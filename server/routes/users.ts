@@ -108,8 +108,23 @@ router.post('/', requireAdmin, async (req, res) => {
   res.status(201).json(publicUser(user));
 });
 
-router.get('/', requireAdmin, async (_req, res) => {
-  const users = await prisma.qhubUser.findMany({ orderBy: { joinDate: 'desc' } });
+router.get('/', requireAuth, async (req, res) => {
+  const isAdmin = req.user!.role === 'admin';
+  let users;
+  if (isAdmin) {
+    users = await prisma.qhubUser.findMany({ orderBy: { joinDate: 'desc' } });
+  } else {
+    users = await prisma.qhubUser.findMany({
+      where: {
+        isBanned: false,
+        OR: [
+          { isPublicProfile: true },
+          { id: req.user!.uid }
+        ]
+      },
+      orderBy: { joinDate: 'desc' }
+    });
+  }
   res.json(users.map(publicUser));
 });
 

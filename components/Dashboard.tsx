@@ -429,8 +429,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Sort users for leaderboard
   const leaderboardUsers = useMemo(() => {
-      return [...allUsers].sort((a, b) => b.xp - a.xp).slice(0, 20);
-  }, [allUsers]);
+      return [...allUsers]
+          .filter(u => u.isPublicProfile || u.id === user.id)
+          .sort((a, b) => b.xp - a.xp)
+          .slice(0, 20);
+  }, [allUsers, user.id]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">

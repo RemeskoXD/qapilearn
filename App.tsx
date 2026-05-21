@@ -120,7 +120,7 @@ const App: React.FC = () => {
   const bonusTasks = useCollection<BonusTask>(isLogged ? '/tasks' : null);
   const sessions = useCollection<CommunitySession>(isLogged ? '/sessions' : null);
   const levels = useCollection<LevelRequirement>(isLogged ? '/levels' : null);
-  const allUsers = useCollection<User>(isAdmin ? '/users' : null);
+  const allUsers = useCollection<User>(isLogged ? '/users' : null);
 
   const systemSettings = settingsRes.data ?? DEFAULT_SETTINGS;
   const nextLevelRequirement = useMemo(
@@ -166,7 +166,7 @@ const App: React.FC = () => {
         const path = isSelf ? '/users/me' : `/users/${updated.id}`;
         const saved = await api.patch<User>(path, updated);
         if (isSelf) setCurrentUser(saved);
-        if (isAdmin) allUsers.reload();
+        allUsers.reload();
       } catch (e: any) {
         notify('error', 'Chyba', e.message ?? 'Uložení selhalo.');
       }
