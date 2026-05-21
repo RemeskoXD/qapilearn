@@ -390,7 +390,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
         {/* --- EDIT MODAL --- */}
         <AnimatePresence>
             {editingUser && editForm && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div initial={{y: 20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-3xl border border-slate-200 shadow-2xl flex flex-col">
                         
                         {/* Header */}
@@ -581,7 +581,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
             )}
 
             {isCreating && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div initial={{y: 20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-3xl border border-slate-200 shadow-2xl flex flex-col">
                         
                         {/* Header */}

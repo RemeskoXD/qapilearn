@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   LayoutDashboard, Users, Database, Shield, Settings, 
   LogOut, TrendingUp, DollarSign, Activity, Lock, ArrowLeft, Search, MoreHorizontal,
-  Edit, Trash2, Ban, Mail, Check, X, UserCheck, Play, BookOpen, Film, Award, Gift, FileText, HelpCircle, Calendar, Zap, Plus, ExternalLink, Terminal, AlertTriangle, Save, RefreshCw, Layers, Video, File, List, CheckCircle, Brain, Gem, MessageSquare, Clock, Send, Star, Megaphone, Home, Image as ImageIcon, Filter, ArrowUpDown, Briefcase, Link as LinkIcon, Menu, Eye, ChevronDown, ChevronUp, Package, FileSpreadsheet, FileJson, Download, StickyNote, Info, CalendarCheck, CheckSquare, MailCheck
+  Edit, Trash2, Ban, Mail, Check, X, UserCheck, Play, BookOpen, Film, Award, Gift, FileText, HelpCircle, Calendar, Zap, Plus, ExternalLink, Terminal, AlertTriangle, Save, RefreshCw, Layers, Video, File, List, CheckCircle, Brain, Gem, MessageSquare, Clock, Send, Star, Megaphone, Home, Image as ImageIcon, Filter, ArrowUpDown, Briefcase, Link as LinkIcon, Menu, Eye, ChevronDown, ChevronUp, Package, FileSpreadsheet, FileJson, Download, StickyNote, Info, CalendarCheck, CheckSquare, MailCheck, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, UserRole, Message, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, SystemSettings, Course, CourseModule, Lesson, QuizQuestion, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, ToastMessage } from '../types';
@@ -72,6 +72,23 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('admin_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    const newValue = !isCollapsed;
+    setIsCollapsed(newValue);
+    try {
+      localStorage.setItem('admin_sidebar_collapsed', String(newValue));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Navigation Items
   const navItems = [
@@ -94,42 +111,141 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
       
-      {/* Sidebar (Desktop) */}
-      <div className="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex relative z-20">
-         <div className="p-8">
-           <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-9 h-9 bg-rose-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-rose-600/20"><Shield size={18} /></div>
-              <div>
-                <div className="font-bold text-slate-900 leading-none">Q-Hub Admin</div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">CMS</p>
+      {/* Mobile Sidebar (Drawer Overlay) */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 flex lg:hidden">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 0.5 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+            />
+            {/* Drawer content card */}
+            <motion.div 
+              initial={{ x: '-100%' }} 
+              animate={{ x: 0 }} 
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="relative w-64 max-w-xs bg-white h-full flex flex-col z-10 shadow-2xl"
+            >
+              <div className="p-6 flex items-center justify-between border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white"><Shield size={16} /></div>
+                  <span className="font-bold text-slate-900 text-sm">Q-Hub Admin</span>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-slate-700 p-1">
+                  <X size={18} />
+                </button>
               </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+                {navItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-sm font-medium ${
+                      activeTab === item.id ? 'bg-rose-50 text-rose-700 border border-rose-100 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.icon} {item.label}
+                  </button>
+                ))}
+              </div>
+              <div className="p-4 border-t border-slate-100 space-y-1 bg-slate-50/50">
+                <button onClick={() => { props.onNavigate('dashboard'); setSidebarOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition rounded-lg hover:bg-white border border-transparent hover:border-slate-200">
+                  <ArrowLeft size={16} /> Pohled studenta
+                </button>
+                <button onClick={() => { props.onLogout(); setSidebarOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-rose-600 hover:text-rose-700 transition rounded-lg hover:bg-rose-50">
+                  <LogOut size={16} /> Odhlásit
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar (Desktop) */}
+      <div className={`bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
+         <div className={`p-6 border-b border-slate-100 flex items-center ${isCollapsed ? 'flex-col gap-4 p-4 justify-center' : 'justify-between'}`}>
+           <div className="flex items-center gap-2.5 overflow-hidden">
+              <div className="w-9 h-9 bg-rose-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-rose-600/20 flex-shrink-0"><Shield size={18} /></div>
+              {!isCollapsed && (
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
+                  <div className="font-bold text-slate-900 leading-none text-sm tracking-tight whitespace-nowrap">Q-Hub Admin</div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">CMS Panel</p>
+                </motion.div>
+              )}
            </div>
+           {isCollapsed ? (
+             <button onClick={toggleSidebar} className="text-slate-400 hover:text-rose-600 p-1.5 hover:bg-rose-50 rounded-lg transition" title="Rozbalit boční panel">
+                <ChevronRight size={18} />
+             </button>
+           ) : (
+             <button onClick={toggleSidebar} className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-slate-50 transition" title="Skrýt boční panel">
+                <ChevronLeft size={18} />
+             </button>
+           )}
         </div>
-        <div className="flex-1 overflow-y-auto px-4 space-y-1 custom-scrollbar">
+        
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 custom-scrollbar">
            {navItems.map(item => (
              <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-sm font-medium ${
-                  activeTab === item.id ? 'bg-rose-50 text-rose-700 border border-rose-200 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
+                title={isCollapsed ? item.label : undefined}
+                className={`w-full flex items-center rounded-xl transition-all duration-200 text-sm font-medium ${
+                  isCollapsed ? 'justify-center p-2.5 h-11 w-11 mx-auto' : 'px-4 py-2.5 gap-3'
+                } ${
+                  activeTab === item.id 
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200 font-semibold shadow-xs' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
                 }`}
              >
-                {item.icon} {item.label}
+                <div className="flex-shrink-0">{item.icon}</div>
+                {!isCollapsed && (
+                  <motion.span 
+                    initial={{ opacity: 0, width: 0 }} 
+                    animate={{ opacity: 1, width: 'auto' }}
+                    className="whitespace-nowrap overflow-hidden text-ellipsis text-xs"
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
              </button>
            ))}
         </div>
-        <div className="p-4 border-t border-slate-200 space-y-1">
-           <button onClick={() => props.onNavigate('dashboard')} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition rounded-lg hover:bg-slate-50">
-              <ArrowLeft size={16} /> Pohled studenta
+        
+        <div className={`p-4 border-t border-slate-200 space-y-1.5 ${isCollapsed ? 'flex flex-col items-center px-2' : ''}`}>
+           <button 
+             onClick={() => props.onNavigate('dashboard')} 
+             title={isCollapsed ? "Pohled studenta" : undefined}
+             className={`flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-all rounded-lg hover:bg-slate-50 ${
+               isCollapsed ? 'justify-center h-10 w-10 p-0' : 'w-full gap-2 px-4 py-2.5'
+             }`}
+           >
+              <ArrowLeft size={16} />
+              {!isCollapsed && <span className="text-xs">Pohled studenta</span>}
            </button>
-           <button onClick={props.onLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-rose-600 hover:text-rose-700 transition rounded-lg hover:bg-rose-50">
-              <LogOut size={16} /> Odhlásit
+           <button 
+             onClick={props.onLogout} 
+             title={isCollapsed ? "Odhlásit" : undefined}
+             className={`flex items-center text-sm font-medium text-rose-600 hover:text-rose-700 transition-[#FF2D55] duration-200 rounded-lg hover:bg-rose-50 ${
+               isCollapsed ? 'justify-center h-10 w-10 p-0' : 'w-full gap-2 px-4 py-2.5'
+             }`}
+           >
+              <LogOut size={16} />
+              {!isCollapsed && <span className="text-xs">Odhlásit</span>}
            </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative z-10">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative z-20">
          <header className="h-16 lg:h-20 border-b border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-between px-4 lg:px-8">
             <div className="flex items-center gap-4">
                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="lg:hidden text-slate-500"><Menu/></button>

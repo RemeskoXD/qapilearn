@@ -88,8 +88,8 @@ const AdminCalendar: React.FC<AdminCalendarProps> = ({ events, onUpdateEvents, n
                         </div>
 
                         <div className="flex flex-row md:flex-col justify-center gap-2">
-                            <button onClick={() => setEditingEvent(event)} className="p-2 bg-slate-100 hover:bg-indigo-600 text-slate-600 hover:text-slate-900 rounded-lg transition"><Edit size={16}/></button>
-                            <button onClick={() => handleDeleteEvent(event.id)} className="p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-slate-900 rounded-lg transition"><Trash2 size={16}/></button>
+                            <button onClick={() => setEditingEvent(event)} className="p-2 bg-slate-100 hover:bg-indigo-600 text-slate-600 hover:text-white rounded-lg transition"><Edit size={16}/></button>
+                            <button onClick={() => handleDeleteEvent(event.id)} className="p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-lg transition"><Trash2 size={16}/></button>
                         </div>
                     </div>
                 );
@@ -99,7 +99,7 @@ const AdminCalendar: React.FC<AdminCalendarProps> = ({ events, onUpdateEvents, n
         {/* --- EDIT MODAL --- */}
         <AnimatePresence>
             {editingEvent && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-2xl rounded-3xl border border-slate-200 shadow-2xl p-8 flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-6">
                             <h3 className="text-xl font-bold text-slate-900">Editor Události</h3>

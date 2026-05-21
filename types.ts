@@ -202,6 +202,9 @@ export interface Lesson {
   duration: number; // minutes
   isMandatory: boolean;
   questions?: QuizQuestion[]; // If type is quiz
+  description?: string; // Short description/subtitle for general lessons
+  videoWatchTime?: number; // Mandatory watch time in seconds before lesson is marked complete
+  hasWatchConstraint?: boolean; // True if the student must watch the video for videoWatchTime seconds
 }
 
 export interface QuizQuestion {
@@ -209,6 +212,8 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   correctOptionIndex: number;
+  type?: 'choice' | 'text-fill' | 'true-false'; // default to choice
+  correctTextAnswer?: string; // for 'text-fill' (case insensitive match)
 }
 
 export interface CourseModule {

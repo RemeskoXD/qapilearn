@@ -126,8 +126,8 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                                     <span className="font-bold text-yellow-500">+{challenge.rewardXP} XP</span>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => setEditingChallenge(challenge)} className="p-2 bg-slate-100 hover:bg-indigo-600 rounded-lg text-slate-500 hover:text-slate-900 transition"><Edit size={16}/></button>
-                                    <button onClick={() => handleDeleteChallenge(challenge.id)} className="p-2 bg-slate-100 hover:bg-red-600 rounded-lg text-slate-500 hover:text-slate-900 transition"><Trash2 size={16}/></button>
+                                    <button onClick={() => setEditingChallenge(challenge)} className="p-2 bg-slate-100 hover:bg-indigo-600 rounded-lg text-slate-600 hover:text-white transition"><Edit size={16}/></button>
+                                    <button onClick={() => handleDeleteChallenge(challenge.id)} className="p-2 bg-slate-100 hover:bg-red-600 rounded-lg text-slate-600 hover:text-white transition"><Trash2 size={16}/></button>
                                 </div>
                             </div>
                         </div>
@@ -150,11 +150,11 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                             <div className="flex-1 grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-[10px] text-slate-500 uppercase font-bold block">Titul</label>
-                                    <input value={lvl.title} onChange={e => handleLevelChange(idx, 'title', e.target.value)} className="w-full bg-black border border-slate-200 rounded px-2 py-1 text-sm text-white"/>
+                                    <input value={lvl.title} onChange={e => handleLevelChange(idx, 'title', e.target.value)} className="w-full bg-white text-slate-900 border border-slate-250 rounded px-3 py-1.5 focus:ring-1 focus:ring-amber-500 outline-none transition text-sm font-semibold"/>
                                 </div>
                                 <div>
                                     <label className="text-[10px] text-slate-500 uppercase font-bold block">XP Potřeba</label>
-                                    <input type="number" value={lvl.xpRequired} onChange={e => handleLevelChange(idx, 'xpRequired', parseInt(e.target.value))} className="w-full bg-black border border-slate-200 rounded px-2 py-1 text-sm text-yellow-500 font-mono"/>
+                                    <input type="number" value={lvl.xpRequired} onChange={e => handleLevelChange(idx, 'xpRequired', parseInt(e.target.value))} className="w-full bg-white text-slate-900 border border-slate-250 rounded px-3 py-1.5 focus:ring-1 focus:ring-amber-500 outline-none font-mono text-sm text-indigo-600 font-bold"/>
                                 </div>
                             </div>
                         </div>
@@ -166,7 +166,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
         {/* --- EDIT MODALS --- */}
         <AnimatePresence>
             {editingArtifact && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 space-y-4 shadow-2xl">
                         <h3 className="text-xl font-bold text-slate-900">Editor Předmětu</h3>
                         <input value={editingArtifact.name} onChange={e => setEditingArtifact({...editingArtifact, name: e.target.value})} placeholder="Název" className="input"/>
@@ -194,7 +194,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
             )}
 
             {editingChallenge && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 space-y-4 shadow-2xl">
                         <h3 className="text-xl font-bold text-slate-900">Editor Výzvy</h3>
                         <input value={editingChallenge.title} onChange={e => setEditingChallenge({...editingChallenge, title: e.target.value})} placeholder="Název výzvy" className="input"/>

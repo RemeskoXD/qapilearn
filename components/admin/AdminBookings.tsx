@@ -89,7 +89,7 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
                         <th className="p-4 text-right">Akce</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-slate-100">
                     {filteredBookings.map(booking => {
                         const isPast = new Date(booking.date) < new Date();
                         return (
@@ -109,9 +109,9 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
                                 <td className="p-4 text-slate-900 font-medium">{getMentorName(booking.mentorId)}</td>
                                 <td className="p-4">
                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
-                                        booking.status === 'approved' ? 'bg-emerald-50 text-green-400 border-green-900/30' : 
-                                        booking.status === 'rejected' ? 'bg-rose-50 text-red-400 border-red-900/30' : 
-                                        'bg-amber-50 text-yellow-400 border-yellow-900/30'
+                                        booking.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                                        booking.status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-200' : 
+                                        'bg-amber-50 text-amber-700 border-amber-200'
                                     }`}>
                                         {booking.status === 'pending' ? 'Čeká na schválení' : booking.status === 'approved' ? 'Schváleno' : 'Zamítnuto'}
                                     </span>
@@ -136,7 +136,7 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
         {/* --- DETAIL MODAL --- */}
         <AnimatePresence>
             {editingBooking && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-lg rounded-3xl border border-slate-200 shadow-2xl p-8 space-y-6">
                         <div className="flex justify-between items-center border-b border-slate-200 pb-4">
                             <h3 className="text-xl font-bold text-slate-900">Detail Rezervace</h3>
@@ -153,7 +153,7 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
 
                             <div>
                                 <label className="label">Poznámka studenta</label>
-                                <div className="p-3 bg-slate-900/30 border border-slate-200 rounded-lg text-sm text-slate-600 italic">
+                                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-705 font-medium italic">
                                     "{editingBooking.note}"
                                 </div>
                             </div>

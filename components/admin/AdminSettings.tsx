@@ -149,7 +149,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSetting
                             onFactoryReset();
                         }
                     }}
-                    className="w-full py-3 bg-rose-50 hover:bg-red-600 hover:text-slate-900 text-red-500 border border-red-900/50 rounded-xl font-bold transition flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-rose-50 hover:bg-red-600 hover:text-white text-red-600 border border-red-200 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-sm"
                 >
                     <RefreshCw size={18}/> Tovární Reset Databáze
                 </button>

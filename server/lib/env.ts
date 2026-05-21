@@ -11,6 +11,15 @@ if (fs.existsSync(localEnv)) {
   loadDotenv({ path: localEnv, override: true });
 }
 
+// Zajištění izolace tabulek v samostatném schématu "qhub" pro zamezení kolizí u sdílených databází
+if (process.env.DATABASE_URL) {
+  let dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl.includes('schema=')) {
+    dbUrl += dbUrl.includes('?') ? '&schema=qhub' : '?schema=qhub';
+    process.env.DATABASE_URL = dbUrl;
+  }
+}
+
 function required(name: string, fallback?: string): string {
   const v = process.env[name] ?? fallback;
   if (!v) {

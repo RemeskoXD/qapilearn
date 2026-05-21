@@ -77,14 +77,14 @@ const AdminStreams: React.FC<AdminStreamsProps> = ({ streams, onUpdateStreams, n
                         </div>
                         <h3 className="font-bold text-xl text-slate-900 mb-2">{stream.title}</h3>
                         <p className="text-slate-500 text-sm line-clamp-2 mb-4">{stream.description}</p>
-                        <div className="text-xs text-slate-500 font-mono truncate bg-black/30 p-2 rounded border border-slate-200">
+                        <div className="text-xs text-slate-700 font-mono truncate bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                             Embed: {stream.streamUrl}
                         </div>
                     </div>
 
                     <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-4">
-                        <button onClick={() => setEditingStream(stream)} className="p-2 bg-slate-100 hover:bg-indigo-600 text-slate-600 hover:text-slate-900 rounded-lg transition"><Edit size={16}/></button>
-                        <button onClick={() => handleDelete(stream.id)} className="p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-slate-900 rounded-lg transition"><Trash2 size={16}/></button>
+                        <button onClick={() => setEditingStream(stream)} className="p-2 bg-slate-100 hover:bg-indigo-600 text-slate-600 hover:text-white rounded-lg transition"><Edit size={16}/></button>
+                        <button onClick={() => handleDelete(stream.id)} className="p-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-lg transition"><Trash2 size={16}/></button>
                     </div>
                 </div>
             ))}
@@ -93,7 +93,7 @@ const AdminStreams: React.FC<AdminStreamsProps> = ({ streams, onUpdateStreams, n
         {/* Modal */}
         <AnimatePresence>
             {editingStream && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-lg rounded-3xl border border-slate-200 shadow-2xl p-8 space-y-6">
                         <div className="flex justify-between items-center border-b border-slate-200 pb-4">
                             <h3 className="text-xl font-bold text-slate-900">Nastavení Streamu</h3>

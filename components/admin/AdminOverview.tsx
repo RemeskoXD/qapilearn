@@ -1,5 +1,5 @@
-import React from 'react';
-import { Users, BookOpen, Brain, MessageSquare, AlertCircle, TrendingUp, CheckCircle, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, BookOpen, Brain, MessageSquare, AlertCircle, TrendingUp, CheckCircle, Shield, Award, Calendar, ChevronRight, Search, Activity, Clock, LogOut, ArrowUpRight, Zap, Ban, Lock } from 'lucide-react';
 import { User, Course, Quiz, SupportTicket, BonusSubmission } from '../../types';
 
 interface AdminOverviewProps {
@@ -10,115 +10,275 @@ interface AdminOverviewProps {
   submissions: BonusSubmission[];
 }
 
-const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers, courses, quizzes, tickets, submissions }) => {
+const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = [], quizzes = [], tickets = [], submissions = [] }) => {
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+
+  // Calculations
   const activeUsers = allUsers.filter((u) => !u.isBanned);
+  const bannedCount = allUsers.filter((u) => u.isBanned).length;
   const adminCount = allUsers.filter((u) => u.role === 'admin').length;
   const premiumUsers = allUsers.filter((u) => u.role === 'premium').length;
   const vipUsers = allUsers.filter((u) => u.role === 'vip').length;
+  const standardUsers = allUsers.filter((u) => u.role === 'student').length;
+  const expiredUsers = allUsers.filter((u) => u.role === 'expired').length;
+  
   const openTickets = tickets.filter((t) => t.status === 'open').length;
   const pendingSubmissions = submissions.filter((s) => s.status === 'pending').length;
 
+  // Calculate total XP in the platform
+  const totalPlatformXP = allUsers.reduce((sum, u) => sum + (u.xp || 0), 0);
+  
+  // Sort users by recent joining
+  const recentUsers = [...allUsers]
+    .sort((a, b) => new Date(b.joinDate || '').getTime() - new Date(a.joinDate || '').getTime())
+    .slice(0, 5);
+
   const stats = [
     {
-      label: 'Aktivní uživatelé',
-      value: activeUsers.length,
-      sub: `${adminCount} admin · ${premiumUsers} premium · ${vipUsers} VIP`,
-      icon: <Users size={24} className="text-indigo-600" />,
-      color: 'border-indigo-200 bg-indigo-50',
+      label: 'Registrovaní Studenti',
+      value: allUsers.length,
+      sub: `${activeUsers.length} aktivních · ${bannedCount} zablokovaných`,
+      icon: <Users size={22} className="text-indigo-600" />,
+      color: 'border-slate-200 hover:border-indigo-400 bg-linear-to-b from-white to-slate-50/50',
+      badge: 'Uživatelé',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-100',
     },
     {
-      label: 'Publikované kurzy',
-      value: courses.filter((c) => c.published).length,
-      sub: `Celkem ${courses.length} kurzů`,
-      icon: <BookOpen size={24} className="text-violet-600" />,
-      color: 'border-violet-200 bg-violet-50',
+      label: 'Vzdělávací Kurzy',
+      value: courses.length,
+      sub: `${courses.filter((c) => c.published).length} publikováno · ${courses.filter((c) => !c.published).length} konceptů`,
+      icon: <BookOpen size={22} className="text-violet-600" />,
+      color: 'border-slate-200 hover:border-violet-400 bg-linear-to-b from-white to-slate-50/50',
+      badge: 'Lekce & Teorie',
+      badgeColor: 'bg-violet-50 text-violet-700 border-violet-100',
     },
     {
-      label: 'Aktivní kvízy',
-      value: quizzes.filter((q) => q.published).length,
-      sub: `Celkem ${quizzes.length} kvízů`,
-      icon: <Brain size={24} className="text-pink-600" />,
-      color: 'border-pink-200 bg-pink-50',
+      label: 'Znalostní Kvízy',
+      value: quizzes.length,
+      sub: `${quizzes.filter((q) => q.published).length} publikováno · ${quizzes.filter((q) => !q.published).length} testů`,
+      icon: <Brain size={22} className="text-amber-600" />,
+      color: 'border-slate-200 hover:border-amber-400 bg-linear-to-b from-white to-slate-50/50',
+      badge: 'Testy',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-100',
     },
     {
-      label: 'Administrátoři',
-      value: adminCount,
-      sub: 'Správa interního Q-Hub',
-      icon: <Shield size={24} className="text-rose-600" />,
-      color: 'border-rose-200 bg-rose-50',
+      label: 'Celkový Pokrok Hubu',
+      value: `${(totalPlatformXP / 1000).toFixed(1)}k`,
+      sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} XP na studenta`,
+      icon: <Zap size={22} className="text-rose-600" />,
+      color: 'border-slate-200 hover:border-rose-400 bg-linear-to-b from-white to-slate-50/50',
+      badge: 'Celkem XP',
+      badgeColor: 'bg-rose-50 text-rose-700 border-rose-100',
     },
   ];
 
   const attentionItems = [
-    { label: 'Nevyřešené tickety', value: openTickets, icon: <MessageSquare size={20} />, alert: openTickets > 0 },
-    { label: 'Úkoly ke schválení', value: pendingSubmissions, icon: <CheckCircle size={20} />, alert: pendingSubmissions > 0 },
+    { 
+      label: 'Nevyřešené tickety', 
+      value: openTickets, 
+      desc: 'Zprávy na zákaznické podpoře od studentů.', 
+      icon: <MessageSquare size={20} />, 
+      alert: openTickets > 0,
+      alertColor: 'bg-rose-50 border-rose-100 text-rose-700'
+    },
+    { 
+      label: 'Úkoly ke schválení', 
+      value: pendingSubmissions, 
+      desc: 'Bonusové projekty, které čekají na vaše schválení.',
+      icon: <CheckCircle size={20} />, 
+      alert: pendingSubmissions > 0,
+       alertColor: 'bg-amber-50 border-amber-100 text-amber-700'
+    },
   ];
+
+  // Helper colors for user badges
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin': return <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit"><Shield size={10}/> Admin</span>;
+      case 'vip': return <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">👑 VIP</span>;
+      case 'premium': return <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">💎 Premium</span>;
+      case 'student': return <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">🎓 Student</span>;
+      case 'expired': return <span className="bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit"><Lock size={10}/> Expirován</span>;
+      default: return <span className="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full uppercase">{role}</span>;
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="flex justify-between items-end">
+      {/* Top Welcome Title */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xs">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Přehled Q-Hub</h2>
-          <p className="text-slate-500">Interní vzdělávání — bez plateb a předplatného.</p>
+          <span className="text-xs font-bold text-rose-600 uppercase tracking-widest bg-rose-50 border border-rose-100 px-3.5 py-1 rounded-full">Centrální dispečink Hubu</span>
+          <h2 className="text-3xl font-black text-slate-900 mt-2 mb-1 tracking-tight">Vítejte v Administraci Q-Hubu</h2>
+          <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">Spravujte studenty, kurzy, herní prvky, podepisujte certifikáty a odpovídejte na dotazy podpory z jednoho intuitivního místa.</p>
+        </div>
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl">
+          <Activity size={18} className="text-emerald-500 animate-pulse" />
+          <div className="text-left">
+            <div className="text-xs font-bold text-slate-700 uppercase leading-none">Status Systému</div>
+            <span className="text-[10px] text-slate-400 font-medium font-mono">Běží na standardním portu</span>
+          </div>
         </div>
       </div>
 
+      {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div
             key={i}
-            className={`p-6 rounded-2xl border ${stat.color} relative overflow-hidden group hover:shadow-md transition-all`}
+            className={`p-6 rounded-3xl border ${stat.color} relative overflow-hidden group hover:shadow-xl transition-all duration-350 flex flex-col justify-between h-48`}
           >
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white rounded-xl border border-slate-200">{stat.icon}</div>
-              <TrendingUp size={16} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            {/* Top row */}
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-xs group-hover:bg-indigo-50/25 transition-colors">{stat.icon}</div>
+              <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${stat.badgeColor}`}>{stat.badge}</span>
             </div>
-            <div className="text-3xl font-black text-slate-900 mb-1">{stat.value}</div>
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</div>
-            {stat.sub && <div className="text-xs text-slate-500 mt-2 border-t border-slate-200 pt-2">{stat.sub}</div>}
+            
+            {/* Value & Info */}
+            <div className="mt-4">
+              <div className="text-4xl font-black text-slate-900 tracking-tight flex items-baseline gap-1.5">
+                {stat.value}
+                <ArrowUpRight size={14} className="text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+              </div>
+              <div className="text-xs font-bold text-slate-800 uppercase mt-1">{stat.label}</div>
+              <div className="text-[11px] text-slate-500 mt-1 truncate font-medium">{stat.sub}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <AlertCircle size={20} className="text-amber-500" /> Vyžaduje pozornost
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {attentionItems.map((item, i) => (
-              <div
-                key={i}
-                className={`p-4 rounded-xl border flex items-center justify-between ${
-                  item.alert ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      item.alert ? 'bg-rose-100 text-rose-600' : 'bg-white text-slate-500 border border-slate-200'
-                    }`}
-                  >
-                    {item.icon}
+      {/* Primary Actions & Double Card View */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Side: Attention & Roles */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Attention Items */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle size={20} className="text-orange-500 animate-bounce" />
+              <h3 className="font-bold text-slate-900 text-base">Vyžaduje pozornost</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {attentionItems.map((item, i) => (
+                <div
+                  key={i}
+                  className={`p-4 rounded-2xl border flex flex-col justify-between transition-all ${
+                    item.alert 
+                      ? `${item.alertColor} ring-4 ring-rose-500/5` 
+                      : 'bg-slate-50/50 border-slate-200 text-slate-500 opacity-60'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-xl bg-white border border-slate-100 shadow-xs`}>{item.icon}</div>
+                      <span className="text-sm font-bold">{item.label}</span>
+                    </div>
+                    <span className="text-2xl font-black">{item.value}</span>
                   </div>
-                  <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                  <p className="text-[11px] mt-2 opacity-80 leading-relaxed font-normal">{item.desc}</p>
                 </div>
-                <span className={`text-xl font-bold ${item.alert ? 'text-rose-600' : 'text-slate-500'}`}>
-                  {item.value}
-                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* User Role Distribution CSS Bar */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h3 className="font-bold text-slate-905 text-sm mb-4">Struktura Účtů</h3>
+            <div className="space-y-3.5">
+              {[
+                { label: 'Studenti', count: standardUsers, color: 'bg-slate-400', pct: allUsers.length ? (standardUsers / allUsers.length) * 100 : 0 },
+                { label: 'Premium', count: premiumUsers, color: 'bg-indigo-600', pct: allUsers.length ? (premiumUsers / allUsers.length) * 100 : 0 },
+                { label: 'VIP Členové', count: vipUsers, color: 'bg-amber-500', pct: allUsers.length ? (vipUsers / allUsers.length) * 100 : 0 },
+                { label: 'Administrátoři', count: adminCount, color: 'bg-red-500', pct: allUsers.length ? (adminCount / allUsers.length) * 100 : 0 },
+                { label: 'Expirovaní', count: expiredUsers, color: 'bg-rose-600', pct: allUsers.length ? (expiredUsers / allUsers.length) * 100 : 0 },
+              ].map((roleRow, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-slate-600">{roleRow.label}</span>
+                    <span className="text-slate-905 font-bold font-mono">{roleRow.count} ({Math.round(roleRow.pct)}%)</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    <div className={`h-full ${roleRow.color}`} style={{ width: `${roleRow.pct}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Side: Recent Users Register Feed */}
+        <div className="lg:col-span-8">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col h-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="font-black text-slate-900 text-lg">Nedávno registrovaní studenti</h3>
+                <p className="text-xs text-slate-400">Přehled posledních registrovaných studentů, jejich XP a oprávnění.</p>
               </div>
-            ))}
+              <div className="relative w-full sm:w-48 text-[11px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                <input 
+                  type="text" 
+                  value={userSearchTerm}
+                  onChange={e => setUserSearchTerm(e.target.value)}
+                  placeholder="Rychlý filtr..." 
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 outline-hidden font-medium placeholder:text-slate-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-550">
+                <thead>
+                  <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                    <th className="pb-3 pl-2">Student</th>
+                    <th className="pb-3 text-right">Získáno XP</th>
+                    <th className="pb-3">Plán / Role</th>
+                    <th className="pb-3 text-right">Člen od</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentUsers
+                    .filter(u => u.email?.toLowerCase().includes(userSearchTerm.toLowerCase()) || u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()))
+                    .map((usr) => (
+                      <tr key={usr.id} className="hover:bg-slate-50/50 transition duration-150">
+                        <td className="py-3.5 pl-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 font-bold text-slate-500 uppercase flex items-center justify-center border border-slate-250">
+                              {usr.name?.charAt(0) || usr.email?.charAt(0) || 'U'}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-905">{usr.name || 'Neznámé jméno'}</div>
+                              <div className="text-[10px] text-slate-400 select-all font-mono">{usr.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 text-right font-bold text-slate-800 font-mono">
+                          <span className="flex items-center justify-end gap-1 font-bold text-yellow-500">
+                            <Zap size={10} fill="currentColor" /> {usr.xp?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="py-3.5">
+                          {getRoleBadge(usr.role)}
+                        </td>
+                        <td className="py-3.5 text-right font-mono text-slate-400 font-semibold">
+                          {usr.joinDate ? new Date(usr.joinDate).toLocaleDateString([], {day:'2-digit', month:'2-digit', year:'numeric'}) : 'Neznámé'}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              {recentUsers.length === 0 && (
+                <div className="text-center py-12 text-slate-400">Nenalezeni žádní nedávní uživatelé.</div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-6 flex flex-col justify-center">
-          <h3 className="text-slate-900 font-bold mb-2">Interní systém</h3>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Q-Hub neobsahuje platby ani Stripe. Přístup řídí administrátor přes role uživatele
-            (student, premium, VIP, admin).
-          </p>
-        </div>
       </div>
+
     </div>
   );
 };

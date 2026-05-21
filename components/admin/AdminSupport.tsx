@@ -84,18 +84,18 @@ const AdminSupport: React.FC<AdminSupportProps> = ({ tickets, onReplyTicket, onC
                             <p className="text-xs text-slate-500">Uživatel: {selectedTicket.userEmail}</p>
                         </div>
                         {selectedTicket.status !== 'closed' && (
-                            <button onClick={handleClose} className="px-4 py-2 bg-slate-100 hover:bg-green-600 hover:text-slate-900 text-slate-500 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                            <button onClick={handleClose} className="px-4 py-2 bg-slate-100 hover:bg-emerald-600 text-slate-600 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-2">
                                 <CheckCircle size={14}/> Vyřešit
                             </button>
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-black/20">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-slate-50/50">
                         {selectedTicket.messages.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.sender === 'support' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] p-4 rounded-2xl ${msg.sender === 'support' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-slate-100 text-slate-600 rounded-bl-none'}`}>
+                                <div className={`max-w-[80%] p-4 rounded-2xl ${msg.sender === 'support' ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-650/10' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-xs'}`}>
                                     <div className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</div>
-                                    <div className={`text-[10px] mt-2 opacity-50 ${msg.sender === 'support' ? 'text-right' : 'text-left'}`}>
+                                    <div className={`text-[10px] mt-2 opacity-50 ${msg.sender === 'support' ? 'text-indigo-200' : 'text-slate-400'}`}>
                                         {msg.sender === 'support' ? 'Support Team' : selectedTicket.userEmail} • {new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
                                     </div>
                                 </div>
@@ -110,7 +110,7 @@ const AdminSupport: React.FC<AdminSupportProps> = ({ tickets, onReplyTicket, onC
                                     value={replyText}
                                     onChange={e => setReplyText(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                                    className="w-full bg-black border border-slate-300 rounded-xl p-4 pr-12 text-sm text-white focus:border-indigo-500 outline-none resize-none h-24"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 pr-12 text-sm text-slate-800 focus:border-indigo-500 hover:border-slate-300 outline-none resize-none h-24 focus:bg-white transition-all"
                                     placeholder="Napište odpověď..."
                                 />
                                 <button onClick={handleSend} className="absolute bottom-4 right-4 p-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition">

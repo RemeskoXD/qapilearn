@@ -10,6 +10,106 @@ import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, C
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
 
+// Helper to render basic markdown for course lessons with full styling support
+const renderMarkdown = (text: string) => {
+    if (!text) return null;
+    
+    const lines = text.split('\n');
+    let insideList = false;
+    let listItems: string[] = [];
+    const elements: React.ReactNode[] = [];
+    
+    const flushList = (keyIdx: number) => {
+        if (listItems.length > 0) {
+            elements.push(
+                <ul key={`ul-${keyIdx}`} className="list-disc pl-6 space-y-2 my-4 text-slate-800">
+                    {listItems.map((item, i) => <li key={i}>{parseInlineMarkdown(item)}</li>)}
+                </ul>
+            );
+            listItems = [];
+            insideList = false;
+        }
+    };
+
+    const parseInlineMarkdown = (str: string) => {
+        if (str.startsWith('![') && str.endsWith(')')) {
+            const altMatch = str.match(/!\[(.*?)\]/);
+            const urlMatch = str.match(/\((.*?)\)/);
+            if (urlMatch) {
+                return (
+                    <span className="block my-6 text-center">
+                        <img 
+                            src={urlMatch[1]} 
+                            referrerPolicy="no-referrer"
+                            alt={altMatch ? altMatch[1] : 'Obrázek'} 
+                            className="rounded-xl border border-slate-200 shadow-lg max-h-96 mx-auto object-cover" 
+                        />
+                        {altMatch && altMatch[1] && <span className="block text-xs text-slate-400 mt-2 italic">{altMatch[1]}</span>}
+                    </span>
+                );
+            }
+        }
+        
+        const parts = str.split(/(\*\*.*?\*\*)/g);
+        return parts.map((part, pIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                const inner = part.slice(2, -2);
+                return <strong key={pIdx} className="font-extrabold text-slate-900">{inner}</strong>;
+            }
+            const subParts = part.split(/(\*.*?\*)/g);
+            return subParts.map((sub, sIdx) => {
+                if (sub.startsWith('*') && sub.endsWith('*')) {
+                    return <em key={`${pIdx}-${sIdx}`} className="italic text-slate-700">{sub.slice(1, -1)}</em>;
+                }
+                return sub;
+            });
+        });
+    };
+
+    lines.forEach((line, index) => {
+        const trimmed = line.trim();
+        
+        if (trimmed.startsWith('- ')) {
+            insideList = true;
+            listItems.push(trimmed.substring(2));
+        } else {
+            if (insideList) {
+                flushList(index);
+            }
+            
+            if (trimmed.startsWith('# ')) {
+                elements.push(<h1 key={index} className="text-3xl font-extrabold text-slate-900 mt-6 mb-4 border-b border-slate-100 pb-2">{parseInlineMarkdown(trimmed.substring(2))}</h1>);
+            } else if (trimmed.startsWith('## ')) {
+                elements.push(<h2 key={index} className="text-2xl font-bold text-slate-900 mt-5 mb-3">{parseInlineMarkdown(trimmed.substring(3))}</h2>);
+            } else if (trimmed.startsWith('### ')) {
+                elements.push(<h3 key={index} className="text-xl font-semibold text-slate-900 mt-4 mb-2">{parseInlineMarkdown(trimmed.substring(4))}</h3>);
+            } else if (trimmed.startsWith('---')) {
+                elements.push(<hr key={index} className="my-6 border-slate-200" />);
+            } else if (trimmed.startsWith('> ')) {
+                elements.push(
+                    <blockquote key={index} className="border-l-4 border-indigo-500 pl-4 py-2 my-4 italic text-slate-700 bg-indigo-50/50 rounded-r-lg">
+                        {parseInlineMarkdown(trimmed.substring(2))}
+                    </blockquote>
+                );
+            } else if (trimmed !== '') {
+                if (trimmed.startsWith('![') && trimmed.endsWith(')')) {
+                    elements.push(<div key={index}>{parseInlineMarkdown(trimmed)}</div>);
+                } else {
+                    elements.push(<p key={index} className="text-slate-700 leading-relaxed my-3">{parseInlineMarkdown(trimmed)}</p>);
+                }
+            } else {
+                elements.push(<div key={index} className="h-2" />);
+            }
+        }
+    });
+    
+    if (insideList) {
+        flushList(lines.length);
+    }
+    
+    return <div className="space-y-1 text-slate-800">{elements}</div>;
+};
+
 const PRESET_AVATARS = [
     "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
     "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
@@ -91,6 +191,44 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState('');
+
+  // Video watch constraints states
+  const [watchTimeLeft, setWatchTimeLeft] = useState<number>(0);
+  const [watchComplete, setWatchComplete] = useState<boolean>(true);
+
+  // Countdown timer for video lessons with watch constraints
+  useEffect(() => {
+      if (!activeCourseId || !activeLessonId) {
+          setWatchTimeLeft(0);
+          setWatchComplete(true);
+          return;
+      }
+      const course = courses.find(c => c.id === activeCourseId);
+      if (!course) return;
+      const flatLessons = course.modules.flatMap(m => m.lessons);
+      const lesson = flatLessons.find(l => l.id === activeLessonId);
+
+      if (lesson && lesson.type === 'video' && lesson.hasWatchConstraint && lesson.videoWatchTime) {
+          setWatchTimeLeft(lesson.videoWatchTime);
+          setWatchComplete(false);
+
+          const interval = setInterval(() => {
+              setWatchTimeLeft(prev => {
+                  if (prev <= 1) {
+                      clearInterval(interval);
+                      setWatchComplete(true);
+                      return 0;
+                  }
+                  return prev - 1;
+              });
+          }, 1000);
+
+          return () => clearInterval(interval);
+      } else {
+          setWatchTimeLeft(0);
+          setWatchComplete(true);
+      }
+  }, [activeLessonId, activeCourseId, courses]);
 
   // Update current note when lesson changes
   useEffect(() => {
@@ -414,7 +552,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleLessonQuizAnswer = (qId: string, idx: number) => { setLessonQuizState(prev => ({ ...prev, answers: { ...prev.answers, [qId]: idx } })); };
   const submitLessonQuiz = (questions: any[]) => {
       let correct = 0;
-      questions.forEach(q => { if (lessonQuizState.answers[q.id] === q.correctOptionIndex) correct++; });
+      questions.forEach(q => {
+          const qType = q.type || 'choice';
+          if (qType === 'text-fill') {
+              const userAns = (lessonQuizState.answers[q.id] || '').toString().trim().toLowerCase();
+              const correctAns = (q.correctTextAnswer || '').trim().toLowerCase();
+              if (userAns === correctAns) correct++;
+          } else {
+              if (lessonQuizState.answers[q.id] === q.correctOptionIndex) correct++;
+          }
+      });
       const score = Math.round((correct / questions.length) * 100);
       setLessonQuizState(prev => ({ ...prev, step: 'result', score, passed: score >= 70 }));
   };
@@ -429,11 +576,15 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Sort users for leaderboard
   const leaderboardUsers = useMemo(() => {
-      return [...allUsers]
+      const resolvedUsers = allUsers.map(u => u.id === user.id ? { ...u, ...user } : u);
+      if (!resolvedUsers.some(u => u.id === user.id)) {
+          resolvedUsers.push(user);
+      }
+      return resolvedUsers
           .filter(u => u.isPublicProfile || u.id === user.id)
           .sort((a, b) => b.xp - a.xp)
           .slice(0, 20);
-  }, [allUsers, user.id]);
+  }, [allUsers, user]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
@@ -490,8 +641,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               )}
               <div className="flex-1 overflow-hidden">
                  <p className="text-sm font-bold truncate text-slate-900">{user.name || user.email}</p>
-                 <p className="text-xs text-indigo-600 flex items-center gap-1 uppercase">{user.role === 'admin' ? <><Shield size={10} /> ADMIN</> : <><Gem size={10}/> {user.role === 'expired' ? 'EXPIRED' : user.role}</>}</p>
-                 <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-semibold font-mono"><Zap size={10} className="text-yellow-500" fill="currentColor" /> {user.xp?.toLocaleString() || 0} XP</p>
+                 <p className="text-xs text-indigo-600 flex items-center gap-1 uppercase font-bold">{user.role === 'admin' ? <><Shield size={10} /> ADMIN</> : <><Gem size={10}/> {user.role === 'expired' ? 'EXPIRED' : user.role}</>}</p>
+                 <div className="mt-1 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 leading-none">
+                        <span className="flex items-center gap-0.5 font-bold font-mono text-slate-700">
+                            <Zap size={10} className="text-yellow-500" fill="currentColor" /> {user.xp?.toLocaleString() || 0} XP
+                        </span>
+                        <span className="font-mono text-[10px] text-indigo-600 font-bold">Lvl {user.level || 1}</span>
+                    </div>
+                    {nextLevelRequirement && (
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                            <div className="h-full bg-indigo-500 rounded-full" style={{width: `${Math.min(100, (user.xp / nextLevelRequirement.xpRequired) * 105)}%`}}></div>
+                        </div>
+                    )}
+                 </div>
               </div>
               <Settings size={16} className="text-slate-500 group-hover:text-slate-900 transition" />
            </div>
@@ -501,7 +664,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
          {/* ... (Header remains unchanged) ... */}
-         <header className="h-20 border-b border-slate-200 bg-slate-50/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 relative z-30">
+         <header className="h-20 border-b border-slate-200 bg-slate-50/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 relative z-[80]">
             <div className="flex items-center gap-4">
                <div>
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Vítej zpět, {user.name?.split(' ')[0] || 'Studente'} <span className="text-2xl">👋</span></h2>
@@ -541,7 +704,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 origin-top-right"
+                                className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-[100] origin-top-right"
                            >
                                <div className="p-4 border-b border-slate-200 flex justify-between items-center">
                                    <h4 className="font-bold text-slate-900 text-sm">Oznámení</h4>
@@ -2436,59 +2599,144 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             <Edit3 size={16}/> Poznámky
                                         </button>
                                     </div>
-                                    <div className="flex-1 flex overflow-hidden relative">
+                                    <div className="flex-1 flex overflow-hidden relative bg-slate-50">
                                         <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
                                             {currentLesson && (
                                                 currentLesson.type === 'video' ? (
-                                                    <div className="w-full max-w-5xl aspect-video bg-white rounded-xl overflow-hidden shadow-2xl">
-                                                        <iframe src={currentLesson.content} className="w-full h-full" frameBorder="0" allowFullScreen></iframe>
+                                                    <div className="w-full max-w-5xl space-y-4">
+                                                        <div className="aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
+                                                            <iframe src={currentLesson.content} className="w-full h-full" frameBorder="0" allowFullScreen></iframe>
+                                                        </div>
+                                                        {currentLesson.description && (
+                                                            <div className="p-4 bg-white border border-slate-100 rounded-xl shadow-xs">
+                                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Popis Lekce</h4>
+                                                                <p className="text-sm text-slate-600 font-medium leading-relaxed">{currentLesson.description}</p>
+                                                            </div>
+                                                        )}
+                                                        {currentLesson.hasWatchConstraint && !watchComplete && (
+                                                            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-800 text-sm flex items-center justify-between shadow-xs">
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <div className="p-2 bg-amber-500 text-white rounded-lg animate-pulse">
+                                                                        <Clock size={16}/>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-bold">Odemknutí lekce aktivní</div>
+                                                                        <div className="text-xs text-amber-600/90 font-medium font-sans">Sledujte video po zadanou dobu, aby se lekce odemkla.</div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="font-mono font-black text-blue-900 bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 rounded-lg text-lg tracking-wider min-w-[50px] text-center">
+                                                                    {watchTimeLeft}s
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {currentLesson.hasWatchConstraint && watchComplete && (
+                                                            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-800 text-sm flex items-center gap-2.5 shadow-xs">
+                                                                <div className="p-2 bg-emerald-500 text-white rounded-lg">
+                                                                    <CheckCircle size={16}/>
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-bold">Časový limit splněn!</div>
+                                                                    <div className="text-xs text-emerald-600/90 font-medium">Nyní můžete lekci kliknutím dole dokončit.</div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : currentLesson.type === 'text' ? (
-                                                    <div className="max-w-3xl w-full bg-white p-8 rounded-2xl prose prose-invert">
-                                                        <h1 className="text-3xl font-bold mb-6">{currentLesson.title}</h1>
-                                                        <div className="whitespace-pre-wrap text-slate-600">{currentLesson.content}</div>
+                                                    <div className="max-w-4xl w-full bg-white p-10 rounded-3xl border border-slate-200 shadow-xl overflow-y-auto">
+                                                        <div className="border-b border-slate-100 pb-6 mb-8 text-center">
+                                                            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">Textová Lekce</span>
+                                                            <h1 className="text-3xl font-extrabold text-slate-900 mt-2">{currentLesson.title}</h1>
+                                                            {currentLesson.description && <p className="text-sm text-slate-500 mt-1">{currentLesson.description}</p>}
+                                                        </div>
+                                                        <div className="prose max-w-none text-slate-700 font-sans text-base leading-relaxed">
+                                                            {renderMarkdown(currentLesson.content)}
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <div className="max-w-3xl w-full">
                                                         {lessonQuizState.step === 'start' && (
-                                                            <div className="text-center bg-white p-12 rounded-2xl border border-slate-200">
-                                                                <Brain size={64} className="mx-auto mb-6 text-violet-600"/>
-                                                                <h2 className="text-3xl font-bold mb-4">Kvíz: {currentLesson.title}</h2>
-                                                                <p className="text-slate-500 mb-8">Ověřte své znalosti z této lekce.</p>
-                                                                <button onClick={() => setLessonQuizState(prev => ({...prev, step: 'playing'}))} className="px-8 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-bold text-white transition">Spustit Kvíz</button>
+                                                            <div className="text-center bg-white p-12 rounded-3xl border border-slate-200 shadow-xl">
+                                                                <Brain size={64} className="mx-auto mb-6 text-violet-600 animate-bounce"/>
+                                                                <h2 className="text-3xl font-bold mb-3 text-slate-900">Kvíz k Lekci</h2>
+                                                                <p className="text-slate-500 mb-8 max-w-md mx-auto">Ověřte své znalosti z této lekce k zisku certifikátu a postupu dál.</p>
+                                                                <button onClick={() => setLessonQuizState(prev => ({...prev, step: 'playing'}))} className="px-8 py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-bold text-white transition shadow-lg shadow-violet-600/20 active:scale-95">Spustit Kvíz</button>
                                                             </div>
                                                         )}
-                                                        {/* ... (Quiz playing/result states remain same) ... */}
                                                         {lessonQuizState.step === 'playing' && currentLesson.questions && (
-                                                            <div className="bg-white p-8 rounded-2xl border border-slate-200">
+                                                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
                                                                 <div className="flex justify-between items-center mb-6">
-                                                                    <span className="text-sm text-slate-500">Otázka {lessonQuizState.currentQuestionIndex + 1} / {currentLesson.questions.length}</span>
-                                                                    <span className="text-xs font-bold px-2 py-1 bg-slate-100 rounded">TEST</span>
+                                                                    <span className="text-sm text-slate-500 font-medium">Otázka {lessonQuizState.currentQuestionIndex + 1} / {currentLesson.questions.length}</span>
+                                                                    <span className="text-xs font-bold px-3 py-1 bg-violet-50 text-violet-700 border border-violet-100 rounded-full">Kvíz Lekce</span>
                                                                 </div>
-                                                                <h3 className="text-xl font-bold mb-8">{currentLesson.questions[lessonQuizState.currentQuestionIndex].question}</h3>
-                                                                <div className="space-y-3 mb-8">
-                                                                    {currentLesson.questions[lessonQuizState.currentQuestionIndex].options.map((opt, oIdx) => (
-                                                                        <button key={oIdx} onClick={() => handleLessonQuizAnswer(currentLesson.questions![lessonQuizState.currentQuestionIndex].id, oIdx)} className={`w-full p-4 text-left rounded-xl border transition ${lessonQuizState.answers[currentLesson.questions![lessonQuizState.currentQuestionIndex].id] === oIdx ? 'bg-violet-100 border-purple-500 text-purple-300' : 'bg-white border-slate-300 hover:bg-slate-100'}`}>{opt}</button>
-                                                                    ))}
-                                                                </div>
-                                                                <div className="flex justify-between">
-                                                                     <button onClick={() => setLessonQuizState(prev => ({...prev, currentQuestionIndex: Math.max(0, prev.currentQuestionIndex - 1)}))} disabled={lessonQuizState.currentQuestionIndex === 0} className="text-slate-500 disabled:opacity-50">Předchozí</button>
+                                                                <h3 className="text-xl font-bold mb-8 text-slate-900">{currentLesson.questions[lessonQuizState.currentQuestionIndex].question}</h3>
+                                                                
+                                                                {/* Render based on Type of Question */}
+                                                                {(() => {
+                                                                    const currentQ = currentLesson.questions[lessonQuizState.currentQuestionIndex];
+                                                                    const qType = currentQ.type || 'choice';
+                                                                    
+                                                                    if (qType === 'text-fill') {
+                                                                        return (
+                                                                            <div className="space-y-4 mb-8">
+                                                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Odpověď (doplňte text bez ohledu na velikost písmen)</label>
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    placeholder="Zadejte vaši odpověď..." 
+                                                                                    value={lessonQuizState.answers[currentQ.id] || ''} 
+                                                                                    onChange={e => setLessonQuizState(prev => ({ ...prev, answers: { ...prev.answers, [currentQ.id]: e.target.value } }))}
+                                                                                    className="w-full p-4 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-900 font-medium"
+                                                                                />
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                    
+                                                                    // Standard multi-choice or true-false
+                                                                    const optionsToRender = qType === 'true-false' ? ['Pravda', 'Nepravda'] : currentQ.options;
+                                                                    return (
+                                                                        <div className="space-y-3 mb-8">
+                                                                            {optionsToRender.map((opt, oIdx) => {
+                                                                                const isSelected = lessonQuizState.answers[currentQ.id] === oIdx;
+                                                                                return (
+                                                                                    <button 
+                                                                                        key={oIdx} 
+                                                                                        onClick={() => handleLessonQuizAnswer(currentQ.id, oIdx)} 
+                                                                                        className={`w-full p-4 text-left rounded-xl border transition flex items-center justify-between ${
+                                                                                            isSelected 
+                                                                                            ? 'bg-violet-50 border-purple-500 text-purple-900 font-semibold' 
+                                                                                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                                                                                        }`}
+                                                                                    >
+                                                                                        <span>{opt}</span>
+                                                                                        {isSelected && <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs">✓</div>}
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                                
+                                                                <div className="flex justify-between border-t border-slate-100 pt-6">
+                                                                     <button onClick={() => setLessonQuizState(prev => ({...prev, currentQuestionIndex: Math.max(0, prev.currentQuestionIndex - 1)}))} disabled={lessonQuizState.currentQuestionIndex === 0} className="text-slate-500 font-bold disabled:opacity-50">Předchozí</button>
                                                                      {lessonQuizState.currentQuestionIndex < (currentLesson.questions.length - 1) ? (
-                                                                         <button onClick={() => setLessonQuizState(prev => ({...prev, currentQuestionIndex: prev.currentQuestionIndex + 1}))} className="px-6 py-2 bg-white text-black font-bold rounded-lg">Další</button>
+                                                                         <button onClick={() => setLessonQuizState(prev => ({...prev, currentQuestionIndex: prev.currentQuestionIndex + 1}))} className="px-6 py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition">Další</button>
                                                                      ) : (
-                                                                         <button onClick={() => submitLessonQuiz(currentLesson.questions!)} className="px-6 py-2 bg-green-500 text-black font-bold rounded-lg">Vyhodnotit</button>
+                                                                         <button onClick={() => submitLessonQuiz(currentLesson.questions!)} className="px-6 py-2 bg-green-600 text-white font-bold rounded-xl hover:bg-green-500 shadow-md transition shadow-green-600/10">Vyhodnotit</button>
                                                                      )}
                                                                 </div>
                                                             </div>
                                                         )}
                                                         {lessonQuizState.step === 'result' && (
-                                                            <div className="text-center bg-white p-12 rounded-2xl border border-slate-200">
-                                                                <div className="mb-6 inline-flex p-4 rounded-full bg-white">
+                                                            <div className="text-center bg-white p-12 rounded-3xl border border-slate-200 shadow-xl">
+                                                                <div className="mb-6 inline-flex p-4 rounded-full bg-slate-50 border border-slate-100">
                                                                     {lessonQuizState.passed ? <Award size={48} className="text-green-500"/> : <X size={48} className="text-red-500"/>}
                                                                 </div>
-                                                                <h2 className="text-3xl font-bold mb-2">{lessonQuizState.passed ? 'Splněno!' : 'Zkuste to znovu'}</h2>
-                                                                <p className="text-slate-500 mb-8">Váš výsledek: <span className={lessonQuizState.passed ? 'text-green-500 font-bold' : 'text-red-500 font-bold'}>{lessonQuizState.score}%</span></p>
-                                                                {lessonQuizState.passed ? <div className="p-4 bg-emerald-50 text-green-400 rounded-xl mb-4 text-sm">Lekce byla označena jako splněná.</div> : <button onClick={() => setLessonQuizState({step: 'start', currentQuestionIndex: 0, answers: {}, score: 0, passed: false})} className="px-6 py-2 bg-white text-black font-bold rounded-lg">Resetovat</button>}
+                                                                <h2 className="text-3xl font-bold mb-2 text-slate-900">{lessonQuizState.passed ? 'Skvělá práce, splněno!' : 'Zkuste to znovu'}</h2>
+                                                                <p className="text-slate-500 mb-8 max-w-md mx-auto">Váš výsledek: <span className={lessonQuizState.passed ? 'text-green-500 font-bold' : 'text-red-500 font-bold'}>{lessonQuizState.score}%</span> (pro úspěch potřebujete alespoň 70%)</p>
+                                                                {lessonQuizState.passed ? (
+                                                                    <div className="p-4 bg-emerald-50 text-emerald-800 rounded-xl mb-4 text-sm font-semibold border border-emerald-100 max-w-sm mx-auto">Lekce byla označena jako splněná.</div>
+                                                                ) : (
+                                                                    <button onClick={() => setLessonQuizState({step: 'start', currentQuestionIndex: 0, answers: {}, score: 0, passed: false})} className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition">Spustit znovu</button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -2525,12 +2773,24 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <div className="flex gap-4">
                                             <button 
                                                 onClick={() => onCourseProgress(course.id, currentLesson!.id)}
-                                                disabled={currentLesson?.type === 'quiz' && !lessonQuizState.passed && !isCompleted}
-                                                className={`px-6 py-2 font-bold rounded-lg flex items-center gap-2 transition ${
-                                                    (currentLesson?.type === 'quiz' && !lessonQuizState.passed && !isCompleted) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white'
+                                                disabled={
+                                                    (currentLesson?.type === 'quiz' && !lessonQuizState.passed && !isCompleted) ||
+                                                    (currentLesson?.type === 'video' && currentLesson?.hasWatchConstraint && !watchComplete && !isCompleted)
+                                                }
+                                                className={`px-6 py-2.5 font-bold rounded-xl flex items-center gap-2 transition ${
+                                                    ((currentLesson?.type === 'quiz' && !lessonQuizState.passed && !isCompleted) ||
+                                                     (currentLesson?.type === 'video' && currentLesson?.hasWatchConstraint && !watchComplete && !isCompleted))
+                                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' 
+                                                    : 'bg-green-600 hover:bg-green-500 text-white shadow-md shadow-green-600/10'
                                                 }`}
                                             >
-                                                <CheckCircle size={18}/> {isCompleted ? 'Dokončeno' : 'Označit jako dokončené'}
+                                                <CheckCircle size={18}/> 
+                                                {isCompleted 
+                                                    ? 'Dokončeno' 
+                                                    : (currentLesson?.type === 'video' && currentLesson?.hasWatchConstraint && !watchComplete)
+                                                        ? `Sledujte video (${watchTimeLeft}s)`
+                                                        : 'Označit jako dokončené'
+                                                }
                                             </button>
                                             {nextLesson && isCompleted && (
                                                 <button 

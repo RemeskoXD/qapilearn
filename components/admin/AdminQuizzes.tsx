@@ -88,10 +88,10 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                         </div>
 
                         <div className="flex gap-2">
-                            <button onClick={() => setEditingQuiz(quiz)} className="flex-1 py-2 bg-slate-100 hover:bg-violet-600 text-slate-600 hover:text-slate-900 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                            <button onClick={() => setEditingQuiz(quiz)} className="flex-1 py-2 bg-slate-100 hover:bg-violet-600 text-slate-600 hover:text-white rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
                                 <Edit size={14}/> Upravit
                             </button>
-                            <button onClick={() => handleDeleteQuiz(quiz.id)} className="px-3 py-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-slate-900 rounded-lg transition">
+                            <button onClick={() => handleDeleteQuiz(quiz.id)} className="px-3 py-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white rounded-lg transition">
                                 <Trash2 size={14}/>
                             </button>
                         </div>
@@ -103,7 +103,7 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
         {/* --- QUIZ EDITOR MODAL --- */}
         <AnimatePresence>
             {editingQuiz && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
                         {/* Header */}
                         <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-white">
@@ -179,18 +179,18 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                                             <input 
                                                 value={q.question}
                                                 onChange={e => updateQuestion(qIdx, {question: e.target.value})}
-                                                className="input mb-4 font-bold bg-black"
+                                                className="input mb-4 font-bold bg-white text-slate-900 border-slate-200 border"
                                                 placeholder="Znění otázky..."
                                             />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 {q.options.map((opt, oIdx) => (
-                                                    <div key={oIdx} className={`flex items-center gap-3 p-3 rounded-xl border transition ${q.correctOptionIndex === oIdx ? 'bg-emerald-50 border-emerald-300' : 'bg-black border-slate-200'}`}>
+                                                    <div key={oIdx} className={`flex items-center gap-3 p-3 rounded-xl border transition ${q.correctOptionIndex === oIdx ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-white border-slate-200 text-slate-800'}`}>
                                                         <input 
                                                             type="radio" 
                                                             checked={q.correctOptionIndex === oIdx} 
                                                             onChange={() => updateQuestion(qIdx, {correctOptionIndex: oIdx})}
-                                                            className="accent-green-500 w-5 h-5"
+                                                            className="accent-green-500 w-5 h-5 cursor-pointer"
                                                         />
                                                         <input 
                                                             value={opt}
@@ -199,7 +199,7 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                                                                 newOpts[oIdx] = e.target.value;
                                                                 updateQuestion(qIdx, {options: newOpts});
                                                             }}
-                                                            className="flex-1 bg-transparent border-none outline-none text-sm"
+                                                            className="flex-1 bg-transparent border-none outline-none text-sm text-slate-800"
                                                             placeholder={`Možnost ${oIdx + 1}`}
                                                         />
                                                         <button 

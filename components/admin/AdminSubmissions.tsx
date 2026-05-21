@@ -80,9 +80,9 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
                                     <User size={12}/> {getUserName(sub.userId)}
                                 </div>
                                 <h3 className="text-lg font-bold text-slate-900">{getTaskTitle(sub.taskId)}</h3>
-                                <div className="bg-slate-900/30 p-4 rounded-lg border border-slate-200 text-sm text-slate-600 font-mono break-all">
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-850 font-mono break-all font-semibold">
                                     {sub.content.startsWith('http') ? (
-                                        <a href={sub.content} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1">
+                                        <a href={sub.content} target="_blank" rel="noreferrer" className="text-indigo-600 hover:text-indigo-500 hover:underline font-bold flex items-center gap-1">
                                             <ExternalLink size={14}/> Otevřít odkaz
                                         </a>
                                     ) : sub.content}
@@ -118,7 +118,7 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
                                 <span className="bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase font-bold">{task.proofType}</span>
                                 <span className="text-yellow-500 font-bold flex items-center gap-1"><Gift size={14}/> {task.rewardXP} XP</span>
                             </div>
-                            <button onClick={() => setEditingTask(task)} className="w-full mt-4 py-2 bg-slate-100 hover:bg-indigo-600 text-slate-600 hover:text-slate-900 rounded-lg text-sm font-bold transition">Upravit</button>
+                            <button onClick={() => setEditingTask(task)} className="w-full mt-4 py-2 bg-slate-100 hover:bg-indigo-650 text-slate-700 hover:text-white rounded-lg text-sm font-semibold transition">Upravit</button>
                         </div>
                     ))}
                 </div>
@@ -128,7 +128,7 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
         {/* Modal */}
         <AnimatePresence>
             {editingTask && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <motion.div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 space-y-4 shadow-2xl">
                         <h3 className="text-xl font-bold text-slate-900">Editor Úkolu</h3>
                         <input value={editingTask.title} onChange={e => setEditingTask({...editingTask, title: e.target.value})} placeholder="Název úkolu" className="input"/>
