@@ -30,9 +30,21 @@ app.use(
     origin: (origin, cb) => {
       // bez Origin hlavičky (např. curl, same-origin v prod) -> povolit
       if (!origin) return cb(null, true);
-      if (origin === env.CLIENT_ORIGIN) return cb(null, true);
-      // v produkci povolíme i same-origin požadavky (Express + frontend = 1 url)
-      if (env.NODE_ENV === 'production') return cb(null, true);
+      
+      const isAllowed = 
+        origin === env.CLIENT_ORIGIN ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('http://127.0.0.1') ||
+        origin.endsWith('.run.app') ||
+        /\.run\.app$/.test(origin) ||
+        origin.includes('run.app') ||
+        env.NODE_ENV === 'production';
+
+      if (isAllowed) {
+        return cb(null, true);
+      }
+      
+      console.warn(`[Q-Hub] CORS blocked origin: ${origin}`);
       cb(new Error('Not allowed by CORS'));
     },
     credentials: true,
