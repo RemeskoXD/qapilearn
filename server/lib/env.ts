@@ -11,11 +11,34 @@ if (fs.existsSync(localEnv)) {
   loadDotenv({ path: localEnv, override: true });
 }
 
-// Zajištění izolace tabulek v samostatném schématu "qhub" pro zamezení kolizí u sdílených databází
+// Zajištění izolace tabulek v samostatném schématu "qhub" a konfigurace spojení pro stabilitu u vzdálených DB
 if (process.env.DATABASE_URL) {
   let dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl.includes('schema=')) {
-    dbUrl += dbUrl.includes('?') ? '&schema=qhub' : '?schema=qhub';
+  try {
+    const parsedUrl = new URL(dbUrl);
+    // Nastavíme schema=qhub, pokud není nastaveno
+    if (!parsedUrl.searchParams.has('schema')) {
+      parsedUrl.searchParams.set('schema', 'qhub');
+    }
+    // Omezíme connection_limit (např. na 3), aby nedocházelo k vyčerpání spojení na vzdáleném serveru a Connection reset by peer
+    if (!parsedUrl.searchParams.has('connection_limit')) {
+      parsedUrl.searchParams.set('connection_limit', '3');
+    }
+    // Nastavíme timeouty pro předcházení pádům a dlouhým visícím požadavkům
+    if (!parsedUrl.searchParams.has('pool_timeout')) {
+      parsedUrl.searchParams.set('pool_timeout', '20');
+    }
+    if (!parsedUrl.searchParams.has('connect_timeout')) {
+      parsedUrl.searchParams.set('connect_timeout', '20');
+    }
+    process.env.DATABASE_URL = parsedUrl.toString();
+  } catch (e) {
+    if (!dbUrl.includes('schema=')) {
+      dbUrl += dbUrl.includes('?') ? '&schema=qhub' : '?schema=qhub';
+    }
+    if (!dbUrl.includes('connection_limit=')) {
+      dbUrl += `&connection_limit=3`;
+    }
     process.env.DATABASE_URL = dbUrl;
   }
 }

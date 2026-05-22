@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # ---- Stage 2: build (Vite frontend + Prisma client) ----
 FROM node:20-alpine AS build
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Vygeneruje @prisma/client do node_modules
@@ -28,9 +29,10 @@ RUN npm run build
 # ---- Stage 3: runtime ----
 FROM node:20-alpine AS runtime
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=3000
 
 # Kopírujeme jen to, co je potřeba pro běh.
 COPY --from=deps  /app/node_modules ./node_modules
@@ -42,7 +44,7 @@ COPY package.json ./
 COPY --from=build /app/node_modules/.prisma  ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma  ./node_modules/@prisma
 
-EXPOSE 4000
+EXPOSE 3000
 
 # Healthcheck pro Coolify / reverse proxy.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
