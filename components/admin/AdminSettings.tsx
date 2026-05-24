@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, Save, AlertTriangle, Activity, Lock, Globe, Bell, Power, RefreshCw, Server } from 'lucide-react';
+import { Settings, Save, AlertTriangle, Activity, Lock, Globe, Bell, Power, RefreshCw, Server, Trash2 } from 'lucide-react';
 import { SystemSettings } from '../../types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
@@ -16,6 +16,7 @@ interface AdminSettingsProps {
 const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSettings, onFactoryReset, notify }) => {
   const [localSettings, setLocalSettings] = useState<SystemSettings>(settings);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleChange = (field: keyof SystemSettings, value: any) => {
       setLocalSettings(prev => ({ ...prev, [field]: value }));
@@ -144,11 +145,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSetting
                 </p>
 
                 <button 
-                    onClick={() => {
-                        if(window.confirm('VAROVÁNÍ: Tato akce vymaže veškerá data (uživatele, kurzy, nastavení) a vrátí systém do továrního nastavení. Pokračovat?')) {
-                            onFactoryReset();
-                        }
-                    }}
+                    onClick={() => setShowResetConfirm(true)}
                     className="w-full py-3 bg-rose-50 hover:bg-red-600 hover:text-white text-red-600 border border-red-200 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-sm"
                 >
                     <RefreshCw size={18}/> Tovární Reset Databáze
@@ -156,6 +153,39 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSetting
             </div>
 
         </div>
+
+        {/* --- RESET DATA CONFIRMATION MODAL --- */}
+        <AnimatePresence>
+            {showResetConfirm && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
+                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                            <AlertTriangle size={24}/>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Vymazat celou databázi?</h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                VAROVÁNÍ: Tato akce vymaže veškerá registrovaná data (uživatele, kurzy, nastavení) a vrátí systém do továrního nastavení. Pokračovat?
+                            </p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                                Zrušit
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    onFactoryReset();
+                                    setShowResetConfirm(false);
+                                }} 
+                                className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/10 transition"
+                            >
+                                Ano, resetovat
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     </div>
   );
 };

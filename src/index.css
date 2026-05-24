@@ -1,1 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Brand Overrides: map Indigo and Slate to user colors */
+  --color-indigo-50: #E6EFFE;
+  --color-indigo-100: #d4e5ff;
+  --color-indigo-200: #EDDEC9;
+  --color-indigo-500: #D4AF37;
+  --color-indigo-600: #0C1532;
+  --color-indigo-700: #080d21;
+  --color-indigo-800: #050917;
+  --color-indigo-900: #03050d;
+
+  --color-slate-50: #F9F3EC;
+  --color-slate-100: #EDDEC9;
+  --color-slate-200: #e0d0b8;
+  --color-slate-900: #0C1532;
+  --color-slate-950: #090e21;
+
+  --color-brand-gold: #D4AF37;
+  --color-brand-bg: #F9F3EC;
+  --color-brand-border: #EDDEC9;
+  --color-brand-navy: #0C1532;
+  --color-brand-blue: #E6EFFE;
+}
+
+body {
+  background-color: #F9F3EC;
+  color: #0C1532;
+  font-family: "Inter", ui-sans-serif, system-ui;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: "Space Grotesk", var(--font-sans);
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", var(--font-mono);
+}
+
+/* Custom fade-in and smooth entry animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

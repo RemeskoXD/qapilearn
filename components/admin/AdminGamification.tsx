@@ -23,6 +23,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
   const [activeTab, setActiveTab] = useState<'artifacts' | 'challenges' | 'levels'>('artifacts');
   const [editingArtifact, setEditingArtifact] = useState<Artifact | null>(null);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [deletingItem, setDeletingItem] = useState<{ type: 'artifact' | 'challenge', id: string, name: string } | null>(null);
   
   // Levels are edited inline mostly, but we track changes
   const [localLevels, setLocalLevels] = useState(levelRequirements);
@@ -36,7 +37,10 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
       notify('success', 'Uloženo', 'Předmět byl uložen.');
   };
   const handleDeleteArtifact = (id: string) => {
-      if(window.confirm('Smazat předmět?')) onUpdateArtifacts(artifacts.filter(a => a.id !== id));
+      const art = artifacts.find(a => a.id === id);
+      if (art) {
+          setDeletingItem({ type: 'artifact', id, name: art.name });
+      }
   };
 
   // --- CHALLENGES LOGIC ---
@@ -48,7 +52,22 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
       notify('success', 'Uloženo', 'Výzva byla uložena.');
   };
   const handleDeleteChallenge = (id: string) => {
-      if(window.confirm('Smazat výzvu?')) onUpdateChallenges(challenges.filter(c => c.id !== id));
+      const chal = challenges.find(c => c.id === id);
+      if (chal) {
+          setDeletingItem({ type: 'challenge', id, name: chal.title });
+      }
+  };
+
+  const confirmDeleteItem = () => {
+      if (!deletingItem) return;
+      if (deletingItem.type === 'artifact') {
+          onUpdateArtifacts(artifacts.filter(a => a.id !== deletingItem.id));
+          notify('success', 'Smazáno', 'Předmět byl smazán.');
+      } else if (deletingItem.type === 'challenge') {
+          onUpdateChallenges(challenges.filter(c => c.id !== deletingItem.id));
+          notify('success', 'Smazáno', 'Výzva byla smazána.');
+      }
+      setDeletingItem(null);
   };
 
   // --- LEVELS LOGIC ---
@@ -210,6 +229,31 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                         <div className="flex justify-end gap-2 pt-4">
                             <button onClick={() => setEditingChallenge(null)} className="btn-secondary">Zrušit</button>
                             <button onClick={handleSaveChallenge} className="btn-primary bg-indigo-600 hover:bg-indigo-500">Uložit</button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* --- DELETE CONFIRMATION MODAL --- */}
+        <AnimatePresence>
+            {deletingItem && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
+                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                            <Trash2 size={24}/>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Opravdu smazat?</h3>
+                            <p className="text-sm text-slate-500 mt-1">Chystáte se smazat {deletingItem.type === 'artifact' ? 'předmět' : 'výzvu'} "{deletingItem.name}". Tato akce je nevratná.</p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setDeletingItem(null)} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                                Zrušit
+                            </button>
+                            <button onClick={confirmDeleteItem} className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/10 transition">
+                                Smazat
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>

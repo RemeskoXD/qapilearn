@@ -9,6 +9,6 @@ try {
   });
   console.log('[Q-Hub] Schéma úspěšně synchronizováno.');
 } catch (error) {
-  console.error('[Q-Hub] Selhala synchronizace databázového schématu:', error);
-  process.exit(1);
+  console.error('[Q-Hub] Selhala synchronizace databázového schématu (nefatální pro start):', error);
+  // Nevoláme process.exit(1), abychom nepoložili server při startu na sandboxu
 }

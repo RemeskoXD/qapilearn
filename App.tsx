@@ -71,20 +71,12 @@ const App: React.FC = () => {
   // --- AUTH BOOT ---
   useEffect(() => {
     (async () => {
+      // Vždy začínáme na přihlašovací obrazovce (login) na / s vyčištěným hashem, aby se uživateli hned ukázal login na čisté adrese
       if (window.location.hash === '#db-check') {
-        setView('db-check');
-        setBootLoading(false);
-        return;
+        window.location.hash = '';
       }
-      try {
-        const me = await api.get<{ user: User }>('/auth/me');
-        setCurrentUser(me.user);
-        setView(me.user.role === 'admin' ? 'admin' : 'dashboard');
-      } catch {
-        setView('login');
-      } finally {
-        setBootLoading(false);
-      }
+      setView('login');
+      setBootLoading(false);
     })();
   }, []);
 

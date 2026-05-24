@@ -21,6 +21,7 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'tasks' | 'reviews'>('reviews');
   const [editingTask, setEditingTask] = useState<BonusTask | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
   // --- TASK LOGIC ---
   const handleSaveTask = () => {
@@ -31,7 +32,15 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
       notify('success', 'Uloženo', 'Úkol byl uložen.');
   };
   const handleDeleteTask = (id: string) => {
-      if(window.confirm('Smazat úkol?')) onUpdateTasks(bonusTasks.filter(t => t.id !== id));
+      setDeletingTaskId(id);
+  };
+
+  const confirmDeleteTask = () => {
+      if (deletingTaskId) {
+          onUpdateTasks(bonusTasks.filter(t => t.id !== deletingTaskId));
+          notify('success', 'Smazáno', 'Úkol byl odstraněn.');
+          setDeletingTaskId(null);
+      }
   };
 
   // --- REVIEW LOGIC ---
@@ -150,6 +159,31 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
                         <div className="flex justify-end gap-2 pt-4">
                             <button onClick={() => setEditingTask(null)} className="btn-secondary">Zrušit</button>
                             <button onClick={handleSaveTask} className="btn-primary bg-indigo-600 hover:bg-indigo-500">Uložit</button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* --- DELETE CONFIRMATION MODAL --- */}
+        <AnimatePresence>
+            {deletingTaskId && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
+                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                            <Trash2 size={24}/>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Opravdu smazat?</h3>
+                            <p className="text-sm text-slate-500 mt-1">Tato akce je nevratná.</p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setDeletingTaskId(null)} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                                Zrušit
+                            </button>
+                            <button onClick={confirmDeleteTask} className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/10 transition">
+                                Smazat
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>

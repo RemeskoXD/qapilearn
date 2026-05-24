@@ -19,6 +19,7 @@ import eventsRouter from './routes/events.js';
 import sessionsRouter from './routes/sessions.js';
 import levelsRouter from './routes/levels.js';
 import dbCheckRouter from './routes/db_check.js';
+import caflouRouter from './routes/caflou.js';
 import { ensureSeeded } from './lib/autoSeed.js';
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/events', eventsRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/levels', levelsRouter);
 app.use('/api/db-check', dbCheckRouter);
+app.use(caflouRouter);
 
 // Generické CRUD endpointy
 app.use('/api/courses', crudRouter(prisma.qhubCourse as any));

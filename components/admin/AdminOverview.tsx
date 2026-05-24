@@ -17,10 +17,11 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
   const activeUsers = allUsers.filter((u) => !u.isBanned);
   const bannedCount = allUsers.filter((u) => u.isBanned).length;
   const adminCount = allUsers.filter((u) => u.role === 'admin').length;
-  const premiumUsers = allUsers.filter((u) => u.role === 'premium').length;
-  const vipUsers = allUsers.filter((u) => u.role === 'vip').length;
-  const standardUsers = allUsers.filter((u) => u.role === 'student').length;
-  const expiredUsers = allUsers.filter((u) => u.role === 'expired').length;
+  const merchantUsers = allUsers.filter((u) => u.role === 'obchodnik').length;
+  const techUsers = allUsers.filter((u) => u.role === 'technik').length;
+  const teamLeaderUsers = allUsers.filter((u) => u.role === 'team_leader').length;
+  const lineUsers = allUsers.filter((u) => u.role === 'linka').length;
+  const otherUsers = allUsers.filter((u) => u.role === 'ostatni').length;
   
   const openTickets = tickets.filter((t) => t.status === 'open').length;
   const pendingSubmissions = submissions.filter((s) => s.status === 'pending').length;
@@ -65,10 +66,10 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
       label: 'Celkový Pokrok Hubu',
       value: `${(totalPlatformXP / 1000).toFixed(1)}k`,
       sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} XP na studenta`,
-      icon: <Zap size={22} className="text-rose-600" />,
-      color: 'border-slate-200 hover:border-rose-400 bg-linear-to-b from-white to-slate-50/50',
+      icon: <Zap size={22} className="text-brand-gold" />,
+      color: 'border-slate-200 hover:border-brand-gold bg-linear-to-b from-white to-slate-50/50',
       badge: 'Celkem XP',
-      badgeColor: 'bg-rose-50 text-rose-700 border-rose-100',
+      badgeColor: 'bg-indigo-50 text-brand-gold border-indigo-200',
     },
   ];
 
@@ -95,11 +96,12 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin': return <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit"><Shield size={10}/> Admin</span>;
-      case 'vip': return <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">👑 VIP</span>;
-      case 'premium': return <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">💎 Premium</span>;
-      case 'student': return <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">🎓 Student</span>;
-      case 'expired': return <span className="bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit"><Lock size={10}/> Expirován</span>;
-      default: return <span className="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full uppercase">{role}</span>;
+      case 'obchodnik': return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">💼 Obchodník</span>;
+      case 'technik': return <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">🔧 Technik</span>;
+      case 'team_leader': return <span className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">👑 Team Leader</span>;
+      case 'linka': return <span className="bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">📞 Linka</span>;
+      case 'ostatni': return <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1 w-fit">⚙️ Ostatní</span>;
+      default: return <span className="bg-slate-100 text-slate-650 text-[10px] px-2 py-0.5 rounded-full uppercase">{role}</span>;
     }
   };
 
@@ -108,7 +110,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
       {/* Top Welcome Title */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xs">
         <div>
-          <span className="text-xs font-bold text-rose-600 uppercase tracking-widest bg-rose-50 border border-rose-100 px-3.5 py-1 rounded-full">Centrální dispečink Hubu</span>
+          <span className="text-xs font-bold text-brand-gold uppercase tracking-widest bg-indigo-50 border border-brand-gold/30 px-3.5 py-1 rounded-full">Centrální dispečink Hubu</span>
           <h2 className="text-3xl font-black text-slate-900 mt-2 mb-1 tracking-tight">Vítejte v Administraci Q-Hubu</h2>
           <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">Spravujte studenty, kurzy, herní prvky, podepisujte certifikáty a odpovídejte na dotazy podpory z jednoho intuitivního místa.</p>
         </div>
@@ -188,11 +190,12 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
             <h3 className="font-bold text-slate-905 text-sm mb-4">Struktura Účtů</h3>
             <div className="space-y-3.5">
               {[
-                { label: 'Studenti', count: standardUsers, color: 'bg-slate-400', pct: allUsers.length ? (standardUsers / allUsers.length) * 100 : 0 },
-                { label: 'Premium', count: premiumUsers, color: 'bg-indigo-600', pct: allUsers.length ? (premiumUsers / allUsers.length) * 100 : 0 },
-                { label: 'VIP Členové', count: vipUsers, color: 'bg-amber-500', pct: allUsers.length ? (vipUsers / allUsers.length) * 100 : 0 },
+                { label: 'Obchodník', count: merchantUsers, color: 'bg-emerald-500', pct: allUsers.length ? (merchantUsers / allUsers.length) * 100 : 0 },
+                { label: 'Technik', count: techUsers, color: 'bg-indigo-600', pct: allUsers.length ? (techUsers / allUsers.length) * 100 : 0 },
+                { label: 'Team Leader', count: teamLeaderUsers, color: 'bg-amber-500', pct: allUsers.length ? (teamLeaderUsers / allUsers.length) * 100 : 0 },
+                { label: 'Linka', count: lineUsers, color: 'bg-violet-600', pct: allUsers.length ? (lineUsers / allUsers.length) * 100 : 0 },
+                { label: 'Ostatní', count: otherUsers, color: 'bg-slate-400', pct: allUsers.length ? (otherUsers / allUsers.length) * 100 : 0 },
                 { label: 'Administrátoři', count: adminCount, color: 'bg-red-500', pct: allUsers.length ? (adminCount / allUsers.length) * 100 : 0 },
-                { label: 'Expirovaní', count: expiredUsers, color: 'bg-rose-600', pct: allUsers.length ? (expiredUsers / allUsers.length) * 100 : 0 },
               ].map((roleRow, idx) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between text-xs font-semibold">

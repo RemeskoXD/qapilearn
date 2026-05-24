@@ -49,6 +49,7 @@ export function initialUserDefaults() {
   return {
     role: 'student',
     positions: [],
+    region: 'Karlovy Vary',
     level: 1,
     xp: 0,
     financialProfit: 0,

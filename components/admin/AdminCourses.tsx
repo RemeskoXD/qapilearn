@@ -218,6 +218,12 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [learningPointInput, setLearningPointInput] = useState('');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<{
+      type: 'course' | 'module' | 'lesson';
+      id: string;
+      extraId?: string;
+      name: string;
+  } | null>(null);
 
   // --- STATS CALCULATION ---
   const getCourseStats = (courseId: string) => {
@@ -240,7 +246,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
           title: 'Nový Kurz', 
           description: '', 
           image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800', 
-          level: 'premium', 
+          level: 'ostatni', 
           author: 'Q-Hub', 
           totalDuration: 0, 
           published: false, 
@@ -260,9 +266,9 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
   };
 
   const handleDeleteCourse = (id: string) => {
-      if(window.confirm('Opravdu smazat tento kurz? Akce je nevratná a smaže i progress studentů.')) {
-          onUpdateCourses(courses.filter(c => c.id !== id));
-          notify('success', 'Smazáno', 'Kurz byl odstraněn.');
+      const crs = courses.find(c => c.id === id);
+      if (crs) {
+          setDeletingItem({ type: 'course', id, name: crs.title });
       }
   };
 
@@ -289,9 +295,10 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
 
   const deleteModule = (moduleId: string) => {
       if (!currentCourse) return;
-      if (!window.confirm('Smazat modul a všechny jeho lekce?')) return;
-      setCurrentCourse({ ...currentCourse, modules: currentCourse.modules.filter(m => m.id !== moduleId) });
-      if (activeModuleId === moduleId) setActiveModuleId(null);
+      const mod = currentCourse.modules.find(m => m.id === moduleId);
+      if (mod) {
+          setDeletingItem({ type: 'module', id: moduleId, name: mod.title });
+      }
   };
 
   const addLesson = (moduleId: string) => {
@@ -315,12 +322,32 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
 
   const deleteLesson = (moduleId: string, lessonId: string) => {
       if (!currentCourse) return;
-      if (!window.confirm('Smazat lekci?')) return;
-      setCurrentCourse({
-          ...currentCourse,
-          modules: currentCourse.modules.map(m => m.id === moduleId ? { ...m, lessons: m.lessons.filter(l => l.id !== lessonId) } : m)
-      });
-      if (activeLessonId === lessonId) setActiveLessonId(null);
+      const mod = currentCourse.modules.find(m => m.id === moduleId);
+      const les = mod?.lessons.find(l => l.id === lessonId);
+      if (les) {
+          setDeletingItem({ type: 'lesson', id: moduleId, extraId: lessonId, name: les.title });
+      }
+  };
+
+  const confirmDeleteItem = () => {
+      if (!deletingItem) return;
+      
+      if (deletingItem.type === 'course') {
+          onUpdateCourses(courses.filter(c => c.id !== deletingItem.id));
+          notify('success', 'Smazáno', 'Kurz byl odstraněn.');
+      } else if (deletingItem.type === 'module') {
+          setCurrentCourse({ ...currentCourse, modules: currentCourse.modules.filter(m => m.id !== deletingItem.id) });
+          if (activeModuleId === deletingItem.id) setActiveModuleId(null);
+          notify('success', 'Smazáno', 'Sekce byla odstraněna.');
+      } else if (deletingItem.type === 'lesson') {
+          setCurrentCourse({
+              ...currentCourse,
+              modules: currentCourse.modules.map(m => m.id === deletingItem.id ? { ...m, lessons: m.lessons.filter(l => l.id !== deletingItem.extraId) } : m)
+          });
+          if (activeLessonId === deletingItem.extraId) setActiveLessonId(null);
+          notify('success', 'Smazáno', 'Lekce byla odstraněna.');
+      }
+      setDeletingItem(null);
   };
 
   // --- IMAGE EDITOR HANDLERS ---
@@ -428,7 +455,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
                                 <div><label className="label text-xs font-bold text-slate-500 uppercase">Název Kurzu</label><input value={currentCourse.title} onChange={e => setCurrentCourse({...currentCourse, title: e.target.value})} className="input py-2 bg-white border-slate-300"/></div>
                                 <div><label className="label text-xs font-bold text-slate-500 uppercase">Popis</label><textarea value={currentCourse.description} onChange={e => setCurrentCourse({...currentCourse, description: e.target.value})} className="input h-16 text-xs bg-white border-slate-300 py-1.5"/></div>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <div><label className="label text-xs font-bold text-slate-500 uppercase">Level</label><select value={currentCourse.level} onChange={e => setCurrentCourse({...currentCourse, level: e.target.value as any})} className="input py-1.5 bg-white border-slate-300 text-xs"><option value="student">Student</option><option value="premium">Premium</option><option value="vip">VIP</option></select></div>
+                                    <div><label className="label text-xs font-bold text-slate-500 uppercase">Level</label><select value={currentCourse.level} onChange={e => setCurrentCourse({...currentCourse, level: e.target.value as any})} className="input py-1.5 bg-white border-slate-300 text-xs"><option value="obchodnik">Obchodník</option><option value="technik">Technik</option><option value="team_leader">Team Leader</option><option value="linka">Linka</option><option value="ostatni">Ostatní</option><option value="admin">Admin</option></select></div>
                                     <div><label className="label text-xs font-bold text-slate-500 uppercase">XP Odměna</label><input type="number" value={currentCourse.xpReward} onChange={e => setCurrentCourse({...currentCourse, xpReward: parseInt(e.target.value) || 0})} className="input py-1.5 bg-white border-slate-300 text-xs text-center font-mono font-bold"/></div>
                                 </div>
                                 
@@ -877,6 +904,33 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
                 notify={notify}
             />
         )}
+
+        {/* --- DELETE CONFIRMATION MODAL --- */}
+        <AnimatePresence>
+            {deletingItem && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
+                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                            <Trash2 size={24}/>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Opravdu smazat?</h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Chystáte se smazat {deletingItem.type === 'course' ? 'kurz' : deletingItem.type === 'module' ? 'sekci' : 'lekci'} "{deletingItem.name}". Tato akce je nevratná.
+                            </p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setDeletingItem(null)} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                                Zrušit
+                            </button>
+                            <button onClick={confirmDeleteItem} className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/10 transition">
+                                Smazat
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     </div>
   );
 };

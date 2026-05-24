@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type UserRole = 'student' | 'premium' | 'vip' | 'support' | 'admin' | 'expired';
+export type UserRole = 'obchodnik' | 'technik' | 'team_leader' | 'linka' | 'ostatni' | 'admin';
 
 // Pracovní pozice v Q-Hub – uživatel jich může mít víc najednou.
 export type QhubPosition = 'technik' | 'prodejce' | 'team_leader' | 'linka' | 'ostatni';
@@ -292,6 +292,7 @@ export interface User {
   email: string;
   name?: string;
   phone?: string;
+  region?: string;
   role: UserRole;
   positions: QhubPosition[]; // pracovní pozice (multi-select)
   level: number;

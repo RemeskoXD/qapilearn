@@ -20,6 +20,7 @@ model QhubUser {
   passwordHash      String
   name              String?
   phone             String?
+  region            String   @default("Karlovy Vary")
   role              String   @default("student") // student | premium | vip | support | admin | expired
   positions         Json     @default("[]") // string[] – technik | prodejce | team_leader | linka | ostatni
   level             Int      @default(1)

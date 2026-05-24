@@ -14,6 +14,7 @@ interface AdminQuizzesProps {
 
 const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, notify }) => {
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
 
   const handleCreateQuiz = () => {
       const newQuiz: Quiz = { 
@@ -21,7 +22,7 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
           title: 'Nový Kvíz', 
           description: '', 
           image: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=800', 
-          level: 'student', 
+          level: 'ostatni', 
           xpReward: 100, 
           passingScore: 80, 
           questions: [], 
@@ -39,9 +40,14 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
   };
 
   const handleDeleteQuiz = (id: string) => {
-      if(window.confirm('Opravdu smazat tento kvíz?')) {
-          onUpdateQuizzes(quizzes.filter(q => q.id !== id));
+      setDeletingQuizId(id);
+  };
+
+  const confirmDeleteQuiz = () => {
+      if (deletingQuizId) {
+          onUpdateQuizzes(quizzes.filter(q => q.id !== deletingQuizId));
           notify('success', 'Smazáno', 'Kvíz byl odstraněn.');
+          setDeletingQuizId(null);
       }
   };
 
@@ -132,9 +138,12 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                                 <div>
                                     <label className="label">Level Přístupu</label>
                                     <select value={editingQuiz.level} onChange={e => setEditingQuiz({...editingQuiz, level: e.target.value as any})} className="input">
-                                        <option value="student">Student</option>
-                                        <option value="premium">Premium</option>
-                                        <option value="vip">VIP</option>
+                                        <option value="obchodnik">Obchodník</option>
+                                        <option value="technik">Technik</option>
+                                        <option value="team_leader">Team Leader</option>
+                                        <option value="linka">Linka</option>
+                                        <option value="ostatni">Ostatní</option>
+                                        <option value="admin">Admin</option>
                                     </select>
                                 </div>
                                 <div>
@@ -225,6 +234,31 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                                     ))}
                                 </div>
                             </div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* --- DELETE CONFIRMATION MODAL --- */}
+        <AnimatePresence>
+            {deletingQuizId && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
+                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                            <Trash2 size={24}/>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Opravdu smazat?</h3>
+                            <p className="text-sm text-slate-500 mt-1">Tato akce je nevratná.</p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setDeletingQuizId(null)} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                                Zrušit
+                            </button>
+                            <button onClick={confirmDeleteQuiz} className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/10 transition">
+                                Smazat
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>

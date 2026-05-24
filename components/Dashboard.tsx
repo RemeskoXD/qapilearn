@@ -10,6 +10,18 @@ import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, C
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
 
+const CZECH_REGIONS = [
+  'Karlovy Vary',
+  'Plzeň',
+  'Ostrava',
+  'Zlín',
+  'Praha',
+  'Brno',
+  'České Budějovice',
+  'Liberec',
+  'Hradec Králové'
+];
+
 // Helper to render basic markdown for course lessons with full styling support
 const renderMarkdown = (text: string) => {
     if (!text) return null;
@@ -179,6 +191,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [activeTab, setActiveTab] = useState(isExpired ? 'settings' : 'dashboard');
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [leaderboardRegion, setLeaderboardRegion] = useState('all');
+  const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
+  const [hoveredXpIndex, setHoveredXpIndex] = useState<number | null>(null);
   
   // Quiz Player State (Standalone)
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -439,20 +454,87 @@ const Dashboard: React.FC<DashboardProps> = ({
       return `${line} L ${width},${height} L 0,${height} Z`;
   };
 
+  const getXpChartData = () => {
+      const points: { label: string; xp: number; desc: string }[] = [];
+      const baseDate = user.joinDate ? new Date(user.joinDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      points.push({
+          label: baseDate.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }),
+          xp: 50,
+          desc: 'Založení účtu'
+      });
+
+      let currentSum = 50;
+
+      const progress = user.courseProgress || [];
+      progress.forEach((p, i) => {
+          if (p.isCompleted) {
+              const date = new Date(baseDate.getTime() + (i + 1) * 3 * 24 * 60 * 60 * 1000);
+              currentSum += 150;
+              points.push({
+                  label: date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }),
+                  xp: Math.min(user.xp, currentSum),
+                  desc: 'Úspěšné dokončení kurzu'
+              });
+          }
+      });
+
+      const quizHist = user.quizHistory || [];
+      quizHist.forEach((q, i) => {
+          if (q.passed) {
+              const date = new Date(baseDate.getTime() + (i + 1) * 4 * 24 * 60 * 60 * 1000);
+              currentSum += 100;
+              points.push({
+                  label: date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }),
+                  xp: Math.min(user.xp, currentSum),
+                  desc: 'Složení odborného testu'
+              });
+          }
+      });
+
+      points.sort((a, b) => a.xp - b.xp);
+
+      // Ensure today's active score is final
+      points.push({
+          label: new Date().toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }),
+          xp: user.xp,
+          desc: 'Dnešní skóre v Q-Hubu'
+      });
+
+      return points;
+  };
+
+  const xpChartData = getXpChartData();
+  const maxXpVal = xpChartData.length > 0 ? Math.max(...xpChartData.map(d => d.xp)) * 1.15 : 1000;
+
+  const createXpGraphPath = (width: number, height: number) => {
+      if (xpChartData.length < 2) return "";
+      const stepX = width / (xpChartData.length - 1);
+      const points = xpChartData.map((d, i) => {
+          const x = i * stepX;
+          const y = height - (d.xp / maxXpVal) * height;
+          return `${x},${y}`;
+      });
+      return `M ${points.join(' L ')}`;
+  };
+
+  const createXpFillPath = (width: number, height: number) => {
+      if (xpChartData.length < 2) return "";
+      const line = createXpGraphPath(width, height);
+      return `${line} L ${width},${height} L 0,${height} Z`;
+  };
+
   // ... (Sidebar links and logic remain same) ...
   const sidebarLinks = [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", id: 'dashboard' },
-    { icon: <MessageCircle size={20} />, label: "Komunita", id: 'community' },
     { icon: <Trophy size={20} />, label: "Žebříček", id: 'leaderboard' },
     { icon: <BookOpen size={20} />, label: "Kurzy", id: 'courses' },
-    { icon: <BarChart2 size={20} />, label: "Nástroje", id: 'tools' }, // New Tool Link
     { icon: <Zap size={20} />, label: "Výzvy", id: 'challenges' },
     { icon: <Brain size={20} />, label: "Kvízy", id: 'quizzes' },
     { icon: <Calendar size={20} />, label: "Akce & Webináře", id: 'events' },
     { icon: <Users size={20} />, label: "Mentoring", id: 'mentoring' },
     { icon: <HelpCircle size={20} />, label: "Podpora", id: 'support' },
-    { icon: <FileText size={20} />, label: "E-booky", id: 'ebooks' },
-    { icon: <Film size={20} />, label: "Streamy", id: 'streams' },
+    { icon: <FileText size={20} />, label: "Vzdělávání o obchodě", id: 'ebooks' },
     { icon: <Gift size={20} />, label: "Bonusové úkoly", id: 'bonus' },
     { icon: <Award size={20} />, label: "Certifikáty", id: 'certificates' },
   ];
@@ -582,9 +664,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
       return resolvedUsers
           .filter(u => u.isPublicProfile || u.id === user.id)
+          .filter(u => leaderboardRegion === 'all' || u.region === leaderboardRegion)
           .sort((a, b) => b.xp - a.xp)
           .slice(0, 20);
-  }, [allUsers, user]);
+  }, [allUsers, user, leaderboardRegion]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
@@ -640,14 +723,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-lg font-bold">{user.email.charAt(0).toUpperCase()}</div>
               )}
               <div className="flex-1 overflow-hidden">
-                 <p className="text-sm font-bold truncate text-slate-900">{user.name || user.email}</p>
-                 <p className="text-xs text-indigo-600 flex items-center gap-1 uppercase font-bold">{user.role === 'admin' ? <><Shield size={10} /> ADMIN</> : <><Gem size={10}/> {user.role === 'expired' ? 'EXPIRED' : user.role}</>}</p>
+                 <p className="text-sm font-bold truncate text-slate-900 leading-tight">{user.name || user.email}</p>
+                 <p className="text-[10px] text-slate-500 font-semibold flex items-center gap-0.5 mt-0.5">
+                     <span>📍 {user.region || 'Karlovy Vary'}</span>
+                 </p>
+                 <p className="text-xs text-indigo-600 flex items-center gap-1 uppercase font-bold mt-0.5">{user.role === 'admin' ? <><Shield size={10} /> ADMIN</> : <><Gem size={10}/> {user.role === 'expired' ? 'EXPIRED' : user.role}</>}</p>
                  <div className="mt-1 space-y-1">
                     <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 leading-none">
                         <span className="flex items-center gap-0.5 font-bold font-mono text-slate-700">
                             <Zap size={10} className="text-yellow-500" fill="currentColor" /> {user.xp?.toLocaleString() || 0} XP
                         </span>
-                        <span className="font-mono text-[10px] text-indigo-600 font-bold">Lvl {user.level || 1}</span>
+                        <span className="text-[10px] text-indigo-600 font-extrabold bg-indigo-50 border border-indigo-150 px-1.5 py-0.5 rounded leading-none">
+                            {user.level === 2 ? 'Senior' : user.level >= 3 ? 'Expert' : 'Junior'}
+                        </span>
                     </div>
                     {nextLevelRequirement && (
                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
@@ -670,9 +758,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Vítej zpět, {user.name?.split(' ')[0] || 'Studente'} <span className="text-2xl">👋</span></h2>
                   {nextLevelRequirement && !isExpired && (
                       <div className="flex items-center gap-3 mt-1 hidden md:flex">
-                          <div className="text-xs font-mono text-yellow-500 font-bold">Lvl {user.level}</div>
+                          <div className="text-xs font-mono text-indigo-600 font-bold bg-indigo-50 border border-indigo-150 px-1.5 py-0.5 rounded">{user.level === 2 ? 'Senior' : user.level >= 3 ? 'Expert' : 'Junior'}</div>
                           <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden relative group">
-                              <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500" style={{width: `${Math.min(100, (user.xp / nextLevelRequirement.xpRequired) * 100)}%`}}></div>
+                              <div className="h-full bg-indigo-500" style={{width: `${Math.min(100, (user.xp / nextLevelRequirement.xpRequired) * 100)}%`}}></div>
                           </div>
                           <div className="text-xs font-mono text-slate-500">{nextLevelRequirement.title}</div>
                       </div>
@@ -762,33 +850,271 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* --- DASHBOARD TAB --- */}
                 {activeTab === 'dashboard' && (
                    <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-                      {/* ... (Existing dashboard content) ... */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                         <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-3xl p-8 col-span-1 md:col-span-2 relative overflow-hidden shadow-xl text-white">
-                            <h3 className="text-2xl font-bold text-white mb-2">Pokračovat v učení 🚀</h3>
-                            <p className="text-indigo-100 mb-6 max-w-sm">Máte rozpracované kurzy. Každý krok se počítá na cestě k úspěchu.</p>
-                            <button onClick={() => setActiveTab('courses')} className="px-6 py-3 bg-white/15 hover:bg-white/25 backdrop-blur-md rounded-xl text-white font-bold transition border border-white/20 flex items-center gap-2">
-                                Přejít na kurzy <ArrowRight size={18}/>
-                            </button>
-                            <BookOpen size={160} className="absolute -right-12 -bottom-12 opacity-10 rotate-12" />
+                      {/* Brand Header */}
+                      <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                         <div className="space-y-2 z-10 w-full md:w-3/4 text-left">
+                            <h2 className="text-3xl font-extrabold text-slate-950 tracking-tight">
+                               Ahoj, {user.name || user.email}! 👋
+                            </h2>
+                            <p className="text-slate-500 text-sm max-w-xl">
+                               Vítej zpět na tvém herním panelu Q-Hub. Zde sleduješ svůj posun v dovednostech a můžeš okamžitě rozvíjet svou profesní dráhu.
+                            </p>
+                            
+                            {/* Level summary badges */}
+                            <div className="flex flex-wrap items-center gap-2 mt-4">
+                               <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                                  <Crown size={14} className="text-brand-gold"/> Level {user.level}
+                               </span>
+                               <span className="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                                  🏆 {user.xp} XP Celkem
+                               </span>
+                               {user.xpBoostUntil && new Date(user.xpBoostUntil) > new Date() && (
+                                  <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-xl animate-pulse">
+                                     💡 2x XP Boost!
+                                  </span>
+                               )}
+                            </div>
                          </div>
-                         <div className="bg-white border border-slate-200 rounded-3xl p-6 relative overflow-hidden group cursor-pointer" onClick={() => setActiveTab('certificates')}>
-                            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition"><Award size={60}/></div>
-                            <h4 className="text-slate-500 text-xs font-bold uppercase mb-4 tracking-wider">Moje Certifikáty</h4>
-                            <div className="text-4xl font-black text-slate-900 mb-1">{user.certificates.length}</div>
-                            <p className="text-xs text-slate-500">Získané odborné certifikace</p>
-                         </div>
-                         <div className="bg-white border border-slate-200 rounded-3xl p-6 relative overflow-hidden group cursor-pointer" onClick={() => setActiveTab('challenges')}>
-                            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition"><Zap size={60}/></div>
-                            <h4 className="text-slate-500 text-xs font-bold uppercase mb-4 tracking-wider">Denní Výzvy</h4>
-                            <div className="text-4xl font-black text-slate-900 mb-1">{challenges.length}</div>
-                            <p className="text-xs text-slate-500">Aktivních výzev k plnění</p>
+                         
+                         {/* Next Level progress circular gauge */}
+                         <div className="z-10 bg-slate-50/60 rounded-3xl p-4 border border-slate-100 flex items-center gap-4 max-w-sm w-full md:w-auto">
+                            {nextLevelRequirement ? (
+                               <>
+                                  <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
+                                     <svg className="absolute w-full h-full transform -rotate-90">
+                                        <circle cx="32" cy="32" r="28" stroke="#EDDEC9" strokeWidth="3" fill="transparent" />
+                                        <circle cx="32" cy="32" r="28" stroke="#D4AF37" strokeWidth="3.5" strokeDasharray={`${Math.PI * 2 * 28}`} strokeDashoffset={`${Math.PI * 2 * 28 * (1 - Math.min(1, user.xp / nextLevelRequirement.xpRequired))}`} fill="transparent" strokeLinecap="round" className="transition-all duration-1000" />
+                                     </svg>
+                                     <span className="text-xs font-black text-slate-900">{Math.round((user.xp / nextLevelRequirement.xpRequired) * 100)}%</span>
+                                  </div>
+                                  <div className="text-left">
+                                     <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Další Level</h5>
+                                     <p className="text-sm font-black text-slate-900 leading-tight">Level {nextLevelRequirement.level} ({nextLevelRequirement.title})</p>
+                                     <p className="text-[10.5px] text-slate-500 mt-0.5">Potřebuješ ještě {nextLevelRequirement.xpRequired - user.xp} XP</p>
+                                  </div>
+                               </>
+                            ) : (
+                               <div className="text-left">
+                                  <span className="text-xs font-bold text-slate-400">Dosáhl/a jsi maximálního levelu! 👑</span>
+                               </div>
+                            )}
                          </div>
                       </div>
 
+                      {/* Prominent Quick-Links Grid: KURZY, MENTORING, LEADERBOARD */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         
+                         {/* Card 1: KURZY */}
+                         <div className="bg-white border border-slate-150 hover:border-indigo-150 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-6 text-slate-200/20 group-hover:text-amber-500/10 group-hover:rotate-6 transition duration-300"><BookOpen size={90}/></div>
+                            <div className="space-y-4">
+                               <div className="w-12 h-12 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded-2xl flex items-center justify-center">
+                                  <BookOpen size={22} className="text-indigo-650" />
+                               </div>
+                               <div className="text-left">
+                                  <h3 className="text-lg font-bold text-slate-950">Kurzy & Výuka</h3>
+                                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                     Rozvíjejte své prodejní i technické schopnosti. Certifikované kurzy s testy a úkoly.
+                                  </p>
+                                </div>
+                                <div className="flex gap-4 text-xs font-bold pt-1 border-t border-slate-100 justify-start">
+                                   <div className="text-left">
+                                      <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Aktivní</span>
+                                      <span className="text-slate-800 text-sm font-black">{courses.length} kurzy</span>
+                                   </div>
+                                   <div className="text-left">
+                                      <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Hotovo</span>
+                                      <span className="text-indigo-650 text-sm font-black">
+                                         {user.courseProgress.filter(p => p.isCompleted).length}
+                                      </span>
+                                   </div>
+                                </div>
+                             </div>
+                             <button onClick={() => setActiveTab('courses')} className="mt-5 w-full py-3 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                Studovat lekce <ArrowRight size={14}/>
+                             </button>
+                          </div>
+
+                          {/* Card 2: MENTORING */}
+                          <div className="bg-white border border-slate-150 hover:border-indigo-150 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                             <div className="absolute top-0 right-0 p-6 text-slate-200/20 group-hover:text-amber-500/10 group-hover:rotate-6 transition duration-300"><UsersIcon size={90}/></div>
+                             <div className="space-y-4">
+                                <div className="w-12 h-12 bg-indigo-50 text-rose-700 border border-indigo-150 rounded-2xl flex items-center justify-center">
+                                   <UsersIcon size={22} className="text-indigo-650" />
+                                </div>
+                                <div className="text-left">
+                                   <h3 className="text-lg font-bold text-slate-950">Mentoring</h3>
+                                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                      Rezervujte si individuální konzultace s lídry oboru, získejte zpětnou vazbu a plán.
+                                   </p>
+                                </div>
+                                <div className="flex gap-4 text-xs font-bold pt-1 border-t border-slate-100 justify-start">
+                                   <div className="text-left">
+                                      <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Lektoři</span>
+                                      <span className="text-slate-800 text-sm font-black">{mentors.length} k dispozici</span>
+                                   </div>
+                                   <div className="text-left">
+                                      <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Rezervace</span>
+                                      <span className="text-indigo-650 text-sm font-black">
+                                         {bookings.filter(b => b.userId === user.id).length} sezení
+                                      </span>
+                                   </div>
+                                </div>
+                             </div>
+                             <button onClick={() => setActiveTab('mentoring')} className="mt-5 w-full py-3 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                Rezervovat mentoring <ArrowRight size={14}/>
+                             </button>
+                          </div>
+
+                          {/* Card 3: LEADERBOARD / ŽEBŘÍČEK */}
+                          <div className="bg-white border border-slate-150 hover:border-indigo-150 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                             <div className="absolute top-0 right-0 p-6 text-slate-200/20 group-hover:text-amber-500/10 group-hover:rotate-6 transition duration-300"><Trophy size={90}/></div>
+                             <div className="space-y-4">
+                                <div className="w-12 h-12 bg-amber-50 text-amber-705 border border-amber-100 rounded-2xl flex items-center justify-center">
+                                   <Trophy size={22} className="text-brand-gold" />
+                                </div>
+                                <div className="text-left">
+                                   <h3 className="text-lg font-bold text-slate-950">Síň slávy & Žebříček</h3>
+                                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                      Soutěžte s ostatními kolegy, sledujte finanční zisk a celkové postavení v týmu.
+                                   </p>
+                                </div>
+                                <div className="flex gap-4 text-xs font-bold pt-1 border-t border-slate-100 justify-start">
+                                   <div className="text-left">
+                                      <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Celkový zisk</span>
+                                      <span className="text-emerald-700 text-sm font-black">{(user.financialProfit ?? 0).toLocaleString()} Kč</span>
+                                   </div>
+                                   <div className="text-left">
+                                      <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Region</span>
+                                      <span className="text-slate-800 text-sm font-black capitalize">{user.region || 'Celá ČR'}</span>
+                                   </div>
+                                </div>
+                             </div>
+                             <button onClick={() => setActiveTab('leaderboard')} className="mt-5 w-full py-3 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                Zobrazit žebříček <ArrowRight size={14}/>
+                             </button>
+                          </div>
+
+                       </div>
+
+                       {/* --- XP PROGRESS CHART / GRAF --- */}
+                       <div className="bg-white border border-slate-150 rounded-3xl p-6 md:p-8 shadow-sm">
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                             <div className="text-left">
+                                <h3 className="text-lg font-extrabold text-slate-950 flex items-center gap-2">
+                                   <TrendingUp size={20} className="text-brand-gold" />
+                                   Křivka profesního růstu (XP Body)
+                                 </h3>
+                                 <p className="text-xs text-slate-500 mt-0.5">Sledujte v reálném čase, jak se vaše body vyvíjí za odvedenou práci, Caflou úkoly a studijní moduly.</p>
+                             </div>
+                             <div className="bg-indigo-50 border border-indigo-150 rounded-xl px-4 py-2 text-xs font-bold text-indigo-700 flex items-center gap-1.5 shadow-sm">
+                                🌱 Tempo růstu: <span className="font-mono text-slate-900">{user.xp} XP</span>
+                             </div>
+                          </div>
+
+                          {/* SVG Graph Drawing */}
+                          {xpChartData.length < 2 ? (
+                             <div className="py-12 text-center text-slate-400">
+                                Chybí dostatek bodů pro vykreslení růstové křivky. Získejte svá první XP!
+                             </div>
+                          ) : (
+                             <div className="relative pt-4">
+                                {/* Highlight point description box */}
+                                <AnimatePresence>
+                                   {hoveredXpIndex !== null && xpChartData[hoveredXpIndex] && (
+                                      <motion.div 
+                                         initial={{ opacity: 0, scale: 0.95, y: -5 }} 
+                                         animate={{ opacity: 1, scale: 1, y: 0 }} 
+                                         exit={{ opacity: 0, scale: 0.95 }}
+                                         className="absolute top-4 right-4 bg-slate-900 text-white rounded-2xl p-4 shadow-xl border border-slate-800 max-w-xs z-10 text-xs text-left"
+                                      >
+                                         <div className="font-extrabold text-brand-gold mb-1 text-[11px] uppercase tracking-wider">Milník v Q-Hub</div>
+                                         <p className="font-semibold text-slate-100">{xpChartData[hoveredXpIndex].desc}</p>
+                                         <div className="flex justify-between items-center mt-3 pt-2 border-t border-white/10 text-[10px] text-slate-400 font-mono">
+                                            <span>Datum: {xpChartData[hoveredXpIndex].label}</span>
+                                            <span className="text-brand-gold font-bold">+{xpChartData[hoveredXpIndex].xp} XP</span>
+                                         </div>
+                                      </motion.div>
+                                   )}
+                                </AnimatePresence>
+
+                                <div className="w-full h-64 overflow-hidden rounded-2xl bg-slate-50/50 border border-slate-100 relative">
+                                   <svg className="w-full h-full" viewBox="0 0 800 240" preserveAspectRatio="none">
+                                      <defs>
+                                         <linearGradient id="xpAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.2"/>
+                                            <stop offset="100%" stopColor="#E6EFFE" stopOpacity="0.0"/>
+                                         </linearGradient>
+                                      </defs>
+
+                                      {/* Background grid lines */}
+                                      <line x1="0" y1="60" x2="800" y2="60" stroke="#EDDEC9" strokeWidth="1" strokeDasharray="4 4" />
+                                      <line x1="0" y1="120" x2="800" y2="120" stroke="#EDDEC9" strokeWidth="1" strokeDasharray="4 4" />
+                                      <line x1="0" y1="180" x2="800" y2="180" stroke="#EDDEC9" strokeWidth="1" strokeDasharray="4 4" />
+
+                                      {/* Filled Area */}
+                                      <path 
+                                         d={createXpFillPath(800, 240)} 
+                                         fill="url(#xpAreaGradient)"
+                                         className="transition-all duration-300"
+                                      />
+
+                                      {/* Spline Border */}
+                                      <path 
+                                         d={createXpGraphPath(800, 240)} 
+                                         fill="none" 
+                                         stroke="#D4AF37" 
+                                         strokeWidth="3.5" 
+                                         strokeLinecap="round"
+                                         className="transition-all duration-300"
+                                      />
+
+                                      {/* Interactive Hover Nodes */}
+                                      {xpChartData.map((d, idx) => {
+                                         const stepX = 800 / (xpChartData.length - 1);
+                                         const cx = idx * stepX;
+                                         const cy = 240 - (d.xp / maxXpVal) * 240;
+
+                                         return (
+                                            <g key={idx} className="cursor-pointer group">
+                                               {/* Invisible larger hover circle */}
+                                               <circle 
+                                                  cx={cx} 
+                                                  cy={cy} 
+                                                  r="18" 
+                                                  fill="transparent"
+                                                  onMouseEnter={() => setHoveredXpIndex(idx)}
+                                                  onMouseLeave={() => setHoveredXpIndex(null)}
+                                               />
+                                               {/* Glowing dot effect */}
+                                               <circle 
+                                                  cx={cx} 
+                                                  cy={cy} 
+                                                  r={hoveredXpIndex === idx ? "8" : "5"} 
+                                                  fill={hoveredXpIndex === idx ? "#0C1532" : "#D4AF37"}
+                                                  stroke="white"
+                                                  strokeWidth="2.5"
+                                                  className="transition-all duration-200"
+                                               />
+                                            </g>
+                                         );
+                                      })}
+                                   </svg>
+                                </div>
+
+                                {/* Legend labels */}
+                                <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 font-mono mt-3 px-1">
+                                   <span>Zahájení studia ({xpChartData[0]?.label})</span>
+                                   <span className="text-slate-400">Průběh</span>
+                                   <span>Dnes ({xpChartData[xpChartData.length - 1]?.label})</span>
+                                </div>
+                             </div>
+                          )}
+                       </div>
+
                       {/* Personal Admin Message */}
                       {user.dashboardMessage && user.dashboardMessage.active && user.dashboardMessage.text && (
-                          <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-3xl p-8 relative overflow-hidden shadow-sm">
+                          <div className="bg-gradient-to-r from-indigo-50 to-white border border-indigo-200 rounded-3xl p-8 relative overflow-hidden shadow-sm">
                               <div className="absolute top-0 right-0 p-8 opacity-10 text-indigo-300"><MessageSquare size={120} /></div>
                               <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-700">
                                   <Info size={24}/> Zpráva od vedení
@@ -1568,7 +1894,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     const mentorObj = mentors.find(m => m.id === selectedMentor);
                                     if (!mentorObj) return null;
                                     return (
-                                        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-6 space-y-4 animate-fade-in relative">
+                                        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-200 rounded-2xl p-6 space-y-4 animate-fade-in relative">
                                             <button 
                                                 onClick={() => setSelectedMentor(null)} 
                                                 className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
@@ -1874,10 +2200,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* --- E-BOOKS TAB --- */}
                 {activeTab === 'ebooks' && (
-                    <div className="space-y-8 animate-fade-in">
+                    <div className="space-y-8 animate-fade-in font-sans">
                         <div>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Knihovna E-booků & Návodů</h2>
-                            <p className="text-slate-500">Klíčové dokumenty, check-listy a prodejní příručky připravené ke stažení.</p>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Vzdělávání o obchodě Kvapy</h2>
+                            <p className="text-slate-500">Klíčové rozvoje dovedností, prodejní příručky a interní video školení společnosti Kvapy.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1893,7 +2219,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         </div>
                                         <div className="p-6 space-y-4">
                                             <div>
-                                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block font-mono">{ebook.author || 'Q-HUB autoři'}</span>
+                                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block font-mono">{ebook.author || 'Módní experti Kvapy'}</span>
                                                 <h3 className="font-bold text-slate-900 text-lg mt-0.5">{ebook.title}</h3>
                                             </div>
                                             <p className="text-slate-500 text-xs leading-relaxed line-clamp-3">{ebook.description}</p>
@@ -1912,7 +2238,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             }}
                                             className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2"
                                         >
-                                            <Download size={14}/> Stáhnout Elektronickou Knihu
+                                            <Download size={14}/> Stáhnout Prodejní Příručku
                                         </button>
                                     </div>
                                 </div>
@@ -1923,128 +2249,114 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 </div>
                             )}
                         </div>
-                    </div>
-                )}
 
-                {/* --- LATEST STREAMS TAB --- */}
-                {activeTab === 'streams' && (
-                    <div className="space-y-8 animate-fade-in">
-                        <div>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Exkluzivní Livestreamy & Archiv</h2>
-                            <p className="text-slate-500">Sledujte právě probíhající živé přenosy nebo si pusťte záznamy z předchozích mastermind hovorů.</p>
-                        </div>
+                        {/* Video Training Section */}
+                        <div className="pt-8 border-t border-slate-200">
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-bold text-slate-900 mb-1">📺 Video nahrávky prodejních školení & webinářů</h2>
+                                <p className="text-slate-500 text-sm">Záznamy z expertních mastermind workshopů společnosti Kvapy.</p>
+                            </div>
 
-                        {/* Interactive Cinema Player Header */}
-                        {selectedStreamId && (() => {
-                            const streamObj = streams.find(s => s.id === selectedStreamId);
-                            if (!streamObj) return null;
-                            return (
-                                <div className="bg-slate-950 rounded-3xl overflow-hidden p-6 text-white space-y-4 shadow-2xl animate-fade-in">
-                                    <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
-                                            <span className="text-xs tracking-wider uppercase font-black text-red-500">Kino Přehrávač</span>
-                                        </div>
-                                        <button 
-                                            onClick={() => setSelectedStreamId(null)}
-                                            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-xs transition"
-                                        >
-                                            Zavřít přehrávač ❌
-                                        </button>
-                                    </div>
-
-                                    <div className="relative aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-white/5">
-                                        <iframe 
-                                            src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                                            title={streamObj.title}
-                                            className="absolute inset-0 w-full h-full"
-                                            allow="autoplay; encrypted-media"
-                                            allowFullScreen
-                                        ></iframe>
-                                    </div>
-
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                        <div>
-                                            <h3 className="font-bold text-lg">{streamObj.title}</h3>
-                                            <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
-                                                <span>Probíhá prezenční hodnocení</span>
-                                                <span className="text-red-400 font-bold flex items-center gap-1 font-mono">
-                                                    ● {streamObj.viewers?.toLocaleString() || '152'} sledujících
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })()}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {streams && streams.length > 0 ? streams.map(stream => {
-                                const isLive = stream.status === 'live';
-                                const isUpcoming = stream.status === 'upcoming';
-                                return (
-                                    <div key={stream.id} className={`bg-white border rounded-3xl overflow-hidden shadow-sm hover:border-indigo-300 transition flex flex-col justify-between ${isLive ? 'border-red-400 ring-2 ring-red-500/15' : 'border-slate-200'}`}>
-                                        <div>
-                                            <div className="h-44 bg-slate-900 relative flex items-center justify-center">
-                                                {/* Simulated thumbnail */}
-                                                <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950 flex flex-col justify-between p-4">
-                                                    <div className="flex justify-between items-start">
-                                                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest text-white font-mono ${
-                                                            isLive ? 'bg-red-600 animate-pulse' :
-                                                            isUpcoming ? 'bg-amber-600' :
-                                                            'bg-slate-700'
-                                                        }`}>
-                                                            {isLive ? '🔴 LIVE' : isUpcoming ? '📅 PŘIPRAVENO' : '🔒 ZÁZNAM'}
-                                                        </span>
-                                                        {isLive && (
-                                                            <span className="bg-black/50 text-white/90 text-[10px] px-2 py-0.5 rounded font-mono font-bold">
-                                                                👁️ {stream.viewers}
-                                                            </span>
-                                                        )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {[
+                                  {
+                                    id: 'yt-1',
+                                    title: 'Jak úspěšně vyjednávat se zákazníky: Psychologie obchodu',
+                                    description: 'Klíčové principy překonávání námitek, psychologie tlaku a správné argumentace výhod na prodejní schůzce.',
+                                    duration: '18:42',
+                                    youtubeId: 'W3uQzFmI_t0',
+                                    category: 'Prodejní dovednosti',
+                                    logo: '🎯'
+                                  },
+                                  {
+                                    id: 'yt-2',
+                                    title: 'Mistry v uzavírání obchodů (Closing techniky)',
+                                    description: 'Pokročilé vědomé i nevědomé techniky closingu pro úspěšné dotažení kontraktu z oboru distribuce.',
+                                    duration: '24:15',
+                                    youtubeId: 'b_Vp6q1n2oE',
+                                    category: 'Uzavírání kontraktů',
+                                    logo: '🤝'
+                                  },
+                                  {
+                                    id: 'yt-3',
+                                    title: 'Optimalizace tras a plánování schůzek v regionu',
+                                    description: 'Jak zorganizovat svůj pracovní čas, ujet méně kilometrů, navštívit více partnerů a zefektivnit návštěvy poboček.',
+                                    duration: '15:30',
+                                    youtubeId: 'L_x6q3gY3oI',
+                                    category: 'Efektivní organizace',
+                                    logo: '📈'
+                                  }
+                                ].map(video => (
+                                    <div key={video.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
+                                        <div className="p-6 space-y-4">
+                                            <div className="h-40 bg-slate-900 rounded-2xl relative flex items-center justify-center text-5xl">
+                                                <span>{video.logo}</span>
+                                                <button 
+                                                    onClick={() => setActiveYoutubeId(video.youtubeId)} 
+                                                    className="absolute inset-0 bg-black/40 hover:bg-black/20 flex items-center justify-center rounded-2xl group transition"
+                                                >
+                                                    <div className="w-14 h-14 bg-rose-600 hover:bg-rose-500 rounded-full flex items-center justify-center text-white transition transform group-hover:scale-110 shadow-lg shadow-rose-600/30">
+                                                        <Play size={24} className="ml-1 fill-white" />
                                                     </div>
-                                                    
-                                                    <div className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center mx-auto text-white backdrop-blur-sm self-center cursor-pointer transition">
-                                                        <Play size={20} className="ml-0.5" fill="currentColor"/>
-                                                    </div>
-
-                                                    <div className="text-[10px] text-white/50 tracking-wider font-semibold">Q-HUB TV BROADCAST</div>
+                                                </button>
+                                                <div className="absolute bottom-3 right-3 bg-black/80 text-white text-[10px] font-bold px-2 py-1 rounded font-mono">
+                                                    {video.duration}
                                                 </div>
                                             </div>
-
-                                            <div className="p-5 space-y-2">
-                                                <h3 className="font-bold text-slate-950 text-base line-clamp-2">{stream.title}</h3>
-                                                <div className="text-[10px] font-mono text-slate-500">
-                                                    Vysílání systému: {isLive ? 'Právě běží online v hubu' : 'Archivováno pro výukové účely'}
-                                                </div>
+                                            <div>
+                                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{video.category}</span>
+                                                <h3 className="font-bold text-slate-900 text-base mt-1 line-clamp-2">{video.title}</h3>
+                                                <p className="text-slate-500 text-xs leading-relaxed mt-2 line-clamp-3">{video.description}</p>
                                             </div>
                                         </div>
-
-                                        <div className="p-5 pt-0">
-                                            <button
-                                                onClick={() => {
-                                                    if (isUpcoming) {
-                                                        notify('warning', 'Budoucí stream', 'Vysílání ještě nebylo spuštěno. Počkejte na plánovaný termín.');
-                                                        return;
-                                                    }
-                                                    setSelectedStreamId(stream.id);
-                                                    notify('success', 'Spuštěn přenos', `Načítání přenosu: ${stream.title}`);
-                                                }}
-                                                className={`w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition ${isLive ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                                        <div className="p-6 pt-0">
+                                            <button 
+                                                onClick={() => setActiveYoutubeId(video.youtubeId)} 
+                                                className="w-full py-2.5 bg-indigo-50 border border-indigo-150 hover:bg-indigo-100/70 text-indigo-600 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2"
                                             >
-                                                {isLive ? 'Spustit Živé Vysílání 🔴' : isUpcoming ? 'Plánované vysílání' : 'Spustit ze Záznamu 🔒'}
+                                                <Play size={14}/> Spustit Video Školení
                                             </button>
                                         </div>
                                     </div>
-                                );
-                            }) : (
-                                <div className="col-span-full text-center py-20 text-slate-500">
-                                    <Film size={48} className="mx-auto mb-4 opacity-30"/>
-                                    <p>Žádný aktivní přenos ani videonahrávky v databázi.</p>
-                                </div>
-                            )}
+                                ))}
+                            </div>
                         </div>
+
+                        {/* Interactive embedded player overlay for YouTube */}
+                        {activeYoutubeId && (
+                            <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+                                <div className="bg-black/95 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
+                                    <div className="p-4 bg-slate-900 flex justify-between items-center text-white border-b border-slate-800">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-rose-500 flex items-center gap-1.5 font-mono">
+                                            <span className="w-2.5 h-2.5 bg-rose-600 rounded-full animate-ping"></span>
+                                            Přehrávač Školení Kvapy
+                                        </span>
+                                        <button 
+                                            onClick={() => setActiveYoutubeId(null)} 
+                                            className="p-1.5 hover:bg-slate-800 rounded-full text-white/70 hover:text-white transition"
+                                        >
+                                            <X size={20}/>
+                                        </button>
+                                    </div>
+                                    <div className="relative aspect-video w-full">
+                                        <iframe 
+                                            width="100%" 
+                                            height="100%" 
+                                            src={`https://www.youtube.com/embed/${activeYoutubeId}?autoplay=1`} 
+                                            title="YouTube video player" 
+                                            frameBorder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                            allowFullScreen
+                                            className="absolute inset-0 w-full h-full"
+                                        ></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
+
+
 
                 {/* --- BONUS TASKS TAB --- */}
                 {activeTab === 'bonus' && (
@@ -2177,7 +2489,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="h-[calc(100vh-160px)] grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left: Active Sessions */}
                         <div className="lg:col-span-2 space-y-6 overflow-y-auto custom-scrollbar pr-2">
-                             <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-6">
+                             <div className="bg-gradient-to-r from-indigo-50 to-white border border-indigo-200 rounded-2xl p-6">
                                  <h2 className="text-2xl font-bold mb-2 text-slate-900">Mastermind & Sessions</h2>
                                  <p className="text-slate-600 text-sm">Připojte se k živým hovorům s mentory a ostatními studenty.</p>
                              </div>
@@ -2233,19 +2545,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     </div>
                                 ))}
                             </div>
-                            <div className="p-4 bg-white border-t border-slate-200">
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        value={chatMessage} 
-                                        onChange={e => setChatMessage(e.target.value)}
-                                        onKeyDown={e => e.key === 'Enter' && handlePostMessage()}
-                                        placeholder="Napište zprávu..." 
-                                        className="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 transition"
-                                    />
-                                    <button onClick={handlePostMessage} className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white transition"><Send size={18}/></button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -2254,15 +2553,33 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {activeTab === 'leaderboard' && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase">Žebříček <span className="text-yellow-500">ELITY</span></h2>
-                            <p className="text-slate-500">Soutěžte s ostatními studenty a získejte prestižní odměny.</p>
+                            <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase">Žebříček <span className="text-amber-500">ELITY KVAPY</span></h2>
+                            <p className="text-slate-500">Soutěžte s ostatními reprezentanty a získejte prestižní ocenění.</p>
+                        </div>
+                        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center bg-slate-100/50 border border-slate-200 p-4 rounded-2xl gap-3">
+                            <div className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5">
+                                📊 Zobrazeno: {leaderboardUsers.length} nejlepších reprezentantů
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-700">Filtrovat region:</span>
+                                <select 
+                                    value={leaderboardRegion} 
+                                    onChange={e => setLeaderboardRegion(e.target.value)} 
+                                    className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 transition cursor-pointer"
+                                >
+                                    <option value="all">🌍 Celá ČR (Všechny regiony)</option>
+                                    {CZECH_REGIONS.map(reg => (
+                                        <option key={reg} value={reg}>{reg}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                         <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden max-w-4xl mx-auto shadow-2xl">
                             <div className="grid grid-cols-12 bg-white/80 p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                 <div className="col-span-1 text-center">#</div>
-                                <div className="col-span-6">Student</div>
-                                <div className="col-span-3 text-right">XP / Level</div>
-                                <div className="col-span-2 text-right">Badge</div>
+                                <div className="col-span-6">Reprezentant</div>
+                                <div className="col-span-3 text-right">XP / Pozice</div>
+                                <div className="col-span-2 text-right">Odznak</div>
                             </div>
                             {leaderboardUsers.map((u, i) => (
                                 <div key={u.id} className={`grid grid-cols-12 p-4 items-center border-b border-slate-200 hover:bg-slate-50 transition ${u.id === user.id ? 'bg-indigo-50 border-l-2 border-l-indigo-500' : ''}`}>
@@ -2273,12 +2590,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         {u.avatarUrl ? <img src={u.avatarUrl} className="w-10 h-10 rounded-full object-cover bg-slate-100 border border-slate-300"/> : <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase border border-slate-300">{u.name?.charAt(0) || u.email.charAt(0)}</div>}
                                         <div>
                                             <div className={`font-bold ${u.id === user.id ? 'text-indigo-600' : 'text-slate-900'}`}>{u.name || 'Neznámý'}</div>
-                                            <div className="text-xs text-slate-500 hidden sm:block">Člen od {new Date(u.joinDate).getFullYear()}</div>
+                                            <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                                <span>📍 {u.region || 'Karlovy Vary'}</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="col-span-3 text-right">
                                         <div className="font-mono text-yellow-500 font-bold">{u.xp.toLocaleString()} XP</div>
-                                        <div className="text-xs text-slate-500">Lvl {u.level}</div>
+                                        <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                                            {u.level === 2 ? 'Senior' : u.level >= 3 ? 'Expert' : 'Junior'}
+                                        </div>
                                     </div>
                                     <div className="col-span-2 text-right flex justify-end">
                                         {u.role === 'vip' && <Crown size={18} className="text-yellow-500"/>}

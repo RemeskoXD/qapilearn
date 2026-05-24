@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Q-Hub | Interní vzdělávací systém</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              indigo: {
+                50: '#E6EFFE',
+                100: '#D4E5FF',
+                200: '#EDDEC9',
+                500: '#D4AF37',
+                600: '#0C1532',
+                700: '#080d21',
+                800: '#050917',
+                900: '#03050d',
+              },
+              slate: {
+                50: '#F9F3EC',
+                100: '#EDDEC9',
+                200: '#e0d0b8',
+                900: '#0C1532',
+                950: '#090e21',
+              },
+              brand: {
+                gold: '#D4AF37',
+                bg: '#F9F3EC',
+                border: '#EDDEC9',
+                navy: '#0C1532',
+                blue: '#E6EFFE',
+              }
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              display: ["Space Grotesk", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            }
+          }
+        }
+      }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       body {
@@ -77,8 +116,8 @@
       }
 
       .input:focus {
-        border-color: #4f46e5 !important;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+        border-color: #0C1532 !important;
+        box-shadow: 0 0 0 3px rgba(12, 21, 50, 0.1) !important;
         background-color: #ffffff !important;
       }
 

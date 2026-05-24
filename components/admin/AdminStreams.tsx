@@ -14,6 +14,7 @@ interface AdminStreamsProps {
 
 const AdminStreams: React.FC<AdminStreamsProps> = ({ streams, onUpdateStreams, notify }) => {
   const [editingStream, setEditingStream] = useState<Stream | null>(null);
+  const [deletingStreamId, setDeletingStreamId] = useState<string | null>(null);
 
   const handleCreate = () => {
       setEditingStream({
@@ -37,9 +38,14 @@ const AdminStreams: React.FC<AdminStreamsProps> = ({ streams, onUpdateStreams, n
   };
 
   const handleDelete = (id: string) => {
-      if(window.confirm('Opravdu smazat tento stream?')) {
-          onUpdateStreams(streams.filter(s => s.id !== id));
+      setDeletingStreamId(id);
+  };
+
+  const confirmDeleteStream = () => {
+      if (deletingStreamId) {
+          onUpdateStreams(streams.filter(s => s.id !== deletingStreamId));
           notify('success', 'Smazáno', 'Stream byl odstraněn.');
+          setDeletingStreamId(null);
       }
   };
 
@@ -136,6 +142,31 @@ const AdminStreams: React.FC<AdminStreamsProps> = ({ streams, onUpdateStreams, n
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
                             <button onClick={() => setEditingStream(null)} className="px-4 py-2 text-slate-500 hover:text-slate-900 font-bold">Zrušit</button>
                             <button onClick={handleSave} className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white font-bold shadow-lg">Uložit Stream</button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* --- DELETE CONFIRMATION MODAL --- */}
+        <AnimatePresence>
+            {deletingStreamId && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
+                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                            <Trash2 size={24}/>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900">Opravdu smazat?</h3>
+                            <p className="text-sm text-slate-500 mt-1">Tato akce je nevratná.</p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button onClick={() => setDeletingStreamId(null)} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                                Zrušit
+                            </button>
+                            <button onClick={confirmDeleteStream} className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/10 transition">
+                                Smazat
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>

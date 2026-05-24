@@ -21,6 +21,7 @@ import AdminStreams from './admin/AdminStreams';
 import AdminGamification from './admin/AdminGamification';
 import AdminSubmissions from './admin/AdminSubmissions';
 import AdminSettings from './admin/AdminSettings';
+import AdminCaflou from './admin/AdminCaflou';
 
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
@@ -105,6 +106,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
     { id: 'gamification', icon: <Gem size={18} />, label: 'Gamifikace' },
     { id: 'submissions', icon: <CheckSquare size={18} />, label: 'Úkoly & Review' },
     { id: 'levels', icon: <Star size={18} />, label: 'Levely' },
+    { id: 'caflou', icon: <LinkIcon size={18} className="rotate-45" />, label: 'Caflou Integrace' },
     { id: 'settings', icon: <Settings size={18} />, label: 'Nastavení' },
   ];
 
@@ -133,7 +135,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             >
               <div className="p-6 flex items-center justify-between border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center text-white"><Shield size={16} /></div>
+                  <div className="w-8 h-8 bg-slate-900 border border-brand-gold rounded-lg flex items-center justify-center text-brand-gold"><Shield size={16} /></div>
                   <span className="font-bold text-slate-900 text-sm">Q-Hub Admin</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-slate-700 p-1">
@@ -149,7 +151,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                       setSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-sm font-medium ${
-                      activeTab === item.id ? 'bg-rose-50 text-rose-700 border border-rose-100 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      activeTab === item.id ? 'bg-indigo-50 text-slate-900 border border-indigo-200 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
                     {item.icon} {item.label}
@@ -173,7 +175,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
       <div className={`bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
          <div className={`p-6 border-b border-slate-100 flex items-center ${isCollapsed ? 'flex-col gap-4 p-4 justify-center' : 'justify-between'}`}>
            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-9 h-9 bg-rose-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-rose-600/20 flex-shrink-0"><Shield size={18} /></div>
+              <div className="w-9 h-9 bg-slate-900 border border-brand-gold rounded-xl flex items-center justify-center text-brand-gold shadow-md flex-shrink-0"><Shield size={18} /></div>
               {!isCollapsed && (
                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
                   <div className="font-bold text-slate-900 leading-none text-sm tracking-tight whitespace-nowrap">Q-Hub Admin</div>
@@ -182,11 +184,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
               )}
            </div>
            {isCollapsed ? (
-             <button onClick={toggleSidebar} className="text-slate-400 hover:text-rose-600 p-1.5 hover:bg-rose-50 rounded-lg transition" title="Rozbalit boční panel">
+             <button onClick={toggleSidebar} className="text-slate-400 hover:text-brand-gold p-1.5 hover:bg-indigo-50 rounded-lg transition" title="Rozbalit boční panel">
                 <ChevronRight size={18} />
              </button>
            ) : (
-             <button onClick={toggleSidebar} className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-slate-50 transition" title="Skrýt boční panel">
+             <button onClick={toggleSidebar} className="text-slate-400 hover:text-brand-gold p-1 rounded-lg hover:bg-slate-50 transition" title="Skrýt boční panel">
                 <ChevronLeft size={18} />
              </button>
            )}
@@ -202,7 +204,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                   isCollapsed ? 'justify-center p-2.5 h-11 w-11 mx-auto' : 'px-4 py-2.5 gap-3'
                 } ${
                   activeTab === item.id 
-                    ? 'bg-rose-50 text-rose-700 border border-rose-200 font-semibold shadow-xs' 
+                    ? 'bg-indigo-50 text-slate-900 border border-indigo-200 font-semibold shadow-xs' 
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
                 }`}
              >
@@ -381,6 +383,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                     onUpdateArtifacts={props.onUpdateArtifacts}
                     onUpdateChallenges={props.onUpdateChallenges}
                     onUpdateLevels={props.onUpdateLevels}
+                    notify={props.notify}
+                />
+            )}
+
+            {activeTab === 'caflou' && (
+                <AdminCaflou
                     notify={props.notify}
                 />
             )}

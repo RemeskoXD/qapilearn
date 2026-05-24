@@ -10,6 +10,7 @@ const router = Router();
 const SELF_EDITABLE = new Set([
   'name',
   'phone',
+  'region',
   'bio',
   'avatarUrl',
   'isPublicProfile',
@@ -57,7 +58,7 @@ function pick(obj: any, allowed: Set<string>) {
 }
 
 router.post('/', requireAdmin, async (req, res) => {
-  const { email, password, name, role, phone, positions, planExpires } = req.body ?? {};
+  const { email, password, name, role, phone, region, positions, planExpires } = req.body ?? {};
   if (!email || !password) {
     return res.status(400).json({ error: 'Email a heslo jsou povinné.' });
   }
@@ -86,6 +87,7 @@ router.post('/', requireAdmin, async (req, res) => {
       name: name?.trim() || normEmail.split('@')[0],
       role: role || defaults.role,
       phone: phone || '',
+      region: region || 'Karlovy Vary',
       positions: validPositionsArr as any,
       level: defaults.level,
       xp: defaults.xp,

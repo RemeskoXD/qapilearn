@@ -14,10 +14,23 @@ interface AdminUsersProps {
   notify: (type: any, title: string, message: string) => void;
 }
 
+export const CZECH_REGIONS = [
+  'Karlovy Vary',
+  'Plzeň',
+  'Ostrava',
+  'Zlín',
+  'Praha',
+  'Brno',
+  'České Budějovice',
+  'Liberec',
+  'Hradec Králové'
+];
+
 const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdateUser, onDeleteUser, notify }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState<QhubPosition | 'all'>('all');
+  const [regionFilter, setRegionFilter] = useState('all');
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   // Edit Form State
@@ -26,6 +39,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
       email: string;
       role: UserRole;
       positions: QhubPosition[];
+      region: string;
       level: number;
       xp: number;
       phone: string;
@@ -43,10 +57,10 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
       name: '',
       email: '',
       password: '',
-      role: 'student' as UserRole,
+      role: 'ostatni' as UserRole,
       phone: '',
+      region: 'Karlovy Vary',
       positions: [] as QhubPosition[],
-      planExpires: '',
   });
 
   const handleCreateSave = async () => {
@@ -63,8 +77,9 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
               name: createForm.name,
               role: createForm.role,
               phone: createForm.phone,
+              region: createForm.region,
               positions: createForm.positions,
-              planExpires: createForm.planExpires || null,
+              planExpires: null,
           });
           setIsCreating(false);
           // Reset form
@@ -72,10 +87,10 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
               name: '',
               email: '',
               password: '',
-              role: 'student',
+              role: 'ostatni',
               phone: '',
+              region: 'Karlovy Vary',
               positions: [],
-              planExpires: '',
           });
       } catch (e: any) {
           // Toast notifications are handled by onCreateUser
@@ -107,7 +122,8 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
           email: user.email,
           role: user.role,
           positions: resolvedPositions as any,
-          level: user.level,
+          region: user.region || 'Karlovy Vary',
+          level: user.level || 1,
           xp: user.xp,
           phone: user.phone || '',
           bio: user.bio || '',
@@ -141,6 +157,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
           email: editForm.email,
           role: editForm.role,
           positions: editForm.positions,
+          region: editForm.region,
           level: editForm.level,
           xp: editForm.xp,
           phone: editForm.phone,
@@ -185,7 +202,8 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
       }
       
       const matchesPosition = positionFilter === 'all' || userPositions.includes(positionFilter);
-      return matchesSearch && matchesRole && matchesPosition;
+      const matchesRegion = regionFilter === 'all' || (u.region || 'Karlovy Vary') === regionFilter;
+      return matchesSearch && matchesRole && matchesPosition && matchesRegion;
   });
 
   const togglePosition = (p: QhubPosition) => {
@@ -215,10 +233,9 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                             name: '',
                             email: '',
                             password: '',
-                            role: 'student',
+                            role: 'ostatni',
                             phone: '',
                             positions: [],
-                            planExpires: '',
                         });
                         setIsCreating(true);
                     }}
@@ -246,11 +263,12 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                         className="appearance-none bg-slate-50 hover:bg-white focus:bg-white border-2 border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-805 font-bold outline-none transition-all cursor-pointer shadow-sm"
                     >
                         <option value="all">👥 Všechny role</option>
-                        <option value="student">🎓 Student</option>
-                        <option value="premium">💎 Premium</option>
-                        <option value="vip">👑 VIP</option>
+                        <option value="obchodnik">💼 Obchodník</option>
+                        <option value="technik">🔧 Technik</option>
+                        <option value="team_leader">👑 Team Leader</option>
+                        <option value="linka">📞 Linka</option>
+                        <option value="ostatni">⚙️ Ostatní</option>
                         <option value="admin">🛡️ Admin</option>
-                        <option value="expired">❌ Deaktivovaní</option>
                     </select>
                 </div>
                 <div className="relative flex-shrink-0">
@@ -262,6 +280,18 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                         <option value="all">💼 Všechny pozice</option>
                         {QHUB_POSITIONS.map(p => (
                             <option key={p.id} value={p.id}>• {p.label}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="relative flex-shrink-0">
+                    <select 
+                        value={regionFilter} 
+                        onChange={e => setRegionFilter(e.target.value)}
+                        className="appearance-none bg-slate-50 hover:bg-white focus:bg-white border-2 border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-805 font-bold outline-none transition-all cursor-pointer shadow-sm"
+                    >
+                        <option value="all">📍 Všechny regiony</option>
+                        {CZECH_REGIONS.map(reg => (
+                            <option key={reg} value={reg}>{reg}</option>
                         ))}
                     </select>
                 </div>
@@ -278,7 +308,6 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                             <th className="p-4">Role & Level</th>
                             <th className="p-4">Kontakt</th>
                             <th className="p-4">Pozice</th>
-                            <th className="p-4">Přístup do</th>
                             <th className="p-4 text-right">Akce</th>
                         </tr>
                     </thead>
@@ -308,19 +337,30 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                     <td className="p-4">
                                         <div className="flex flex-col gap-1">
                                             <span className={`inline-flex w-fit items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                                                roleDisplay === 'admin' ? 'bg-rose-100 text-red-500 border border-red-200' :
-                                                roleDisplay === 'vip' ? 'bg-amber-100 text-yellow-600 border border-yellow-250' :
-                                                roleDisplay === 'premium' ? 'bg-violet-100 text-violet-600 border border-purple-200' :
-                                                roleDisplay === 'expired' ? 'bg-slate-100 text-slate-500 border border-slate-300' :
-                                                'bg-indigo-100 text-indigo-600 border border-indigo-200'
+                                                roleDisplay === 'admin' ? 'bg-rose-50 text-red-700 border border-red-200' :
+                                                roleDisplay === 'obchodnik' ? 'bg-emerald-50 text-emerald-700 border border-emerald-205' :
+                                                roleDisplay === 'technik' ? 'bg-indigo-50 text-indigo-700 border border-indigo-205' :
+                                                roleDisplay === 'team_leader' ? 'bg-amber-50 text-amber-700 border border-amber-205' :
+                                                roleDisplay === 'linka' ? 'bg-violet-50 text-violet-700 border border-violet-205' :
+                                                'bg-slate-50 text-slate-700 border border-slate-205'
                                             }`}>
-                                                {roleDisplay}
+                                                {roleDisplay === 'obchodnik' ? '💼 Obchodník' :
+                                                 roleDisplay === 'technik' ? '🔧 Technik' :
+                                                 roleDisplay === 'team_leader' ? '👑 Team Leader' :
+                                                 roleDisplay === 'linka' ? '📞 Linka' :
+                                                 roleDisplay === 'ostatni' ? '⚙️ Ostatní' :
+                                                 roleDisplay === 'admin' ? '🛡️ Admin' : roleDisplay}
                                             </span>
-                                            <span className="text-xs">Lvl {levelDisplay} • {xpDisplay} XP</span>
+                                            <span className="text-xs font-semibold text-slate-750">
+                                                {levelDisplay === 2 ? '🥈 Senior' : levelDisplay >= 3 ? '🥇 Expert' : '🥉 Junior'} • {xpDisplay} XP
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="p-4 text-xs">
-                                        {user.phone ? <div className="flex items-center gap-1"><Phone size={12}/> {user.phone}</div> : <span className="text-slate-550">—</span>}
+                                        {user.phone && <div className="flex items-center gap-1 mb-1 font-semibold text-slate-700"><Phone size={12}/> {user.phone}</div>}
+                                        <div className="flex items-center gap-1 text-indigo-600 bg-indigo-50 border border-indigo-150 w-fit px-2 py-0.5 rounded-md font-medium">
+                                            <span>📍</span> {user.region || 'Karlovy Vary'}
+                                        </div>
                                     </td>
                                     <td className="p-4">
                                         {(() => {
@@ -344,24 +384,6 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                                 );
                                             }
                                             return <span className="text-slate-400 text-xs">—</span>;
-                                        })()}
-                                    </td>
-                                    <td className="p-4">
-                                        {(() => {
-                                            if (!user.planExpires) {
-                                                return <span className="text-slate-500 text-xs">Navždy</span>;
-                                            }
-                                            const d = new Date(user.planExpires);
-                                            if (isNaN(d.getTime())) {
-                                                return <span className="text-slate-500 text-xs">Navždy</span>;
-                                            }
-                                            const isExpired = d < new Date();
-                                            return (
-                                                <div className={`text-xs font-medium flex items-center gap-1 ${isExpired ? 'text-red-500' : 'text-slate-600'}`}>
-                                                    <Calendar size={12}/> {d.toLocaleDateString('cs-CZ')}
-                                                    {isExpired && <AlertTriangle size={12} className="text-red-500" />}
-                                                </div>
-                                            );
                                         })()}
                                     </td>
                                     <td className="p-4 text-right">
@@ -454,11 +476,26 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                             onChange={e => setEditForm({...editForm, role: e.target.value as any})} 
                                             className="w-full bg-white border-2 border-slate-205 hover:border-slate-305 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl px-4 py-3 text-slate-805 text-sm font-bold cursor-pointer outline-none transition-all shadow-sm"
                                         >
-                                            <option value="student">🎓 Student</option>
-                                            <option value="premium">💎 Premium člen</option>
-                                            <option value="vip">👑 VIP člen</option>
+                                            <option value="obchodnik">💼 Obchodník</option>
+                                            <option value="technik">🔧 Technik</option>
+                                            <option value="team_leader">👑 Team Leader</option>
+                                            <option value="linka">📞 Linka</option>
+                                            <option value="ostatni">⚙️ Ostatní</option>
                                             <option value="admin">🛡️ Administrator</option>
-                                            <option value="expired">❌ Expirovaný / Deaktivovaný</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-705 tracking-wide uppercase mb-1.5 block flex items-center gap-1.5">
+                                            <span>📍</span> Region / Pobočka
+                                        </label>
+                                        <select 
+                                            value={editForm.region} 
+                                            onChange={e => setEditForm({...editForm, region: e.target.value})} 
+                                            className="w-full bg-white border-2 border-slate-205 hover:border-slate-305 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl px-4 py-3 text-slate-900 text-sm font-medium cursor-pointer outline-none transition-all shadow-sm"
+                                        >
+                                            {CZECH_REGIONS.map(reg => (
+                                                <option key={reg} value={reg}>{reg}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -493,35 +530,23 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                 </p>
                             </div>
 
-                            {/* Section 3: Přístup a Gamifikace */}
-                            <div className="bg-slate-50/70 p-6 rounded-2xl border border-slate-200/80 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Section 3: Úroveň a Gamifikace */}
+                            <div className="bg-slate-50/70 p-6 rounded-2xl border border-slate-200/80">
                                 <div>
                                     <label className="text-xs font-bold text-slate-705 tracking-wide uppercase mb-1.5 block flex items-center gap-1.5">
-                                        <Calendar size={14} className="text-slate-400" /> Platnost členství (Přístup vyprší)
-                                    </label>
-                                    <input 
-                                        type="date" 
-                                        value={editForm.planExpires} 
-                                        onChange={e => setEditForm({...editForm, planExpires: e.target.value})} 
-                                        className="w-full bg-white border-2 border-slate-205 hover:border-slate-305 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl p-3 text-slate-900 text-sm font-medium outline-none transition-all shadow-sm"
-                                    />
-                                    <p className="text-[10.5px] text-slate-500 mt-1.5">Nechte prázdné pro trvalý, časově neomezený přístup.</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-705 tracking-wide uppercase mb-1.5 block flex items-center gap-1.5">
-                                        <Crown size={14} className="text-amber-500" /> Gamifikační úroveň & XP
+                                        <Crown size={14} className="text-amber-500" /> Profesní úroveň (Rank) & XP
                                     </label>
                                     <div className="flex gap-3">
-                                        <div className="relative w-1/3">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-slate-400 uppercase">Lvl</span>
-                                            <input 
-                                                type="number" 
+                                        <div className="relative w-1/2">
+                                            <select 
                                                 value={editForm.level} 
                                                 onChange={e => setEditForm({...editForm, level: parseInt(e.target.value) || 1})} 
-                                                className="w-full bg-white border-2 border-slate-205 hover:border-slate-305 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl pl-9 pr-3 py-3 text-slate-900 text-sm font-extrabold text-center outline-none transition-all shadow-sm" 
-                                                min={1} 
-                                                max={100}
-                                            />
+                                                className="w-full bg-white border-2 border-slate-205 hover:border-slate-305 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl px-3 py-3 text-slate-905 text-xs font-bold cursor-pointer outline-none transition-all shadow-sm"
+                                            >
+                                                <option value={1}>🥉 Junior</option>
+                                                <option value={2}>🥈 Senior</option>
+                                                <option value={3}>🥇 Expert / Master</option>
+                                            </select>
                                         </div>
                                         <div className="relative flex-1">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-indigo-400 uppercase">XP</span>
@@ -534,7 +559,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                             />
                                         </div>
                                     </div>
-                                    <p className="text-[10.5px] text-slate-500 mt-1.5 font-medium">Změna bodů může odemknout nové odznaky a tituly.</p>
+                                    <p className="text-[10.5px] text-slate-500 mt-1.5 font-medium">Správce nastavuje tytéž profesní úrovně ručně pro každého reprezentanta.</p>
                                 </div>
                             </div>
 
@@ -668,24 +693,27 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                             onChange={e => setCreateForm({...createForm, role: e.target.value as any})} 
                                             className="w-full bg-white border-2 border-slate-205 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl px-4 py-3 text-slate-805 text-sm font-bold cursor-pointer outline-none transition-all shadow-sm"
                                         >
-                                            <option value="student">🎓 Student</option>
-                                            <option value="premium">💎 Premium člen</option>
-                                            <option value="vip">👑 VIP člen</option>
+                                            <option value="obchodnik">💼 Obchodník</option>
+                                            <option value="technik">🔧 Technik</option>
+                                            <option value="team_leader">👑 Team Leader</option>
+                                            <option value="linka">📞 Linka</option>
+                                            <option value="ostatni">⚙️ Ostatní</option>
                                             <option value="admin">🛡️ Administrator</option>
-                                            <option value="expired">❌ Expirovaný / Deaktivovaný</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-slate-705 tracking-wide uppercase mb-1.5 block flex items-center gap-1.5">
-                                            <Calendar size={13} className="text-slate-400" /> Vypršení přístupu k platformě
+                                            <span>📍</span> Region / Pobočka
                                         </label>
-                                        <input 
-                                            type="date" 
-                                            value={createForm.planExpires} 
-                                            onChange={e => setCreateForm({...createForm, planExpires: e.target.value})} 
-                                            className="w-full bg-white border-2 border-slate-205 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl p-3 text-slate-900 text-sm font-medium outline-none transition-all shadow-sm cursor-pointer"
-                                        />
-                                        <p className="text-[10px] text-slate-500 mt-1 font-medium">Ponechte prázdné pro automatické neomezené trvání.</p>
+                                        <select 
+                                            value={createForm.region} 
+                                            onChange={e => setCreateForm({...createForm, region: e.target.value})} 
+                                            className="w-full bg-white border-2 border-slate-205 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl px-4 py-3 text-slate-905 text-sm font-medium cursor-pointer outline-none transition-all shadow-sm"
+                                        >
+                                            {CZECH_REGIONS.map(reg => (
+                                                <option key={reg} value={reg}>{reg}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                             </div>
