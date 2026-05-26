@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
 import { 
   Link as LinkIcon, RefreshCw, Check, ArrowUpRight, HelpCircle, AlertCircle, 
   History, Settings, Zap, CheckCircle2, FileText, Info, Coins, Users, 
   Calendar, DollarSign, AlertTriangle, Eye, EyeOff, Sparkles, Trophy,
-  Trash2, Plus, Edit3, Award, TrendingUp, Briefcase
+  Trash2, Plus, Edit3, Award, TrendingUp, Briefcase, BarChart2
 } from 'lucide-react';
 import { ToastMessage } from '../../types';
 
@@ -45,7 +46,7 @@ interface AdminCaflouProps {
 
 export default function AdminCaflou({ notify }: AdminCaflouProps) {
   // Navigation tabs: payouts / rates / sales / settings
-  const [activeTab, setActiveTab] = useState<'payouts' | 'projects' | 'rates' | 'sales' | 'settings'>('projects');
+  const [activeTab, setActiveTab] = useState<'payouts' | 'projects' | 'rates' | 'sales' | 'settings' | 'statistics'>('projects');
   
   // Projects State
   const [projectsData, setProjectsData] = useState<any[]>([]);
@@ -88,7 +89,12 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
     payouts: any[];
   }>({ userConfigs: {}, orders: [], adjustments: [], payouts: [] });
   const [salesLoading, setSalesLoading] = useState(false);
-  const [selectedSalesMonth, setSelectedSalesMonth] = useState('2026-05');
+  const [salesStartDate, setSalesStartDate] = useState(() => {
+    const d = new Date(); d.setDate(1); return d.toISOString().split('T')[0];
+  });
+  const [salesEndDate, setSalesEndDate] = useState(() => {
+    const d = new Date(); d.setMonth(d.getMonth() + 1); d.setDate(0); return d.toISOString().split('T')[0];
+  });
 
   // Form for configuring user
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
@@ -155,7 +161,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
   const handleSaveAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adjUserEmail || !adjAmount || !selectedSalesMonth) {
+    if (!adjUserEmail || !adjAmount) {
       notify('error', 'Chyba', 'Chybí povinná pole úpravy.');
       return;
     }
@@ -168,7 +174,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
           type: adjType,
           amount: adjAmount,
           reason: adjReason,
-          month: selectedSalesMonth
+          month: salesEndDate.substring(0, 7)
         })
       });
       if (resp.ok) {
@@ -249,7 +255,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.toLowerCase().trim(),
-          month: selectedSalesMonth,
+          month: salesEndDate.substring(0, 7),
           xpReward: xpRewardAdd
         })
       });
@@ -448,7 +454,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
       fetchRatesAndUsers();
     } else if (activeTab === 'settings') {
       fetchLogs();
-    } else if (activeTab === 'sales') {
+    } else if (activeTab === 'sales' || activeTab === 'statistics') {
       fetchSalesData();
     }
   }, [activeTab]);
@@ -768,6 +774,18 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
         >
           <Settings size={16} />
           Konfigurace & Webhooky
+        </button>
+        <button
+          onClick={() => setActiveTab('statistics')}
+          className={`flex items-center gap-2 py-4 px-6 font-bold text-sm border-b-2 transition -mb-px ${
+            activeTab === 'statistics'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-900'
+          }`}
+          id="tab-statistics"
+        >
+          <TrendingUp size={16} />
+          Statistiky
         </button>
       </div>
 
@@ -1274,16 +1292,20 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
             {/* Global controls */}
             <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl w-full md:w-auto self-stretch md:self-auto">
-              <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Zúčtovací cyklus</span>
-              <select
-                value={selectedSalesMonth}
-                onChange={(e) => setSelectedSalesMonth(e.target.value)}
+              <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Od</span>
+              <input
+                type="date"
+                value={salesStartDate}
+                onChange={(e) => setSalesStartDate(e.target.value)}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="2026-05">Květen 2026 🌸</option>
-                <option value="2026-06">Červen 2026 ☀️</option>
-                <option value="2026-07">Červenec 2026 🌴</option>
-              </select>
+              />
+              <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Do</span>
+              <input
+                type="date"
+                value={salesEndDate}
+                onChange={(e) => setSalesEndDate(e.target.value)}
+                className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
             </div>
           </div>
 
@@ -1339,7 +1361,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                           type="text"
                           required
                           placeholder="2026-05-20"
-                          defaultValue={`${selectedSalesMonth}-15`}
+                          defaultValue={salesEndDate.substring(0, 10)}
                           onChange={(e) => {
                             // Let's use custom formatted value or handle default value in route
                           }}
@@ -1539,7 +1561,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       const matchedUser = qhubUsers.find(u => u.email.toLowerCase().trim() === norm);
                       const config = salesData.userConfigs[norm] || { userType: 'commission', fixRate: 0 };
                       
-                      const monthOrders = salesData.orders.filter(o => o.email.toLowerCase() === norm && o.date.startsWith(selectedSalesMonth) && o.status === 'completed');
+                      const monthOrders = salesData.orders.filter(o => o.email.toLowerCase() === norm && (o.date >= salesStartDate && o.date <= salesEndDate) && o.status === 'completed');
                       const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);
 
                       // Determine bracket base percentage
@@ -1600,7 +1622,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       const fixAmount = (config.userType === 'fix' || config.userType === 'both') ? config.fixRate : 0;
 
                       // Fines & bonuses for selected month
-                      const monthAdjustments = salesData.adjustments.filter(a => a.email.toLowerCase() === norm && a.month === selectedSalesMonth);
+                      const monthAdjustments = salesData.adjustments.filter(a => a.email.toLowerCase() === norm && (a.month >= salesStartDate.substring(0,7) && a.month <= salesEndDate.substring(0,7)));
                       const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
                       const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
 
@@ -1798,7 +1820,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
                             {monthOrders.length === 0 ? (
                               <div className="text-slate-400 text-[10px] py-2 leading-relaxed">
-                                📭 Pro zúčtovací období {selectedSalesMonth} nemá toto OZ zavedené žádné dokončené objednávky. Provize bude vypočtena na 0 Kč.
+                                📭 Pro zúčtovací období {salesStartDate} do {salesEndDate} nemá toto OZ zavedené žádné dokončené objednávky. Provize bude vypočtena na 0 Kč.
                               </div>
                             ) : (
                               <div className="space-y-2 text-[11px] font-medium leading-normal">
@@ -1882,7 +1904,8 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
                             {/* Action triggering */}
                             {(() => {
-                              const alreadyPaidThisMonth = salesData.payouts.some(p => p.email.toLowerCase() === norm && p.month === selectedSalesMonth);
+                              const targetMonth = salesEndDate.substring(0, 7);
+                              const alreadyPaidThisMonth = salesData.payouts.some(p => p.email.toLowerCase() === norm && p.month === targetMonth);
 
                               if (alreadyPaidThisMonth) {
                                 return (
@@ -1901,16 +1924,16 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                                     <span className="font-bold text-slate-450 text-[10px]">Herní XP:</span>
                                     <input
                                       type="number"
-                                      defaultValue={100}
+                                      defaultValue={totalPayout}
                                       id={`xp-reward-input-${norm}`}
-                                      className="w-12 bg-transparent text-center font-bold font-mono focus:outline-none"
+                                      className="w-16 bg-transparent text-center font-bold font-mono focus:outline-none"
                                     />
                                   </div>
 
                                   <button
                                     onClick={() => {
                                       const inputEl = document.getElementById(`xp-reward-input-${norm}`) as HTMLInputElement;
-                                      const xpAdd = inputEl ? (parseInt(inputEl.value) || 0) : 100;
+                                      const xpAdd = inputEl ? (parseInt(inputEl.value) || 0) : totalPayout;
                                       handleExecuteSalesPayout(norm, xpAdd);
                                     }}
                                     className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition flex justify-center items-center gap-1.5 shadow-sm"
@@ -2507,6 +2530,110 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* TAB 4: STATISTICS */}
+      {activeTab === 'statistics' && (
+        <div className="space-y-8 animate-fade-in" id="caflou-statistics-view">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+            <h3 className="font-extrabold text-slate-900 text-lg mb-6 flex items-center gap-2">
+              <BarChart2 className="text-indigo-600" size={18} />
+              Analytika a Statistiky výplat obchodníků
+            </h3>
+            
+            {!salesData ? (
+              <div className="text-center py-20 bg-slate-50 border border-slate-200 rounded-3xl text-sm text-slate-500 font-bold">
+                Načítám data...
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                
+                {/* Objem výplat podle obchodníků */}
+                <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl shadow-inner">
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-6">Celkové vyplacené provize (Kč)</h4>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={(() => {
+                        const allEmails = new Set<string>();
+                        qhubUsers.forEach(u => allEmails.add(u.email.toLowerCase().trim()));
+                        Object.keys(salesData.userConfigs || {}).forEach(e => allEmails.add(e.toLowerCase().trim()));
+                        (salesData.payouts || []).forEach(p => allEmails.add(p.email.toLowerCase().trim()));
+                        
+                        return Array.from(allEmails).map(email => {
+                          const norm = email.toLowerCase();
+                          const name = qhubUsers.find(u => u.email.toLowerCase() === norm)?.name || norm;
+                          return {
+                            name,
+                            total: salesData.payouts.filter(p => p.email.toLowerCase() === norm).reduce((sum, p) => sum + p.totalPayout, 0)
+                          };
+                        }).sort((a, b) => b.total - a.total);
+                      })()}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+                        <YAxis tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val.toLocaleString()} Kč`} />
+                        <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold'}} formatter={(val: number) => [`${val.toLocaleString()} Kč`, 'Celkem vyplaceno']} />
+                        <Bar dataKey="total" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={40} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Objem rozdaných EXpů */}
+                <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl shadow-inner">
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-6">Rozdané Herní Zkušenosti (XP)</h4>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={(() => {
+                        const allEmails = new Set<string>();
+                        qhubUsers.forEach(u => allEmails.add(u.email.toLowerCase().trim()));
+                        Object.keys(salesData.userConfigs || {}).forEach(e => allEmails.add(e.toLowerCase().trim()));
+                        (salesData.payouts || []).forEach(p => allEmails.add(p.email.toLowerCase().trim()));
+                        
+                        return Array.from(allEmails).map(email => {
+                          const norm = email.toLowerCase();
+                          const name = qhubUsers.find(u => u.email.toLowerCase() === norm)?.name || norm;
+                          return {
+                            name,
+                            xp: salesData.payouts.filter(p => p.email.toLowerCase() === norm).reduce((sum, p) => sum + p.xpReward, 0)
+                          };
+                        }).sort((a, b) => b.xp - a.xp);
+                      })()} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                        <XAxis type="number" tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+                        <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold'}} formatter={(val: number) => [`${val} XP`, 'Celkem rozdaných XP']} />
+                        <Bar dataKey="xp" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={24} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Trendy v čase podle měsíců */}
+                <div className="xl:col-span-2 bg-slate-50 border border-slate-200 p-6 rounded-3xl shadow-inner">
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-6">Vývoj celkových výplat v čase (Obrat provizí za měsíc)</h4>
+                  <div className="h-[350px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={
+                        Object.values(salesData.payouts.reduce((acc: any, p: any) => {
+                          if (!acc[p.month]) acc[p.month] = { month: p.month, celkem: 0, pocet: 0 };
+                          acc[p.month].celkem += p.totalPayout;
+                          acc[p.month].pocet += 1;
+                          return acc;
+                        }, {})).sort((a: any, b: any) => a.month.localeCompare(b.month))
+                      }>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="month" tick={{fontSize: 12, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
+                        <YAxis tick={{fontSize: 12, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val.toLocaleString()} Kč`} />
+                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold'}} formatter={(val: number, name: string) => [name === 'celkem' ? `${val.toLocaleString()} Kč` : val, name === 'celkem' ? 'Suma výplat' : 'Počet výplat']} />
+                        <Legend wrapperStyle={{fontSize: '12px', fontWeight: 'bold'}} />
+                        <Line type="monotone" dataKey="celkem" name="Suma výplat" stroke="#10b981" strokeWidth={4} dot={{r: 6, fill: '#10b981', strokeWidth: 0}} activeDot={{r: 8, fill: '#047857'}} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
             )}
           </div>

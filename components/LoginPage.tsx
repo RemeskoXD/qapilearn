@@ -4,7 +4,6 @@ import {
   Mail,
   Lock,
   ArrowRight,
-  User as UserIcon,
   Eye,
   EyeOff,
   Loader2,
@@ -24,10 +23,8 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [isLoginMode, setIsLoginMode] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,8 +35,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
     try {
-      const endpoint = isLoginMode ? '/auth/login' : '/auth/register';
-      const payload = isLoginMode ? { email, password } : { email, password, name };
+      const endpoint = '/auth/login';
+      const payload = { email, password };
       const res = await api.post<{ user: User }>(endpoint, payload);
       onLogin(res.user);
     } catch (err: any) {
@@ -109,36 +106,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
-            {isLoginMode ? 'Přihlášení' : 'Vytvořit účet'}
+            Přihlášení
           </h2>
           <p className="text-slate-500 mb-8">
-            {isLoginMode
-              ? 'Zadej email a heslo pro vstup do Q-Hub.'
-              : 'Zaregistruj se a získej přístup ke všem kurzům.'}
+            Zadej email a heslo pro vstup do Q-Hub.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLoginMode && (
-              <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1.5 block uppercase tracking-wide">
-                  Jméno
-                </label>
-                <div className="relative">
-                  <UserIcon
-                    size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Jan Novák"
-                    className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-3 py-3 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition"
-                  />
-                </div>
-              </div>
-            )}
-
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-1.5 block uppercase tracking-wide">
                 Email
@@ -184,9 +158,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {!isLoginMode && (
-                <p className="text-xs text-slate-500 mt-1.5">Minimálně 6 znaků.</p>
-              )}
             </div>
 
             {error && (
@@ -205,25 +176,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <Loader2 size={18} className="animate-spin" />
               ) : (
                 <>
-                  {isLoginMode ? 'Přihlásit se' : 'Vytvořit účet'}
+                  Přihlásit se
                   <ArrowRight size={16} />
                 </>
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-slate-600">
-            {isLoginMode ? 'Ještě nemáš účet?' : 'Už máš účet?'}{' '}
-            <button
-              onClick={() => {
-                setIsLoginMode(!isLoginMode);
-                setError('');
-              }}
-              className="text-indigo-600 hover:text-indigo-700 font-semibold"
-            >
-              {isLoginMode ? 'Registrovat se' : 'Přihlásit se'}
-            </button>
-          </div>
 
           <div className="mt-8 pt-4 border-t border-slate-100 text-center">
             <a

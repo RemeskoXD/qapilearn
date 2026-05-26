@@ -166,9 +166,8 @@ const App: React.FC = () => {
     [currentUser?.id, isAdmin, allUsers, notify]
   );
 
-  const handleDeleteUser = useCallback(
+    const handleDeleteUser = useCallback(
     async (userId: string) => {
-      if (!window.confirm('Opravdu smazat uživatele?')) return;
       try {
         await api.delete(`/users/${userId}`);
         notify('success', 'Smazáno', 'Uživatel byl smazán.');

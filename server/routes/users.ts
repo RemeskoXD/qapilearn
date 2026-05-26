@@ -158,6 +158,17 @@ router.patch('/:id', requireAdmin, async (req, res) => {
   res.json(publicUser(updated));
 });
 
+router.patch('/:id/password', requireAdmin, async (req, res) => {
+  const { newPassword } = req.body ?? {};
+  if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+    return res.status(400).json({ error: 'Heslo musí mít minimálně 6 znaků.' });
+  }
+  
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await prisma.qhubUser.update({ where: { id: req.params.id }, data: { passwordHash } });
+  res.json({ success: true });
+});
+
 router.delete('/:id', requireAdmin, async (req, res) => {
   if (req.params.id === req.user!.uid) {
     return res.status(400).json({ error: 'Nemůžeš smazat sám sebe.' });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, Edit, Trash2, Mail, Shield, Gem, Crown, MoreHorizontal, X, Save, Calendar, MessageSquare, DollarSign, Phone, CheckCircle, AlertTriangle, Briefcase, UserPlus, User as UserIcon, Lock as LockIcon, Sparkles } from 'lucide-react';
 import { User, UserRole, DashboardMessage, QhubPosition, QHUB_POSITIONS } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../../lib/api';
 
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
@@ -53,6 +54,9 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
   // Create Form State
   const [isCreating, setIsCreating] = useState(false);
   const [creatingLoading, setCreatingLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState({
       name: '',
       email: '',
@@ -132,6 +136,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
           dashboardMessageText: user.dashboardMessage?.text || '',
           dashboardMessageActive: user.dashboardMessage?.active || false
       });
+      setNewPassword('');
   };
 
   const handleSave = () => {
@@ -175,6 +180,24 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
       onUpdateUser(updatedUser);
       setEditingUser(null);
       notify('success', 'Uživatel uložen', 'Data uživatele byla úspěšně aktualizována.');
+  };
+
+  const handlePasswordChange = async () => {
+      if (!editingUser) return;
+      if (newPassword.length < 6) {
+          notify('error', 'Chyba', 'Heslo musí mít minimálně 6 znaků.');
+          return;
+      }
+      setChangingPassword(true);
+      try {
+          await api.patch(`/users/${editingUser.id}/password`, { newPassword });
+          notify('success', 'Úspěch', 'Heslo uživatele bylo změněno.');
+          setNewPassword('');
+      } catch (e: any) {
+          notify('error', 'Chyba', e.message);
+      } finally {
+          setChangingPassword(false);
+      }
   };
 
   // Filter Logic
@@ -308,6 +331,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                             <th className="p-4">Role & Level</th>
                             <th className="p-4">Kontakt</th>
                             <th className="p-4">Pozice</th>
+                            <th className="p-4">Naposledy online</th>
                             <th className="p-4 text-right">Akce</th>
                         </tr>
                     </thead>
@@ -386,14 +410,24 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                             return <span className="text-slate-400 text-xs">—</span>;
                                         })()}
                                     </td>
+                                    <td className="p-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString('cs-CZ', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Nikdy'}
+                                    </td>
                                     <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button onClick={() => handleEditClick(user)} className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition" title="Upravit">
                                                 <Edit size={16}/>
                                             </button>
-                                            <button onClick={() => onDeleteUser(user.id)} className="p-2 bg-red-50 text-red-500 hover:bg-red-600 hover:text-white rounded-lg transition" title="Smazat">
-                                                <Trash2 size={16}/>
-                                            </button>
+                                            {userToDelete === user.id ? (
+                                                <div className="flex bg-rose-50 rounded-lg overflow-hidden border border-rose-200">
+                                                    <button onClick={() => { onDeleteUser(user.id); setUserToDelete(null); }} className="px-3 py-1.5 text-[11px] uppercase tracking-wide font-black text-white bg-rose-500 hover:bg-rose-600 transition">Smazat</button>
+                                                    <button onClick={() => setUserToDelete(null)} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 hover:bg-slate-200 transition">Zrušit</button>
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => setUserToDelete(user.id)} className="p-2 bg-red-50 text-red-500 hover:bg-red-600 hover:text-white rounded-lg transition" title="Smazat">
+                                                    <Trash2 size={16}/>
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -500,6 +534,35 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                     </div>
                                 </div>
                             </div>
+
+                             {/* Section 1.5: Heslo */}
+                             <div className="bg-rose-50/50 p-6 rounded-2xl border border-rose-200/50 space-y-4">
+                                 <h4 className="text-sm font-bold text-slate-805 flex items-center gap-2 mb-2 border-b border-rose-200 pb-2">
+                                     <LockIcon size={16} className="text-rose-505" />
+                                     Změna přístupového hesla
+                                 </h4>
+                                 <div className="flex flex-col sm:flex-row gap-3">
+                                     <div className="flex-1 relative">
+                                        <input 
+                                            type="text" 
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            placeholder="Nové silné heslo..." 
+                                            className="w-full bg-white border-2 border-rose-100 hover:border-rose-300 focus:border-rose-500 focus:ring-4 focus:ring-rose-100 rounded-xl px-4 py-3 text-slate-900 text-sm font-medium outline-none transition-all placeholder:text-slate-400 shadow-sm"
+                                        />
+                                     </div>
+                                     <button 
+                                         onClick={handlePasswordChange}
+                                         disabled={changingPassword || newPassword.length < 6}
+                                         className="px-6 py-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold rounded-xl flex items-center gap-2 transition shadow-md shadow-slate-900/10 justify-center whitespace-nowrap"
+                                     >
+                                         <Save size={16} /> Změnit
+                                     </button>
+                                 </div>
+                                 <p className="text-[10px] text-slate-500">
+                                     Heslo musí mít minimálně 6 znaků. Změní se okamžitě, není nutné ukládat profil dole. Uživatel {editingUser.lastLogin ? `byl naposledy přihlášen ${new Date(editingUser.lastLogin).toLocaleString('cs-CZ', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'se ještě nikdy nepřihlásil'}.
+                                 </p>
+                             </div>
 
                             {/* Section 2: Pracovní Pozice */}
                             <div className="bg-slate-50/70 p-6 rounded-2xl border border-slate-200/80 space-y-3">

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LayoutDashboard, BookOpen, Film, Calendar, Users, HelpCircle, 
   FileText, Award, Gem, Shield, LogOut, Bell, Zap, Play, Gift, 
-  TrendingUp, Settings, Lock, Mail, ChevronDown, ChevronUp, Download, EyeOff, Eye, CheckCircle, Package, Clock, ExternalLink, Camera, Send, X, ArrowLeft, Brain, Video, Check, Layers, Crown, Plus, Users as UsersIcon, MessageSquare, ArrowRight, AlertOctagon, Info, Star, Trophy, ArrowUp, MessageCircle, User as UserIcon, StickyNote, Edit3, ShoppingBag, BarChart2, DollarSign, Calendar as CalendarIcon, Copy, Coins, Trash2
+  TrendingUp, Settings, Lock, Mail, ChevronDown, ChevronUp, Download, EyeOff, Eye, CheckCircle, Package, Clock, ExternalLink, Camera, Send, X, ArrowLeft, Brain, Video, Check, Layers, Crown, Plus, Users as UsersIcon, MessageSquare, ArrowRight, AlertOctagon, Info, Star, Trophy, ArrowUp, MessageCircle, User as UserIcon, StickyNote, Edit3, ShoppingBag, BarChart2, DollarSign, Calendar as CalendarIcon, Copy, Coins, Trash2, Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, Course, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, CommunitySession, ToastMessage, ProfitEntry, QhubPosition, QHUB_POSITIONS } from '../types';
@@ -189,6 +189,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isExpired = user.role === 'expired';
   const allowedTabs = ['settings', 'certificates', 'support'];
   const [activeTab, setActiveTab] = useState(isExpired ? 'settings' : 'dashboard');
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
 
   // --- OZ Sales Commission State & Handlers ---
@@ -745,6 +746,90 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
       
+      {/* Mobile Sidebar (Drawer) */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-[100] lg:hidden flex">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 0.5 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+            />
+            {/* Drawer content card */}
+            <motion.div 
+              initial={{ x: '-100%' }} 
+              animate={{ x: 0 }} 
+              exit={{ x: '-100%' }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="relative w-80 max-w-[calc(100vw-3rem)] h-full bg-white flex flex-col shadow-2xl z-10"
+            >
+              <div className="p-6 flex items-center justify-between border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                   <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-base shadow-md shadow-indigo-600/20">Q</div>
+                   <div>
+                     <div className="font-bold text-slate-900 leading-none">Q-Hub</div>
+                     <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Learning System</div>
+                   </div>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-slate-700 p-1">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 custom-scrollbar">
+                {sidebarLinks.map((link, i) => {
+                  const isBlocked = isExpired && !allowedTabs.includes(link.id);
+                  return (
+                      <button 
+                        key={i} 
+                        onClick={() => { if (!isBlocked) { setActiveTab(link.id); setSidebarOpen(false); } }}
+                        disabled={isBlocked}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative ${
+                          activeTab === link.id ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] font-semibold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                        } ${isBlocked ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      >
+                        <span className={`${activeTab === link.id ? 'text-white' : 'text-slate-500 group-hover:text-slate-900'}`}>{link.icon}</span>
+                        {link.label}
+                        {isBlocked && <Lock size={14} className="absolute right-4 text-slate-500"/>}
+                      </button>
+                  );
+                })}
+                
+                <div className="pt-6 pb-2 px-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Extra</p></div>
+                <button disabled={isExpired} onClick={() => { setActiveTab('artifacts'); setSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${isExpired ? 'opacity-40 cursor-not-allowed' : ''} ${activeTab === 'artifacts' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-100'}`}>
+                   <Package size={20} className="text-yellow-500" /> Inventář {isExpired && <Lock size={14}/>}
+                </button>
+                
+                {user.role === 'admin' && (
+                   <button onClick={() => { onNavigate('admin'); setSidebarOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:text-slate-900 hover:bg-rose-50 border border-red-900/30 transition mt-4 group">
+                      <Lock size={20} className="group-hover:text-red-500" /> Administrace
+                   </button>
+                )}
+              </div>
+              <div className="p-4 border-t border-slate-200">
+                 <div onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }} className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-100 transition cursor-pointer group relative border border-slate-200/50">
+                    {user.avatarUrl ? (
+                        <img src={user.avatarUrl} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-slate-300"/>
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-lg font-bold text-white">{user.email.charAt(0).toUpperCase()}</div>
+                    )}
+                    <div className="flex-1 overflow-hidden">
+                       <p className="text-sm font-bold truncate text-slate-900 leading-tight">{user.name || user.email}</p>
+                       <p className="text-[10px] text-slate-500 font-semibold flex items-center gap-0.5 mt-0.5">
+                           <span>📍 {user.region || 'Karlovy Vary'}</span>
+                       </p>
+                       <p className="text-xs text-indigo-600 flex items-center gap-1 uppercase font-bold mt-0.5">{user.role === 'admin' ? <><Shield size={10} /> ADMIN</> : <><Gem size={10}/> {user.role === 'expired' ? 'EXPIRED' : user.role}</>}</p>
+                    </div>
+                    <Settings size={16} className="text-slate-500 group-hover:text-slate-900 transition" />
+                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar (Desktop) */}
       <div className="w-72 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex">
         <div className="p-8">
@@ -827,6 +912,9 @@ const Dashboard: React.FC<DashboardProps> = ({
          {/* ... (Header remains unchanged) ... */}
          <header className="h-20 border-b border-slate-200 bg-slate-50/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 relative z-[80]">
             <div className="flex items-center gap-4">
+                <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg transition mr-1">
+                    <Menu size={24} />
+                </button>
                <div>
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Vítej zpět, {user.name?.split(' ')[0] || 'Studente'} <span className="text-2xl">👋</span></h2>
                   {nextLevelRequirement && !isExpired && (
@@ -3108,7 +3196,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {activeTab === 'leaderboard' && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase">Žebříček <span className="text-amber-500">ELITY KVAPY</span></h2>
+                            <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase">Žebříček <span className="text-amber-500">ELITY QAPI</span></h2>
                             <p className="text-slate-500">Soutěžte s ostatními reprezentanty a získejte prestižní ocenění.</p>
                         </div>
                         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center bg-slate-100/50 border border-slate-200 p-4 rounded-2xl gap-3">
