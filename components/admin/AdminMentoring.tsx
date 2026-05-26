@@ -108,7 +108,7 @@ const AdminMentoring: React.FC<AdminMentoringProps> = ({ mentors, onUpdateMentor
         {/* --- EDIT MODAL --- */}
         <AnimatePresence>
             {editingMentor && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[99999] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
                     <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-lg rounded-3xl border border-slate-200 shadow-2xl p-8 space-y-6">
                         <div className="flex justify-between items-center border-b border-slate-200 pb-4">
                             <h3 className="text-xl font-bold text-slate-900">Profil Mentora</h3>
@@ -161,7 +161,7 @@ const AdminMentoring: React.FC<AdminMentoringProps> = ({ mentors, onUpdateMentor
         {/* --- DELETE CONFIRMATION MODAL --- */}
         <AnimatePresence>
             {deletingMentorId && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[99999] bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
                     <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white w-full max-w-sm rounded-3xl border border-slate-200 shadow-2xl p-6 text-center space-y-4">
                         <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
                             <Trash2 size={24}/>

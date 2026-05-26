@@ -1,4 +1,7 @@
 import { env } from './lib/env.js';
+import dns from 'node:dns';
+dns.setDefaultResultOrder('ipv4first');
+
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';

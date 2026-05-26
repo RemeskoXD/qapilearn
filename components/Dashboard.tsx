@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LayoutDashboard, BookOpen, Film, Calendar, Users, HelpCircle, 
   FileText, Award, Gem, Shield, LogOut, Bell, Zap, Play, Gift, 
-  TrendingUp, Settings, Lock, Mail, ChevronDown, ChevronUp, Download, EyeOff, Eye, CheckCircle, Package, Clock, ExternalLink, Camera, Send, X, ArrowLeft, Brain, Video, Check, Layers, Crown, Plus, Users as UsersIcon, MessageSquare, ArrowRight, AlertOctagon, Info, Star, Trophy, ArrowUp, MessageCircle, User as UserIcon, StickyNote, Edit3, ShoppingBag, BarChart2, DollarSign, Calendar as CalendarIcon, Copy
+  TrendingUp, Settings, Lock, Mail, ChevronDown, ChevronUp, Download, EyeOff, Eye, CheckCircle, Package, Clock, ExternalLink, Camera, Send, X, ArrowLeft, Brain, Video, Check, Layers, Crown, Plus, Users as UsersIcon, MessageSquare, ArrowRight, AlertOctagon, Info, Star, Trophy, ArrowUp, MessageCircle, User as UserIcon, StickyNote, Edit3, ShoppingBag, BarChart2, DollarSign, Calendar as CalendarIcon, Copy, Coins, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, Course, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, CommunitySession, ToastMessage, ProfitEntry, QhubPosition, QHUB_POSITIONS } from '../types';
@@ -190,6 +190,78 @@ const Dashboard: React.FC<DashboardProps> = ({
   const allowedTabs = ['settings', 'certificates', 'support'];
   const [activeTab, setActiveTab] = useState(isExpired ? 'settings' : 'dashboard');
   const [messagesOpen, setMessagesOpen] = useState(false);
+
+  // --- OZ Sales Commission State & Handlers ---
+  const [ozData, setOzData] = useState<{
+    userConfigs: Record<string, any>;
+    orders: any[];
+    adjustments: any[];
+    payouts: any[];
+  }>({ userConfigs: {}, orders: [], adjustments: [], payouts: [] });
+  const [ozLoading, setOzLoading] = useState(false);
+  const [selectedOzMonth, setSelectedOzMonth] = useState('2026-05');
+  const [claimSubject, setClaimSubject] = useState('');
+  const [claimText, setClaimText] = useState('');
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [claimTargetOrder, setClaimTargetOrder] = useState<any>(null);
+  const [claimSubmitting, setClaimSubmitting] = useState(false);
+
+  const fetchOzData = async () => {
+    try {
+      setOzLoading(true);
+      const res = await fetch('/api/caflou/oz/data');
+      if (res.ok) {
+        const data = await res.json();
+        setOzData(data);
+      }
+    } catch (e) {
+      console.error('[Dashboard] Failed to fetch OZ sales data:', e);
+    } finally {
+      setOzLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOzData();
+  }, [activeTab]);
+
+  const handleClaimSubmit = async () => {
+    if (!claimSubject || !claimText) {
+      notify('error', 'Chyba', 'Uveďte prosím předmět i zprávu reklamace.');
+      return;
+    }
+    try {
+      setClaimSubmitting(true);
+      const promptText = claimTargetOrder 
+        ? `K zakázce Číslo: ${claimTargetOrder.contractNumber} (${claimTargetOrder.customerName}, obrat ${claimTargetOrder.amount} Kč, sleva ${claimTargetOrder.discount}%)\n\nPodrobná zpráva:\n${claimText}`
+        : `Zpráva:\n${claimText}`;
+        
+      const res = await fetch('/api/caflou/oz/reklamace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          subject: claimSubject,
+          text: promptText
+        })
+      });
+      if (res.ok) {
+        notify('success', 'Reklamace Založena!', `Automatický reklamační lístek s vysokou prioritou byl registrován v našem Helpdesku.`);
+        setIsClaimModalOpen(false);
+        setClaimSubject('');
+        setClaimText('');
+        setClaimTargetOrder(null);
+        // Refresh
+        fetchOzData();
+      } else {
+        notify('error', 'Chyba reklamace', 'Nepodařilo se odeslat reklamační lístek.');
+      }
+    } catch (err: any) {
+      notify('error', 'Chyba reklamace', err?.message || 'Nepodařilo se odeslat.');
+    } finally {
+      setClaimSubmitting(false);
+    }
+  };
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [leaderboardRegion, setLeaderboardRegion] = useState('all');
   const [activeYoutubeId, setActiveYoutubeId] = useState<string | null>(null);
@@ -527,6 +599,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // ... (Sidebar links and logic remain same) ...
   const sidebarLinks = [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", id: 'dashboard' },
+    { icon: <Coins size={20} className="text-emerald-500" />, label: "Moje Provize (OZ)", id: 'oz-rewards' },
     { icon: <Trophy size={20} />, label: "Žebříček", id: 'leaderboard' },
     { icon: <BookOpen size={20} />, label: "Kurzy", id: 'courses' },
     { icon: <Zap size={20} />, label: "Výzvy", id: 'challenges' },
@@ -2010,6 +2083,488 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             Zatím nemáte sjednané žádné osobní konzultace.
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- MOJE PROVIZE (OZ) TAB --- */}
+                {activeTab === 'oz-rewards' && (
+                    <div className="space-y-8 animate-fade-in text-slate-900 pb-12">
+                        {/* Header Section with billing cycle selector */}
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">Okna & Stínící technika QAPI</span>
+                                    <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full">Provizní model OZ</span>
+                                </div>
+                                <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                                    <Coins className="text-emerald-500" size={28} />
+                                    Osobní provizní přehled (OZ)
+                                </h2>
+                                <p className="text-slate-500 text-sm mt-1">
+                                    Sledujte své dokončené zakázky, schválené slevy, dosažené provizní stupně a celkovou výplatu.
+                                </p>
+                            </div>
+
+                            {/* Month Switcher */}
+                            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl w-full md:w-auto self-stretch md:self-auto">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-2">Zúčtovací měsíc</span>
+                                <select
+                                    value={selectedOzMonth}
+                                    onChange={(e) => setSelectedOzMonth(e.target.value)}
+                                    className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="2026-05">Květen 2026 🌸</option>
+                                    <option value="2026-06">Červen 2026 ☀️</option>
+                                    <option value="2026-07">Červenec 2026 🌴</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Core Statistics calculations */}
+                        {(() => {
+                            const normEmail = (user.email || '').toLowerCase().trim();
+                            const config = ozData.userConfigs[normEmail] || { userType: 'commission', fixRate: 0 };
+                            
+                            const userOrders = ozData.orders.filter(o => o.email.toLowerCase() === normEmail);
+                            const monthOrders = userOrders.filter(o => o.date.startsWith(selectedOzMonth) && o.status === 'completed');
+                            
+                            // Calculate monthly volume (obrat)
+                            const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);
+
+                            // Determine bracket base percentage
+                            let baseRatePercent = 8;
+                            let bracketText = '1 Kč - 400 000 Kč (8%)';
+                            if (totalVolume <= 400000) {
+                                baseRatePercent = config.customRates?.b1 ?? 8;
+                                bracketText = `I. Stupeň (${baseRatePercent}%)`;
+                            } else if (totalVolume <= 700000) {
+                                baseRatePercent = config.customRates?.b2 ?? 10;
+                                bracketText = `II. Stupeň (${baseRatePercent}%)`;
+                            } else if (totalVolume <= 1000000) {
+                                baseRatePercent = config.customRates?.b3 ?? 11;
+                                bracketText = `III. Stupeň (${baseRatePercent}%)`;
+                            } else {
+                                baseRatePercent = config.customRates?.b4 ?? 12;
+                                bracketText = `IV. Exkluzivní stupeň (${baseRatePercent}%)`;
+                            }
+
+                            // Individual order commission calculations
+                            const calculateOrderCommission = (amount: number, discount: number) => {
+                                if (discount > 60) return 0; // complete penalty
+
+                                let rate = baseRatePercent;
+                                const tier1 = discount >= 33 && discount <= 45; // reduced
+                                const tier2 = discount > 45 && discount <= 60; // strictly penalized
+
+                                let r1 = config.customRates?.b1 ?? 8;
+                                let r2 = config.customRates?.b2 ?? 10;
+                                let r3 = config.customRates?.b3 ?? 11;
+                                let r4 = config.customRates?.b4 ?? 12;
+
+                                if (totalVolume <= 400000) {
+                                    if (tier2) rate = 3;
+                                    else if (tier1) rate = 6;
+                                    else rate = r1;
+                                } else if (totalVolume <= 700000) {
+                                    if (tier2) rate = 5;
+                                    else if (tier1) rate = 8;
+                                    else rate = r2;
+                                } else if (totalVolume <= 1000000) {
+                                    if (tier2) rate = 6;
+                                    else if (tier1) rate = 9;
+                                    else rate = r3;
+                                } else {
+                                    if (tier2) rate = 7;
+                                    else if (tier1) rate = 10;
+                                    else rate = r4;
+                                }
+                                return amount * (rate / 100);
+                            };
+
+                            const totalCommissions = (config.userType === 'commission' || config.userType === 'both')
+                                ? monthOrders.reduce((sum, o) => sum + calculateOrderCommission(o.amount, o.discount), 0)
+                                : 0;
+
+                            // Monthly Fix rate
+                            const fixAmount = (config.userType === 'fix' || config.userType === 'both') ? config.fixRate : 0;
+
+                            // Fines & bonuses for selected month
+                            const monthAdjustments = ozData.adjustments.filter(a => a.email.toLowerCase() === normEmail && a.month === selectedOzMonth);
+                            const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
+                            const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
+
+                            // Total Final payout
+                            const totalPayout = Math.max(0, Math.round(totalCommissions + fixAmount + bonusesSum - finesSum));
+
+                            // Tier Progress math
+                            let nextTierThreshold = 400000;
+                            let currentProgressPercent = (totalVolume / 400000) * 100;
+                            let nextTierText = 'K odemčení vyší provize 10%';
+
+                            if (totalVolume > 400000 && totalVolume <= 700000) {
+                                nextTierThreshold = 700000;
+                                currentProgressPercent = ((totalVolume - 400000) / 300000) * 100;
+                                nextTierText = 'K odemčení provize 11%';
+                            } else if (totalVolume > 700000 && totalVolume <= 1000000) {
+                                nextTierThreshold = 1000000;
+                                currentProgressPercent = ((totalVolume - 700000) / 300000) * 100;
+                                nextTierText = 'K odemčení max. provize 12%';
+                            } else if (totalVolume > 1000000) {
+                                currentProgressPercent = 100;
+                                nextTierText = 'Gratulujeme! Dosáhli jste nejvyšší provizní sazby.';
+                            }
+
+                            return (
+                                <div className="space-y-8">
+                                    {/* Metric Cards Grid */}
+                                    {ozLoading ? (
+                                        <div className="text-center py-10 text-slate-500 font-medium bg-white rounded-3xl border border-slate-200">Načítám mzdové výpočty...</div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                            {/* Card 1: Cumulative Obrat */}
+                                            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -z-0 opacity-40 group-hover:scale-110 transition-transform"></div>
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Měsíční obrat (Obrat)</span>
+                                                <span className="text-2xl font-black text-slate-900 block tracking-tight animate-none">
+                                                    {totalVolume.toLocaleString()} Kč
+                                                </span>
+                                                <div className="flex items-center gap-1.5 mt-2.5 text-xs text-slate-500 font-bold">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                    {monthOrders.length} uzavřených smluv
+                                                </div>
+                                            </div>
+
+                                            {/* Card 2: Reached Bracket */}
+                                            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -z-0 opacity-40 group-hover:scale-110 transition-transform"></div>
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Dosažený stupeň</span>
+                                                <span className="text-xl font-extrabold text-indigo-600 block leading-tight mt-1">
+                                                    {config.userType === 'fix' ? 'Fixní mzda' : bracketText}
+                                                 </span>
+                                                <div className="flex items-center gap-1.5 mt-2.5 text-xs text-slate-500 font-medium">
+                                                    <span className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 text-[10px] font-bold">Base Rate</span>
+                                                    Sleva 0-33% = {baseRatePercent}% provize
+                                                </div>
+                                            </div>
+
+                                            {/* Card 3: Payout Details & Breaks */}
+                                            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:border-amber-300 transition-all">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Provize + Fix</span>
+                                                <div className="space-y-1 mt-1">
+                                                    <div className="flex justify-between text-xs font-medium text-slate-600">
+                                                        <span>Provize ze zakázek:</span>
+                                                        <span className="font-bold">+{Math.round(totalCommissions).toLocaleString()} Kč</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs font-medium text-slate-600 flex-none">
+                                                        <span>Měsíční fixní základ:</span>
+                                                        <span className="font-bold">+{fixAmount.toLocaleString()} Kč</span>
+                                                    </div>
+                                                </div>
+                                                <div className="border-t border-dashed border-slate-100 mt-2.5 pt-2 flex justify-between text-xs text-slate-500">
+                                                    <span>Manažerské úpravy:</span>
+                                                    <span className={`font-bold ${bonusesSum - finesSum >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                        {bonusesSum - finesSum >= 0 ? '+' : ''}{(bonusesSum - finesSum).toLocaleString()} Kč
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Card 4: Total payout */}
+                                            <div className="bg-emerald-950 text-white rounded-3xl p-6 shadow-md relative overflow-hidden">
+                                                <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-emerald-800 rounded-full opacity-20"></div>
+                                                <span className="text-xs font-bold text-emerald-300 uppercase tracking-widest block mb-1">Navrhovaná Výplata</span>
+                                                <span className="text-3xl font-black text-emerald-400 block tracking-tight">
+                                                    {totalPayout.toLocaleString()} Kč
+                                                </span>
+                                                <p className="text-[10px] text-emerald-200/80 mt-2 font-medium">
+                                                    Konečná částka připsaná do peněženky za tento zúčtovací měsíc po schválení finanční účtárnou.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Tier Level progressive bar */}
+                                    {config.userType !== 'fix' && (
+                                        <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-4">
+                                                <div>
+                                                    <h3 className="font-extrabold text-slate-900 text-sm md:text-base flex items-center gap-2">
+                                                        <TrendingUp size={16} className="text-emerald-500" />
+                                                        Postup po provizních stupních (Měsíční výkon)
+                                                    </h3>
+                                                    <p className="text-xs text-slate-400 mt-0.5">Výška provize se automaticky zvedá podle vašeho celkového dosaženého měsíčního obratu.</p>
+                                                </div>
+                                                {totalVolume < 1000000 && (
+                                                    <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                                                        Chybí {(nextTierThreshold - totalVolume).toLocaleString()} Kč {nextTierText.toLowerCase()}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Visual progress bar */}
+                                            <div className="h-4 bg-slate-100 rounded-full overflow-hidden flex gap-0.5 relative mb-2 shadow-inner">
+                                                <div 
+                                                    className="h-full bg-emerald-500 max-w-full transition-all duration-700"
+                                                    style={{ width: `${Math.min(100, (totalVolume / 1000000) * 100)}%` }}
+                                                ></div>
+                                            </div>
+
+                                            {/* Bracket indicators */}
+                                            <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold text-slate-400 select-none">
+                                                <div className={totalVolume <= 400000 ? 'text-emerald-600 font-extrabold bg-emerald-50/50 py-1 rounded' : ''}>
+                                                    1. Stupeň (8%)<span className="block font-medium text-[9px]">0k - 400k Kč</span>
+                                                </div>
+                                                <div className={totalVolume > 400000 && totalVolume <= 700000 ? 'text-emerald-600 font-extrabold bg-emerald-50/50 py-1 rounded' : ''}>
+                                                    2. Stupeň (10%)<span className="block font-medium text-[9px]">400k - 700k Kč</span>
+                                                </div>
+                                                <div className={totalVolume > 700000 && totalVolume <= 1000000 ? 'text-emerald-600 font-extrabold bg-emerald-50/50 py-1 rounded' : ''}>
+                                                    3. Stupeň (11%)<span className="block font-medium text-[9px]">700k - 1M Kč</span>
+                                                </div>
+                                                <div className={totalVolume > 1000000 ? 'text-emerald-600 font-extrabold bg-emerald-50/50 py-1 rounded' : ''}>
+                                                    Exkluzivní (12%)<span className="block font-medium text-[9px]">1M+ Kč</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Orders log list */}
+                                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                            <div>
+                                                <h3 className="font-extrabold text-slate-900 text-sm md:text-base">Uzavřené zakázky & zakázkové listy</h3>
+                                                <p className="text-xs text-slate-400 mt-0.5">Kompletní log realizací pro přiznání provizí. Procento provize se snižuje při překročení doporučených slev.</p>
+                                            </div>
+                                            <div className="px-3 py-1 bg-white border border-slate-200 text-xs font-bold text-slate-600 rounded-xl shadow-sm">
+                                                Celkem: {monthOrders.length} zakázek
+                                            </div>
+                                        </div>
+
+                                        {monthOrders.length === 0 ? (
+                                            <div className="text-center py-16 text-slate-400 font-medium text-sm space-y-2">
+                                                <div>📭 Nebyly nalezeny žádné uzavřené zakázky pro měsíc {selectedOzMonth}.</div>
+                                                <p className="text-xs text-slate-400 font-normal">Jakmile dokončíte objednávku u klienta, objeví se ve vašich podkladech.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-left border-collapse">
+                                                    <thead>
+                                                        <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30">
+                                                            <th className="py-4 px-6 md:px-8">Datum</th>
+                                                            <th className="py-4 px-4 font-mono">Číslo smlouvy</th>
+                                                            <th className="py-4 px-4">Zákazník / Odběratel</th>
+                                                            <th className="py-4 px-4 text-right">Fakturovaný obrat</th>
+                                                            <th className="py-4 px-4 text-center">Sleva (%)</th>
+                                                            <th className="py-4 px-4 text-center">Provize %</th>
+                                                            <th className="py-4 px-4 text-right">Získaná Provize</th>
+                                                            <th className="py-4 px-6 text-center">Akce</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700 animate-none">
+                                                        {monthOrders.map((o) => {
+                                                            const orderCommValue = config.userType === 'fix' ? 0 : calculateOrderCommission(o.amount, o.discount);
+                                                            
+                                                            // Determine percentage
+                                                            let currentRateStr = `${baseRatePercent}%`;
+                                                            if (o.discount > 60) currentRateStr = '0%';
+                                                            else if (o.discount > 45) {
+                                                                if (totalVolume <= 400000) currentRateStr = '3%';
+                                                                else if (totalVolume <= 700000) currentRateStr = '5%';
+                                                                else if (totalVolume <= 1000000) currentRateStr = '6%';
+                                                                else currentRateStr = '7%';
+                                                            } else if (o.discount >= 33) {
+                                                                if (totalVolume <= 400000) currentRateStr = '6%';
+                                                                else if (totalVolume <= 700000) currentRateStr = '8%';
+                                                                else if (totalVolume <= 1000000) currentRateStr = '9%';
+                                                                else currentRateStr = '10%';
+                                                            }
+
+                                                            return (
+                                                                <tr key={o.id} className="hover:bg-slate-50/60 transition group">
+                                                                    <td className="py-4 px-6 md:px-8 font-medium text-slate-500">{o.date}</td>
+                                                                    <td className="py-4 px-4 font-mono font-bold text-indigo-600">{o.contractNumber}</td>
+                                                                    <td className="py-4 px-4 font-semibold text-slate-900">
+                                                                        <div>{o.customerName}</div>
+                                                                        <span className="text-[10px] font-normal text-slate-400">{o.description}</span>
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-right font-bold text-slate-900">
+                                                                        {o.amount.toLocaleString()} Kč
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center">
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                                            o.discount <= 20 
+                                                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                                                : o.discount <= 32.9
+                                                                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                                                                : o.discount <= 45
+                                                                                ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                                                                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                                                        }`}>
+                                                                            {o.discount}%
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center font-bold text-indigo-700">
+                                                                        {config.userType === 'fix' ? 'Fixní' : currentRateStr}
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-right font-black text-slate-900">
+                                                                        {config.userType === 'fix' ? '0 Kč' : `${Math.round(orderCommValue).toLocaleString()} Kč`}
+                                                                    </td>
+                                                                    <td className="py-4 px-6 text-center">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setClaimTargetOrder(o);
+                                                                                setClaimSubject(`Nesrovnalost provize u zakázky ${o.contractNumber}`);
+                                                                                setIsClaimModalOpen(true);
+                                                                            }}
+                                                                            className="px-2.5 py-1 text-[10px] text-rose-600 font-bold border border-rose-200 hover:bg-rose-50 rounded-lg transition"
+                                                                        >
+                                                                            Rozporovat 🚨
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Fines and bonuses display */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Section 1: Adjustments */}
+                                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                                            <h3 className="font-extrabold text-slate-900 text-xs md:text-sm border-b border-slate-100 pb-3 mb-4 flex items-center gap-1.5 uppercase tracking-wider text-slate-400">
+                                                <Award size={16} className="text-amber-500" />
+                                                Mimořádné odměny a stržené pokuty (MNG)
+                                            </h3>
+                                            
+                                            {monthAdjustments.length === 0 ? (
+                                                <div className="text-center py-10 text-slate-400 text-xs">Bez dodatečných manažerských zásahů a pokut v tomto měsíci.</div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {monthAdjustments.map((a) => (
+                                                        <div key={a.id} className={`p-4 rounded-xl border flex justify-between items-start ${
+                                                            a.type === 'bonus' 
+                                                                ? 'bg-emerald-50 text-emerald-950 border-emerald-100'
+                                                                : 'bg-rose-50 text-rose-950 border-rose-100'
+                                                        }`}>
+                                                            <div>
+                                                                <div className="text-xs font-bold">{a.reason}</div>
+                                                                <span className="text-[10px] text-slate-400 font-medium block mt-1">{a.date}</span>
+                                                            </div>
+                                                            <span className={`text-sm font-extrabold font-mono ${a.type === 'bonus' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                                                {a.type === 'bonus' ? '+' : '-'}{a.amount.toLocaleString()} Kč
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                 </div>
+                                            )}
+                                        </div>
+
+                                        {/* Section 2: Payouts audit */}
+                                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                                            <h3 className="font-extrabold text-slate-900 text-xs md:text-sm border-b border-slate-100 pb-3 mb-4 flex items-center gap-1.5 uppercase tracking-wider text-slate-400">
+                                                <FileText size={16} className="text-indigo-600" />
+                                                Historie vyplacených mezd za OZ činnost
+                                            </h3>
+                                            
+                                            {ozData.payouts.filter(p => p.email.toLowerCase() === normEmail).length === 0 ? (
+                                                <div className="text-center py-10 text-slate-400 text-xs">Zatím nebyly zaúčtovány žádné minulé měsíční výplaty.</div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {ozData.payouts.filter(p => p.email.toLowerCase() === normEmail).map((p) => (
+                                                        <div key={p.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center text-xs text-slate-700">
+                                                            <div>
+                                                                <span className="font-bold block py-0.5 px-2 bg-slate-200 text-slate-800 text-[10px] rounded w-max mb-1 uppercase tracking-wider">{p.month}</span>
+                                                                <span className="text-slate-500 font-medium text-[10px]">Vyplaceno: {p.datePaid}</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="font-extrabold text-slate-900 block">{p.totalPayout.toLocaleString()} Kč</span>
+                                                                <span className="text-[9px] font-bold text-emerald-600">● Zaúčtováno / Vyplaceno</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {/* --- MOJE PROVIZE REKLAMACE MODAL --- */}
+                {isClaimModalOpen && (
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in text-slate-900">
+                        <div className="bg-white rounded-3xl border border-slate-100 p-6 md:p-8 w-full max-w-lg shadow-2xl relative">
+                            <button
+                                onClick={() => {
+                                    setIsClaimModalOpen(false);
+                                    setClaimTargetOrder(null);
+                                }}
+                                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                            >
+                                <X size={20} />
+                            </button>
+
+                            <div className="mb-6">
+                                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest rounded-full">Helpdesk mzdových reklamací</span>
+                                <h3 className="text-xl font-bold text-slate-900 mt-2">🚨 Založení reklamace mzdového plnění</h3>
+                                <p className="text-xs text-slate-400 mt-1">Zadejte spor pro nesrovnalost u provize. Vytvoří to automatický tiket pro MNG & administrátora.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                {claimTargetOrder && (
+                                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1">
+                                        <div className="font-bold text-indigo-700">Parametry reklamované zakázky:</div>
+                                        <div className="text-slate-700"><span className="font-bold text-slate-900">Odběratel:</span> {claimTargetOrder.customerName}</div>
+                                        <div className="text-slate-700"><span className="font-bold text-slate-900">Smlouva:</span> {claimTargetOrder.contractNumber}</div>
+                                        <div className="text-slate-700"><span className="font-bold text-slate-900">Měsíční objem:</span> {claimTargetOrder.amount.toLocaleString()} Kč (Sleva {claimTargetOrder.discount}%)</div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Předmět Reklamace</label>
+                                    <input
+                                        type="text"
+                                        value={claimSubject}
+                                        onChange={(e) => setClaimSubject(e.target.value)}
+                                        placeholder="Vyberte jasný název sporu"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-inner"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Slovní odůvodnění</label>
+                                    <textarea
+                                        value={claimText}
+                                        onChange={(e) => setClaimText(e.target.value)}
+                                        rows={5}
+                                        placeholder="Popište přesně nesrovnalost (např. Sleva byla schválena managerem mimořádně, požaduji přiznání plné sazby...)"
+                                        className="w-full bg-slate-50 border border-slate-250 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-inner"
+                                    ></textarea>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsClaimModalOpen(false);
+                                            setClaimTargetOrder(null);
+                                        }}
+                                        className="w-1/2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+                                    >
+                                        Zrušit
+                                    </button>
+                                    <button
+                                        onClick={handleClaimSubmit}
+                                        disabled={claimSubmitting}
+                                        className="w-1/2 py-3 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-450 text-white text-xs font-bold rounded-xl transition flex justify-center items-center gap-2"
+                                    >
+                                        {claimSubmitting ? 'Odesílám...' : 'Odeslat reklamaci 📬'}
+                                    </button>
                                 </div>
                             </div>
                         </div>

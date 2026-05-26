@@ -20,9 +20,24 @@ export async function syncCollection<T extends { id: string }>(
     return JSON.stringify(old) !== JSON.stringify(i);
   });
 
+  const errors: string[] = [];
+
   await Promise.all([
-    ...toDelete.map((i) => api.delete(`${basePath}/${i.id}`).catch(() => {})),
-    ...toCreate.map((i) => api.post(basePath, i).catch(() => {})),
-    ...toUpdate.map((i) => api.put(`${basePath}/${i.id}`, i).catch(() => {})),
+    ...toDelete.map((i) => api.delete(`${basePath}/${i.id}`).catch((err) => {
+      console.error(`[Sync Delete ${basePath}] Failed to delete item:`, err);
+      errors.push(`Smazání se nezdařilo: ${err?.message || err}`);
+    })),
+    ...toCreate.map((i) => api.post(basePath, i).catch((err) => {
+      console.error(`[Sync Create ${basePath}] Failed to create item:`, err);
+      errors.push(`Vytvoření se nezdařilo: ${err?.message || err}`);
+    })),
+    ...toUpdate.map((i) => api.put(`${basePath}/${i.id}`, i).catch((err) => {
+      console.error(`[Sync Update ${basePath}] Failed to update item:`, err);
+      errors.push(`Aktualizace se nezdařila: ${err?.message || err}`);
+    })),
   ]);
+
+  if (errors.length > 0) {
+    throw new Error(errors.join('; '));
+  }
 }

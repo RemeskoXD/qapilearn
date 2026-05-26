@@ -1,9 +1,5 @@
-// Q-Hub Prisma schema
-// Všechny tabulky mají prefix `qhub_` aby nekolidovaly s existujícími tabulkami v DB.
-
 generator client {
   provider      = "prisma-client-js"
-  // `native` = lokální vývoj; `linux-musl-openssl-3.0.x` = Alpine Docker (Coolify).
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -12,144 +8,124 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ---------------- Uživatelé ----------------
-
 model QhubUser {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  passwordHash      String
-  name              String?
-  phone             String?
-  region            String   @default("Karlovy Vary")
-  role              String   @default("student") // student | premium | vip | support | admin | expired
-  positions         Json     @default("[]") // string[] – technik | prodejce | team_leader | linka | ostatni
-  level             Int      @default(1)
-  xp                Int      @default(0)
-  xpBoostUntil      DateTime?
-  planExpires       DateTime?
-  isBanned          Boolean  @default(false)
-  bio               String?
-  avatarUrl         String?
-  isPublicProfile   Boolean  @default(false)
-  financialProfit   Float    @default(0)
-
-  // Vnořené uživatelské stavy jako JSON (zrcadlí typy v types.ts)
-  inventory         Json     @default("[]") // Artifact[]
-  activeChallenges  Json     @default("[]") // UserChallengeProgress[]
-  certificates      Json     @default("[]") // Certificate[]
-  courseProgress    Json     @default("[]") // UserCourseProgress[]
-  lessonNotes       Json     @default("{}") // Record<lessonId,string>
-  quizHistory       Json     @default("[]") // UserQuizHistory[]
-  adminNotes        Json     @default("[]") // AdminNote[]
-  profitHistory     Json     @default("[]") // ProfitEntry[]
-  messages          Json     @default("[]") // Message[]
-  dashboardMessage  Json?
-
-  joinDate          DateTime @default(now())
-  lastLogin         DateTime @default(now())
-
-  bookings          QhubBooking[]
-  submissions       QhubBonusSubmission[]
-  tickets           QhubTicket[]
+  id               String                @id @default(cuid())
+  email            String                @unique
+  passwordHash     String
+  name             String?
+  phone            String?
+  role             String                @default("student")
+  positions        Json                  @default("[]")
+  level            Int                   @default(1)
+  xp               Int                   @default(0)
+  xpBoostUntil     DateTime?
+  planExpires      DateTime?
+  isBanned         Boolean               @default(false)
+  bio              String?
+  avatarUrl        String?
+  isPublicProfile  Boolean               @default(false)
+  financialProfit  Float                 @default(0)
+  inventory        Json                  @default("[]")
+  activeChallenges Json                  @default("[]")
+  certificates     Json                  @default("[]")
+  courseProgress   Json                  @default("[]")
+  lessonNotes      Json                  @default("{}")
+  quizHistory      Json                  @default("[]")
+  adminNotes       Json                  @default("[]")
+  profitHistory    Json                  @default("[]")
+  messages         Json                  @default("[]")
+  dashboardMessage Json?
+  joinDate         DateTime              @default(now())
+  lastLogin        DateTime              @default(now())
+  region           String                @default("Karlovy Vary")
+  submissions      QhubBonusSubmission[]
+  bookings         QhubBooking[]
+  tickets          QhubTicket[]
 
   @@map("qhub_users")
 }
 
-// ---------------- Kurzy ----------------
-
 model QhubCourse {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
-  image         String
-  level         String   @default("student") // UserRole minimum
-  author        String
-  totalDuration Int      @default(0)
-  published     Boolean  @default(false)
-  xpReward      Int      @default(0)
-  learningPoints Json    @default("[]") // string[]
-  modules       Json     @default("[]") // CourseModule[] (vnořeně, vč. lekcí a quiz otázek)
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  image          String
+  level          String   @default("student")
+  author         String
+  totalDuration  Int      @default(0)
+  published      Boolean  @default(false)
+  xpReward       Int      @default(0)
+  learningPoints Json     @default("[]")
+  modules        Json     @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@map("qhub_courses")
 }
 
-// ---------------- Kvízy ----------------
-
 model QhubQuiz {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
-  image         String
-  level         String   @default("student")
-  xpReward      Int      @default(0)
-  passingScore  Int      @default(70)
-  published     Boolean  @default(true)
-  questions     Json     @default("[]") // QuizQuestion[]
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  image        String
+  level        String   @default("student")
+  xpReward     Int      @default(0)
+  passingScore Int      @default(70)
+  published    Boolean  @default(true)
+  questions    Json     @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("qhub_quizzes")
 }
 
-// ---------------- Mentoři + Bookingy ----------------
-
 model QhubMentor {
-  id                String   @id @default(cuid())
+  id                String        @id @default(cuid())
   name              String
   role              String
   image             String
   bio               String
-  hourlyRate        Float    @default(0)
-  isAvailable       Boolean  @default(true)
+  hourlyRate        Float         @default(0)
+  isAvailable       Boolean       @default(true)
   nextAvailableDate DateTime?
-
   bookings          QhubBooking[]
 
   @@map("qhub_mentors")
 }
 
 model QhubBooking {
-  id           String   @id @default(cuid())
-  mentor       QhubMentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-  mentorId     String
-  user         QhubUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String
-  userEmail    String
-  date         DateTime
-  status       String   @default("pending") // pending | approved | rejected
-  note         String   @default("")
-  meetingLink  String?
-  adminNote    String?
-  rating       Int?
-
-  createdAt    DateTime @default(now())
+  id          String     @id @default(cuid())
+  mentorId    String
+  userId      String
+  userEmail   String
+  date        DateTime
+  status      String     @default("pending")
+  note        String     @default("")
+  meetingLink String?
+  adminNote   String?
+  rating      Int?
+  createdAt   DateTime   @default(now())
+  mentor      QhubMentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  user        QhubUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("qhub_bookings")
 }
 
-// ---------------- Kalendář ----------------
-
 model QhubCalendarEvent {
-  id                 String   @id @default(cuid())
-  title              String
-  description        String
-  date               DateTime
-  type               String   @default("webinar") // webinar | workshop | meetup
-  link               String?
-  registeredUserIds  Json     @default("[]") // string[]
-  maxAttendees       Int?
-  price              Float?
-  isFreeForVip       Boolean  @default(false)
-  isFreeForPremium   Boolean  @default(false)
+  id                String   @id @default(cuid())
+  title             String
+  description       String
+  date              DateTime
+  type              String   @default("webinar")
+  link              String?
+  registeredUserIds Json     @default("[]")
+  maxAttendees      Int?
+  price             Float?
+  isFreeForVip      Boolean  @default(false)
+  isFreeForPremium  Boolean  @default(false)
 
   @@map("qhub_events")
 }
-
-// ---------------- Streamy ----------------
 
 model QhubStream {
   id          String   @id @default(cuid())
@@ -158,51 +134,45 @@ model QhubStream {
   thumbnail   String
   streamUrl   String
   date        DateTime
-  status      String   @default("upcoming") // upcoming | live | ended
+  status      String   @default("upcoming")
   viewers     Int      @default(0)
 
   @@map("qhub_streams")
 }
 
-// ---------------- Ebooks ----------------
-
 model QhubEbook {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   title       String
   description String
   coverImage  String
   downloadUrl String
-  pages       Int      @default(0)
+  pages       Int    @default(0)
   author      String
 
   @@map("qhub_ebooks")
 }
 
-// ---------------- Podpora ----------------
-
 model QhubTicket {
-  id         String   @id @default(cuid())
-  user       QhubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String
-  userEmail  String
-  subject    String
-  status     String   @default("open") // open | closed | pending
-  priority   String   @default("medium") // low | medium | high
-  messages   Json     @default("[]") // { sender, text, timestamp }[]
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  userEmail String
+  subject   String
+  status    String   @default("open")
+  priority  String   @default("medium")
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now())
+  user      QhubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("qhub_tickets")
 }
 
-// ---------------- Bonusové úkoly ----------------
-
 model QhubBonusTask {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String
-  rewardXP    Int      @default(0)
+  rewardXP    Int       @default(0)
   deadline    DateTime?
-  proofType   String   @default("text") // text | image | link
+  proofType   String    @default("text")
 
   @@map("qhub_bonus_tasks")
 }
@@ -210,45 +180,41 @@ model QhubBonusTask {
 model QhubBonusSubmission {
   id          String   @id @default(cuid())
   taskId      String
-  user        QhubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
   content     String
-  status      String   @default("pending") // pending | approved | rejected
+  status      String   @default("pending")
   submittedAt DateTime @default(now())
+  user        QhubUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("qhub_bonus_submissions")
 }
 
-// ---------------- Artefakty + Výzvy ----------------
-
 model QhubArtifact {
-  id              String   @id @default(cuid())
-  name            String
-  description     String
-  image           String
-  rarity          String   @default("common") // common | rare | epic | legendary
-  type            String   @default("consumable") // badge | consumable | ticket
-  quantity        Int      @default(0)
-  price           Int?
-  effectType      String?  // xp_boost
-  effectDuration  Int?     // hours
+  id             String  @id @default(cuid())
+  name           String
+  description    String
+  image          String
+  rarity         String  @default("common")
+  type           String  @default("consumable")
+  quantity       Int     @default(0)
+  price          Int?
+  effectType     String?
+  effectDuration Int?
 
   @@map("qhub_artifacts")
 }
 
 model QhubChallenge {
-  id               String   @id @default(cuid())
+  id               String  @id @default(cuid())
   title            String
   description      String
-  type             String   @default("daily") // daily | weekly
-  targetCount      Int      @default(1)
-  rewardXP         Int      @default(0)
+  type             String  @default("daily")
+  targetCount      Int     @default(1)
+  rewardXP         Int     @default(0)
   rewardArtifactId String?
 
   @@map("qhub_challenges")
 }
-
-// ---------------- Komunitní sessions ----------------
 
 model QhubCommunitySession {
   id           String   @id @default(cuid())
@@ -258,12 +224,10 @@ model QhubCommunitySession {
   date         DateTime
   description  String
   maxAttendees Int      @default(50)
-  attendees    Json     @default("[]") // string[]
+  attendees    Json     @default("[]")
 
   @@map("qhub_community_sessions")
 }
-
-// ---------------- Levely (gamifikace) ----------------
 
 model QhubLevel {
   level      Int    @id
@@ -273,14 +237,12 @@ model QhubLevel {
   @@map("qhub_levels")
 }
 
-// ---------------- Systémová nastavení (singleton) ----------------
-
 model QhubSystemSettings {
-  id                  Int     @id @default(1)
-  maintenanceMode     Boolean @default(false)
-  allowRegistrations  Boolean @default(true)
-  globalBanner        String  @default("")
-  version             String  @default("1.0.0 Q-Hub")
+  id                 Int     @id @default(1)
+  maintenanceMode    Boolean @default(false)
+  allowRegistrations Boolean @default(true)
+  globalBanner       String  @default("")
+  version            String  @default("1.0.0 Q-Hub")
 
   @@map("qhub_settings")
 }

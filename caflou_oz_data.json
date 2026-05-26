@@ -1,0 +1,832 @@
+{
+  "userConfigs": {
+    "ludvikremesekwork@gmail.com": {
+      "userType": "commission",
+      "fixRate": 15000,
+      "customRates": {
+        "b1": 8,
+        "b2": 10,
+        "b3": 11,
+        "b4": 12
+      }
+    },
+    "technik1@qapi.cz": {
+      "userType": "both",
+      "fixRate": 25000,
+      "customRates": {
+        "b1": 8,
+        "b2": 10,
+        "b3": 11,
+        "b4": 12
+      }
+    },
+    "prodejce2@qapi.cz": {
+      "userType": "fix",
+      "fixRate": 45000
+    }
+  },
+  "orders": [
+    {
+      "id": "ord-001",
+      "email": "ludvikremesekwork@gmail.com",
+      "contractNumber": "S2026-001",
+      "customerName": "Bytové Družstvo Karlova",
+      "description": "Kompletní výměna těsnění oken (72 ks) a seřízení kování",
+      "date": "2026-05-02",
+      "amount": 185000,
+      "discount": 15,
+      "status": "completed"
+    },
+    {
+      "id": "ord-002",
+      "email": "ludvikremesekwork@gmail.com",
+      "contractNumber": "S2026-003",
+      "customerName": "Roman Drábek - RD Kraslice",
+      "description": "Dodávka a montáž venkovní stínící techniky (žaluzie Z-90)",
+      "date": "2026-05-10",
+      "amount": 260000,
+      "discount": 35,
+      "status": "completed"
+    },
+    {
+      "id": "ord-003",
+      "email": "ludvikremesekwork@gmail.com",
+      "contractNumber": "S2026-004",
+      "customerName": "Jana Málková",
+      "description": "Dodávka a montáž sítí proti hmyzu a výměna těsnění na křídlech",
+      "date": "2026-05-15",
+      "amount": 45000,
+      "discount": 10,
+      "status": "completed"
+    },
+    {
+      "id": "ord-004",
+      "email": "ludvikremesekwork@gmail.com",
+      "contractNumber": "S2026-009",
+      "customerName": "Základní Škola Cheb",
+      "description": "Havarijní servis kování oken a oprava doplňků",
+      "date": "2026-05-20",
+      "amount": 312000,
+      "discount": 48,
+      "status": "completed"
+    },
+    {
+      "id": "ord-005",
+      "email": "ludvikremesekwork@gmail.com",
+      "contractNumber": "S2026-015",
+      "customerName": "Hotel Thermal s.r.o.",
+      "description": "Seřízení profilů a kompletní promazání kování oken",
+      "date": "2026-05-25",
+      "amount": 120000,
+      "discount": 12,
+      "status": "completed"
+    },
+    {
+      "id": "ord-006",
+      "email": "technik1@qapi.cz",
+      "contractNumber": "S2026-012",
+      "customerName": "Stavebniny Cheb",
+      "description": "Seřízení oken a montáž sítí",
+      "date": "2026-05-12",
+      "amount": 150000,
+      "discount": 18,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-574323",
+      "email": "chytrosmichal@gmail.com",
+      "contractNumber": "Projekt 574323",
+      "customerName": "Břetislav Dytrych",
+      "description": "Dveřní síť",
+      "date": "2026-05-26",
+      "amount": 10189,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571796",
+      "email": "erik.bahleda@qapi.cz",
+      "contractNumber": "Projekt 571796",
+      "customerName": "Daniela Kocourková",
+      "description": "Ext. rolety",
+      "date": "2026-05-04",
+      "amount": 31241,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-561925",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 561925",
+      "customerName": "Jiří Baumruker",
+      "description": "Servis Oken",
+      "date": "2026-04-07",
+      "amount": 26407,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-555118",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 555118",
+      "customerName": "Icecleaning s.r.o.",
+      "description": "garážové vrata",
+      "date": "2026-05-20",
+      "amount": 60000,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579902",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 579902",
+      "customerName": "Jiri Pokorny",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-14",
+      "amount": 13729,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577899",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 577899",
+      "customerName": "Jarmila Dostalova",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-26",
+      "amount": 5789,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577665",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 577665",
+      "customerName": "Nenastína Svitlana",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-26",
+      "amount": 5499,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577664",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 577664",
+      "customerName": "Martina Filipcová",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-18",
+      "amount": 4164,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577631",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 577631",
+      "customerName": "Tibor Cervenak",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-04",
+      "amount": 2999,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577596",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 577596",
+      "customerName": "Petra Smetanová",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-25",
+      "amount": 17069,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-574372",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 574372",
+      "customerName": "Petr Otruba",
+      "description": "Interiérové Stínění",
+      "date": "2026-05-22",
+      "amount": 12627,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579556",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 579556",
+      "customerName": "Milan Holec",
+      "description": "kovaní",
+      "date": "2026-05-07",
+      "amount": 13089,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-585079",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 585079",
+      "customerName": "Pididomek invest, s.r.o.",
+      "description": "kování",
+      "date": "2026-05-21",
+      "amount": 25470,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-578433",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 578433",
+      "customerName": "Božena Doležalová",
+      "description": "kovani + servis",
+      "date": "2026-05-15",
+      "amount": 14850,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-578238",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 578238",
+      "customerName": " Aleš Nerdl",
+      "description": "mechanika",
+      "date": "2026-05-01",
+      "amount": 7319,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-530977",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 530977",
+      "customerName": "René Nekuda",
+      "description": "roletky BŘEZEN",
+      "date": "2026-05-19",
+      "amount": 10406,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-576339",
+      "email": "erik.bahleda@qapi.cz",
+      "contractNumber": "Projekt 576339",
+      "customerName": "Romča Trulejová",
+      "description": "Roletky den noc",
+      "date": "2026-05-08",
+      "amount": 42093,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-558752",
+      "email": "chytrosmichal@gmail.com",
+      "contractNumber": "Projekt 558752",
+      "customerName": "THB stavební s.r.o.",
+      "description": "Rolety den a noc",
+      "date": "2026-05-14",
+      "amount": 39720,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-526830",
+      "email": "davechytros@gmail.com",
+      "contractNumber": "Projekt 526830",
+      "customerName": "Aleš Valla",
+      "description": "Rolety Radix, Žaluzie",
+      "date": "2026-05-19",
+      "amount": 107708,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-483695",
+      "email": "neznamy@qapi.cz",
+      "contractNumber": "Projekt 483695",
+      "customerName": "Ivan Křivánek",
+      "description": "Sekční gar. vrata 2x",
+      "date": "2026-05-06",
+      "amount": 124338,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-569286",
+      "email": "miroslav.lopata@qapi.cz",
+      "contractNumber": "Projekt 569286",
+      "customerName": "Hoàng Nghĩa Hoài",
+      "description": "Sekční vrata",
+      "date": "2026-05-21",
+      "amount": 38993,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-585260",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 585260",
+      "customerName": "Zdeňka Knížková",
+      "description": "servis",
+      "date": "2026-05-11",
+      "amount": 9569,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579785",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 579785",
+      "customerName": "Vojtěch Kletečka",
+      "description": "servis",
+      "date": "2026-05-04",
+      "amount": 14849,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579773",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 579773",
+      "customerName": "SENTO s.r.o.",
+      "description": "servis",
+      "date": "2026-05-04",
+      "amount": 18984,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579317",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 579317",
+      "customerName": "Pididomek invest, s.r.o.",
+      "description": "servis",
+      "date": "2026-05-01",
+      "amount": 32995,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571670",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 571670",
+      "customerName": "Miloš Komárek",
+      "description": "Servis M.Komárek",
+      "date": "2026-05-05",
+      "amount": 16500,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579583",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 579583",
+      "customerName": "Petr Bílý",
+      "description": "servis oken ",
+      "date": "2026-05-01",
+      "amount": 3439,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-594992",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 594992",
+      "customerName": "Jana Turtáková",
+      "description": "Servis oken",
+      "date": "2026-05-26",
+      "amount": 22087,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-594991",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 594991",
+      "customerName": "Zdenka Hálková",
+      "description": "Servis oken",
+      "date": "2026-05-20",
+      "amount": 16431,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-585072",
+      "email": "petr.chytros@qapi.cz",
+      "contractNumber": "Projekt 585072",
+      "customerName": "Hao Jin",
+      "description": "Servis oken",
+      "date": "2026-05-22",
+      "amount": 7038,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-584946",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 584946",
+      "customerName": "Alena Salawová",
+      "description": "Servis oken",
+      "date": "2026-05-18",
+      "amount": 40601,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579479",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 579479",
+      "customerName": "Martin Kučera",
+      "description": "Servis oken",
+      "date": "2026-05-01",
+      "amount": 21790,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579032",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 579032",
+      "customerName": "Václav Zahradníček",
+      "description": "Servis oken",
+      "date": "2026-05-05",
+      "amount": 17747,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577517",
+      "email": "chytrosmichal@gmail.com",
+      "contractNumber": "Projekt 577517",
+      "customerName": "Petr Krčmář",
+      "description": "Servis oken",
+      "date": "2026-05-16",
+      "amount": 182071,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-570313",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 570313",
+      "customerName": "Petr Kuhn",
+      "description": "Servis oken",
+      "date": "2026-05-25",
+      "amount": 37138,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-597147",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 597147",
+      "customerName": "Zdeněk Chlopčík",
+      "description": "Servis Oken",
+      "date": "2026-05-25",
+      "amount": 12159,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-587409",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 587409",
+      "customerName": "Zbyněk Střelec",
+      "description": "Servis Oken",
+      "date": "2026-05-19",
+      "amount": 17856,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-584894",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 584894",
+      "customerName": "Eisner",
+      "description": "Servis Oken",
+      "date": "2026-05-14",
+      "amount": 13737,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-581209",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 581209",
+      "customerName": "Jiří Sroka",
+      "description": "Servis Oken",
+      "date": "2026-05-26",
+      "amount": 7625,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-581026",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 581026",
+      "customerName": "Jaroslav Chytil",
+      "description": "Servis Oken",
+      "date": "2026-05-18",
+      "amount": 15139,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-580943",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 580943",
+      "customerName": "Veronika Malíková",
+      "description": "Servis Oken",
+      "date": "2026-05-26",
+      "amount": 13069,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-580939",
+      "email": "erik.bahleda@qapi.cz",
+      "contractNumber": "Projekt 580939",
+      "customerName": "Jaroslav Veselý",
+      "description": "Servis Oken",
+      "date": "2026-05-07",
+      "amount": 16464,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579950",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 579950",
+      "customerName": "Kateřina Baranovičová",
+      "description": "Servis Oken",
+      "date": "2026-05-19",
+      "amount": 35206,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579908",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 579908",
+      "customerName": "Jan Sadílek",
+      "description": "Servis Oken",
+      "date": "2026-05-19",
+      "amount": 15409,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-579225",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 579225",
+      "customerName": "Zdenka Iranova",
+      "description": "Servis Oken",
+      "date": "2026-05-01",
+      "amount": 3709,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-578761",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 578761",
+      "customerName": "Bozena Krsnakova",
+      "description": "Servis Oken",
+      "date": "2026-05-19",
+      "amount": 10508,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-578415",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 578415",
+      "customerName": "Edita Luklová",
+      "description": "Servis Oken",
+      "date": "2026-05-14",
+      "amount": 8493,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577686",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 577686",
+      "customerName": "Martin Hradil",
+      "description": "Servis Oken",
+      "date": "2026-05-04",
+      "amount": 21839,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577678",
+      "email": "chytrosmichal@gmail.com",
+      "contractNumber": "Projekt 577678",
+      "customerName": "Jiří Zika",
+      "description": "Servis Oken",
+      "date": "2026-05-21",
+      "amount": 3628,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577570",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 577570",
+      "customerName": "Dana Líbalová",
+      "description": "Servis Oken",
+      "date": "2026-05-14",
+      "amount": 10179,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-577564",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 577564",
+      "customerName": "Eva Cílková",
+      "description": "Servis Oken",
+      "date": "2026-05-15",
+      "amount": 15715,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-573816",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 573816",
+      "customerName": "František Kuběna",
+      "description": "Servis Oken",
+      "date": "2026-05-07",
+      "amount": 51689,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-573536",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 573536",
+      "customerName": "Monika Neufusova",
+      "description": "Servis Oken",
+      "date": "2026-05-20",
+      "amount": 26210,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-573442",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 573442",
+      "customerName": "Pavel Podéšť",
+      "description": "Servis Oken",
+      "date": "2026-05-15",
+      "amount": 10679,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-572951",
+      "email": "andrej.krok@qapi.cz",
+      "contractNumber": "Projekt 572951",
+      "customerName": "Naďa Zečevičová",
+      "description": "Servis Oken",
+      "date": "2026-05-20",
+      "amount": 12880,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-572937",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 572937",
+      "customerName": "Leona Böhmova",
+      "description": "Servis Oken",
+      "date": "2026-05-18",
+      "amount": 23041,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-572812",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 572812",
+      "customerName": "Město Veselí nad Lužnicí",
+      "description": "Servis Oken",
+      "date": "2026-05-19",
+      "amount": 15322,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571444",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 571444",
+      "customerName": "Igor Saitov",
+      "description": "Servis Oken",
+      "date": "2026-05-01",
+      "amount": 7496,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571366",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 571366",
+      "customerName": "Pavla Celerová",
+      "description": "Servis Oken",
+      "date": "2026-05-01",
+      "amount": 10598,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571347",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 571347",
+      "customerName": "Vera Sudakova",
+      "description": "Servis Oken",
+      "date": "2026-05-01",
+      "amount": 7086,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571346",
+      "email": "petr.kollner@qapi.cz",
+      "contractNumber": "Projekt 571346",
+      "customerName": "Společenství vlastníků bytových jednotek Mozartova 1779-1781",
+      "description": "Servis Oken",
+      "date": "2026-05-15",
+      "amount": 581898,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-571340",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 571340",
+      "customerName": "Petr Novák",
+      "description": "Servis Oken",
+      "date": "2026-05-15",
+      "amount": 12043,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-565949",
+      "email": "qapi.shop@gmail.com",
+      "contractNumber": "Projekt 565949",
+      "customerName": "Pavel Babica",
+      "description": "Servis Oken",
+      "date": "2026-05-06",
+      "amount": 28214,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-562576",
+      "email": "filip.sindl@qapi.cz",
+      "contractNumber": "Projekt 562576",
+      "customerName": "Markétka Šulcová",
+      "description": "Servis Oken",
+      "date": "2026-05-08",
+      "amount": 13023,
+      "discount": 0,
+      "status": "completed"
+    },
+    {
+      "id": "caflou-prj-551727",
+      "email": "llaaznickova@gmail.com",
+      "contractNumber": "Projekt 551727",
+      "customerName": "Pavel Předota",
+      "description": "Servis Oken",
+      "date": "2026-05-05",
+      "amount": 4310,
+      "discount": 0,
+      "status": "completed"
+    }
+  ],
+  "adjustments": [
+    {
+      "id": "adj-001",
+      "email": "ludvikremesekwork@gmail.com",
+      "type": "bonus",
+      "amount": 5000,
+      "reason": "Mimořádný bonus za perfektní klientské recenze v tomto měsíci",
+      "date": "2026-05-24",
+      "month": "2026-05"
+    },
+    {
+      "id": "adj-002",
+      "email": "ludvikremesekwork@gmail.com",
+      "type": "fine",
+      "amount": 1500,
+      "reason": "Pozdní dodání zakázkových listů u klienta Thermal o 4 dny",
+      "date": "2026-05-26",
+      "month": "2026-05"
+    }
+  ],
+  "payouts": []
+}
