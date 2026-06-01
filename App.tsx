@@ -671,6 +671,7 @@ const App: React.FC = () => {
         bookings={bookings.data}
         ebooks={ebooks.data}
         streams={streams.data}
+        artifacts={artifacts.data}
         tickets={tickets.data}
         nextLevelRequirement={nextLevelRequirement}
         communitySessions={sessions.data}

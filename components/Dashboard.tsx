@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, Course, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, CommunitySession, ToastMessage, ProfitEntry, QhubPosition, QHUB_POSITIONS } from '../types';
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
@@ -139,13 +140,6 @@ const PRESET_AVATARS = [
     "https://api.dicebear.com/7.x/bottts/svg?seed=3",
 ];
 
-const SHOP_ITEMS: Partial<Artifact>[] = [
-    { id: 'shop-1', name: 'XP Boost (24h)', description: 'Zdvojnásobí zisky XP na 24 hodin.', price: 500, image: '🧪', type: 'consumable', effectType: 'xp_boost', effectDuration: 24, rarity: 'rare' },
-    { id: 'shop-2', name: 'Sleva na Mentoring', description: '50% sleva na jednu konzultaci.', price: 2000, image: '🎟️', type: 'ticket', rarity: 'legendary' },
-    { id: 'shop-3', name: 'Profilový Odznak', description: 'Exkluzivní odznak "Supporter" na profil.', price: 1000, image: '🛡️', type: 'badge', rarity: 'epic' },
-    { id: 'shop-4', name: 'Káva Energie', description: 'Jen pro zábavu (a dobrý pocit).', price: 50, image: '☕', type: 'consumable', rarity: 'common' },
-];
-
 interface DashboardProps {
   user: User;
   challenges: Challenge[];
@@ -159,6 +153,7 @@ interface DashboardProps {
   bookings?: Booking[];
   ebooks?: Ebook[];
   streams?: Stream[];
+  artifacts?: Artifact[];
   tickets?: SupportTicket[];
   nextLevelRequirement?: LevelRequirement;
   communitySessions?: CommunitySession[];
@@ -181,7 +176,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ 
     user, challenges, allUsers, events, bonusTasks, submissions, courses, quizzes,
-    mentors = [], bookings = [], ebooks = [], streams = [], tickets = [], nextLevelRequirement, communitySessions = [], notify,
+    mentors = [], bookings = [], ebooks = [], streams = [], artifacts = [], tickets = [], nextLevelRequirement, communitySessions = [], notify,
     onLogout, onNavigate, onUpdateProfile, onRegisterEvent, onSubmitTask, onCourseProgress, onQuizComplete,
     onBookMentor, onCreateTicket, onReplyTicket, onUseArtifact, onChallengeAction, onCreateSession, onJoinSession
 }) => {
@@ -206,6 +201,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [claimTargetOrder, setClaimTargetOrder] = useState<any>(null);
   const [claimSubmitting, setClaimSubmitting] = useState(false);
+
+  const [chartMode, setChartMode] = useState<'individual' | 'comparison'>('individual');
+  const [chartSelectedEmail, setChartSelectedEmail] = useState<string>('');
+
+  useEffect(() => {
+    if (user && user.email) {
+      setChartSelectedEmail(user.email.toLowerCase().trim());
+    }
+  }, [user]);
 
   const fetchOzData = async () => {
     try {
@@ -279,6 +283,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState('');
+  const [isPlayerLessonsOpen, setPlayerLessonsOpen] = useState(false);
 
   // Video watch constraints states
   const [watchTimeLeft, setWatchTimeLeft] = useState<number>(0);
@@ -855,7 +860,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     activeTab === link.id ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] font-semibold' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                   } ${isBlocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
-                  <span className={`${activeTab === link.id ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-900'}`}>{link.icon}</span>
+                  <span className={`${activeTab === link.id ? 'text-white' : 'text-slate-500 group-hover:text-slate-900'}`}>{link.icon}</span>
                   {link.label}
                   {isBlocked && <Lock size={14} className="absolute right-4 text-slate-500"/>}
                 </button>
@@ -916,7 +921,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Menu size={24} />
                 </button>
                <div>
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Vítej zpět, {user.name?.split(' ')[0] || 'Studente'} <span className="text-2xl">👋</span></h2>
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Vítej zpět, {user.name?.split(' ')[0] || 'Pracovníku'} <span className="text-2xl">👋</span></h2>
                   {nextLevelRequirement && !isExpired && (
                       <div className="flex items-center gap-3 mt-1 hidden md:flex">
                           <div className="text-xs font-mono text-indigo-600 font-bold bg-indigo-50 border border-indigo-150 px-1.5 py-0.5 rounded">{user.level === 2 ? 'Senior' : user.level >= 3 ? 'Expert' : 'Junior'}</div>
@@ -1305,12 +1310,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* --- COURSES TAB (UPDATED WITH LOCKS) --- */}
                 {activeTab === 'courses' && (
                     <div className="space-y-8">
-                        <div className="flex justify-between items-end">
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
                             <div>
                                 <h2 className="text-3xl font-bold text-slate-900 mb-2">Kurzy Akademie</h2>
-                                <p className="text-slate-500">Vaše cesta k mistrovství začíná zde.</p>
+                                <p className="text-slate-500 text-sm">Vaše cesta k mistrovství začíná zde.</p>
                             </div>
-                            <div className="bg-white px-4 py-2 rounded-lg text-sm text-slate-500 border border-slate-200">
+                            <div className="bg-white px-4 py-2 rounded-lg text-sm text-slate-500 border border-slate-200 self-start sm:self-auto shrink-0">
                                 Váš plán: <span className="text-indigo-600 font-bold uppercase">{user.role}</span>
                             </div>
                         </div>
@@ -1398,7 +1403,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 <h2 className="text-3xl font-bold text-slate-900 mb-1">Nástroje pro Podnikatele</h2>
                                 <p className="text-slate-500">Praktické kalkulačky a generátory pro podporu vašeho obchodu.</p>
                             </div>
-                            <div className="flex bg-slate-100 rounded-xl p-1 border border-slate-200">
+                            <div className="flex bg-slate-100 rounded-xl p-1 border border-slate-200 flex-wrap sm:flex-nowrap justify-center sm:justify-start w-full sm:w-auto">
                                 <button
                                     onClick={() => setToolsSubTab('roi')}
                                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${toolsSubTab === 'roi' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
@@ -1967,8 +1972,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-4">o absolvování kurzu</p>
                                     <h4 className="font-bold text-blue-900 mb-4">{cert.courseName}</h4>
                                     <div className="text-xs text-slate-500 mb-6">
-                                        Uděleno studentovi<br/>
-                                        <span className="font-bold text-black text-sm">{cert.studentName}</span>
+                                        Uděleno pracovníkovi<br/>
+                                        <span className="font-bold text-black text-sm">{cert.workerName || cert.studentName}</span>
                                     </div>
                                     <div className="flex justify-center mb-4">
                                         <img src={cert.qrCodeUrl} className="w-20 h-20 mix-blend-multiply opacity-80"/>
@@ -2215,6 +2220,146 @@ const Dashboard: React.FC<DashboardProps> = ({
                         {(() => {
                             const normEmail = (user.email || '').toLowerCase().trim();
                             const config = ozData.userConfigs[normEmail] || { userType: 'commission', fixRate: 0 };
+
+                            const allMerchantEmails: string[] = Array.from(new Set([
+                                ...Object.keys(ozData.userConfigs || {}),
+                                ...(ozData.orders || []).map(o => o.email.toLowerCase().trim())
+                            ])).filter(Boolean) as string[];
+
+                            const getMerchantName = (emailStr: string) => {
+                                const emailLower = emailStr.toLowerCase().trim();
+                                if (emailLower === (user.email || '').toLowerCase().trim()) {
+                                    return 'Já (Osobní přehled)';
+                                }
+                                const mappings: Record<string, string> = {
+                                    'ludvikremesekwork@gmail.com': 'Ludvík Remešek',
+                                    'technik1@qapi.cz': 'Technik Jedna',
+                                    'prodejce2@qapi.cz': 'Prodejce Dva',
+                                    'chytrosmichal@gmail.com': 'Michal Chytroš',
+                                    'erik.bahleda@qapi.cz': 'Erik Bahleda',
+                                    'andrej.krok@qapi.cz': 'Andrej Krok',
+                                    'petr.kollner@qapi.cz': 'Petr Köllner',
+                                    'filip.sindl@qapi.cz': 'Filip Šindl',
+                                    'davechytros@gmail.com': 'David Chytroš',
+                                    'qapi.shop@gmail.com': 'QAPI E-shop',
+                                };
+                                if (mappings[emailLower]) return mappings[emailLower];
+                                const part = emailLower.split('@')[0];
+                                return part.split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+                            };
+
+                            const uniqueMonths: string[] = Array.from(new Set(
+                                (ozData.orders || [])
+                                    .map(o => o.date ? o.date.substring(0, 7) : '')
+                                    .filter(m => m && m.match(/^\d{4}-\d{2}$/))
+                            )).sort() as string[];
+                            const sortedMonths: string[] = uniqueMonths.length > 0 ? uniqueMonths : ['2026-04', '2026-05', '2026-06', '2026-07'];
+
+                            const formatMonthLabel = (m: string) => {
+                                const parts = m.split('-');
+                                if (parts.length !== 2) return m;
+                                const year = parts[0];
+                                const monthNum = parts[1];
+                                const monthNames: Record<string, string> = {
+                                    '01': 'Leden', '02': 'Únor', '03': 'Březen', '04': 'Duben',
+                                    '05': 'Květen', '06': 'Červen', '07': 'Červenec', '08': 'Srpen',
+                                    '09': 'Září', '10': 'Říjen', '11': 'Listopad', '12': 'Prosinec'
+                                };
+                                return `${monthNames[monthNum] || monthNum} ${year}`;
+                            };
+
+                            const getMerchantStatsForMonth = (email: string, mMonth: string) => {
+                                const mNormEmail = email.toLowerCase().trim();
+                                const mConfig = ozData.userConfigs[mNormEmail] || { userType: 'commission', fixRate: 0 };
+                                
+                                const mUserOrders = ozData.orders.filter(o => o.email.toLowerCase() === mNormEmail);
+                                const mMonthOrders = mUserOrders.filter(o => o.date.startsWith(mMonth) && o.status === 'completed');
+                                
+                                const mTotalVolume = mMonthOrders.reduce((sum, o) => sum + o.amount, 0);
+
+                                let mBaseRatePercent = 8;
+                                if (mTotalVolume <= 400000) {
+                                    mBaseRatePercent = mConfig.customRates?.b1 ?? 8;
+                                } else if (mTotalVolume <= 700000) {
+                                    mBaseRatePercent = mConfig.customRates?.b2 ?? 10;
+                                } else if (mTotalVolume <= 1000000) {
+                                    mBaseRatePercent = mConfig.customRates?.b3 ?? 11;
+                                } else {
+                                    mBaseRatePercent = mConfig.customRates?.b4 ?? 12;
+                                }
+
+                                const mTotalCommissions = mMonthOrders.reduce((sum, o) => {
+                                    if (o.discount > 60) return sum;
+
+                                    let rate = mBaseRatePercent;
+                                    const tier1 = o.discount >= 33 && o.discount <= 45;
+                                    const tier2 = o.discount > 45 && o.discount <= 60;
+
+                                    let r1 = mConfig.customRates?.b1 ?? 8;
+                                    let r2 = mConfig.customRates?.b2 ?? 10;
+                                    let r3 = mConfig.customRates?.b3 ?? 11;
+                                    let r4 = mConfig.customRates?.b4 ?? 12;
+
+                                    if (mTotalVolume <= 400000) {
+                                        if (tier2) rate = 3;
+                                        else if (tier1) rate = 6;
+                                        else rate = r1;
+                                    } else if (mTotalVolume <= 700000) {
+                                        if (tier2) rate = 5;
+                                        else if (tier1) rate = 8;
+                                        else rate = r2;
+                                    } else if (mTotalVolume <= 1000000) {
+                                        if (tier2) rate = 6;
+                                        else if (tier1) rate = 9;
+                                        else rate = r3;
+                                    } else {
+                                        if (tier2) rate = 7;
+                                        else if (tier1) rate = 10;
+                                        else rate = r4;
+                                    }
+                                    return sum + (o.amount * (rate / 100));
+                                }, 0);
+
+                                const mFixAmount = (mConfig.userType === 'fix' || mConfig.userType === 'both') ? (mConfig.fixRate || 0) : 0;
+                                
+                                const mMonthAdjustments = ozData.adjustments.filter(a => a.email.toLowerCase() === mNormEmail && a.month === mMonth);
+                                const mBonusesSum = mMonthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
+                                const mFinesSum = mMonthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
+
+                                const mTotalPayout = Math.max(0, Math.round(mTotalCommissions + mFixAmount + mBonusesSum - mFinesSum));
+
+                                return {
+                                    obrat: mTotalVolume,
+                                    provize: Math.round(mTotalCommissions),
+                                    fix: mFixAmount,
+                                    payout: mTotalPayout,
+                                    count: mMonthOrders.length
+                                };
+                            };
+
+                            const individualChartData = sortedMonths.map(month => {
+                                const stats = getMerchantStatsForMonth(chartSelectedEmail || (user.email || '').toLowerCase().trim(), month);
+                                return {
+                                    rawMonth: month,
+                                    monthLabel: formatMonthLabel(month),
+                                    obrat: stats.obrat,
+                                    provize: stats.provize,
+                                    payout: stats.payout,
+                                    pocetZakazek: stats.count
+                                };
+                            });
+
+                            const comparisonChartData = allMerchantEmails.map(email => {
+                                const stats = getMerchantStatsForMonth(email, selectedOzMonth);
+                                return {
+                                    email,
+                                    name: getMerchantName(email),
+                                    obrat: stats.obrat,
+                                    provize: stats.provize,
+                                    payout: stats.payout,
+                                    pocetZakazek: stats.count
+                                };
+                            }).filter(d => d.obrat > 0 || d.provize > 0 || d.payout > 0);
                             
                             const userOrders = ozData.orders.filter(o => o.email.toLowerCase() === normEmail);
                             const monthOrders = userOrders.filter(o => o.date.startsWith(selectedOzMonth) && o.status === 'completed');
@@ -2416,6 +2561,250 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* --- GRAPHICAL ANALYSIS PANEL WITH RECHARTS --- */}
+                                    <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+                                            <div>
+                                                <h3 className="font-extrabold text-slate-900 text-sm md:text-base flex items-center gap-2">
+                                                    <BarChart2 size={20} className="text-emerald-500 animate-pulse" />
+                                                    Grafická analýza výkonnosti & provizí
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1">Interaktivní přehled vývoje prodejů a vyplacené odměny jednotlivých obchodníků.</p>
+                                            </div>
+
+                                            {/* Mode Selector */}
+                                            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-100 shrink-0 self-stretch sm:self-auto">
+                                                <button
+                                                    onClick={() => setChartMode('individual')}
+                                                    className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${chartMode === 'individual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                                                >
+                                                    Vývoj v čase (Osobní)
+                                                </button>
+                                                <button
+                                                    onClick={() => setChartMode('comparison')}
+                                                    className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${chartMode === 'comparison' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                                                >
+                                                    Srovnání týmu
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Configuration Controls */}
+                                        {chartMode === 'individual' ? (
+                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <div className="text-[11px] text-slate-500">
+                                                    Sledování trendu uzavřeného měsíčního obratu (zelená plocha, levá osa) vůči schváleným osobním provizím (modrá plocha, pravá osa).
+                                                </div>
+                                                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                                                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block shrink-0 whitespace-nowrap">Zvolit OZ:</span>
+                                                    <select
+                                                        value={chartSelectedEmail || (user.email || '').toLowerCase().trim()}
+                                                        onChange={(e) => setChartSelectedEmail(e.target.value)}
+                                                        className="w-full sm:w-[220px] bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                    >
+                                                        {allMerchantEmails.map(email => (
+                                                            <option key={email} value={email}>
+                                                                {getMerchantName(email)}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <div className="text-[11px] text-slate-500 font-medium">
+                                                    Srovnání dosažených výsledků všech aktivních obchodních zástupců, kteří v daném období realizovali objednávky.
+                                                </div>
+                                                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 shrink-0">
+                                                    Měsíc: <span className="text-emerald-600 font-extrabold uppercase tracking-wider">{formatMonthLabel(selectedOzMonth)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Chart Display area */}
+                                        <div className="bg-slate-50/50 border border-slate-100 p-4 md:p-6 rounded-3xl">
+                                            {chartMode === 'individual' ? (
+                                                <div className="space-y-6">
+                                                    <div className="h-[300px] md:h-[350px] w-full">
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <AreaChart data={individualChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                                <defs>
+                                                                    <linearGradient id="colorObratDashboard" x1="0" y1="0" x2="0" y2="1">
+                                                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
+                                                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.01}/>
+                                                                    </linearGradient>
+                                                                    <linearGradient id="colorProvizeDashboard" x1="0" y1="0" x2="0" y2="1">
+                                                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25}/>
+                                                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0.01}/>
+                                                                    </linearGradient>
+                                                                </defs>
+                                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                                                <XAxis 
+                                                                    dataKey="monthLabel" 
+                                                                    tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} 
+                                                                    axisLine={false} 
+                                                                    tickLine={false} 
+                                                                />
+                                                                <YAxis 
+                                                                    yAxisId="left"
+                                                                    tick={{fontSize: 9, fill: '#10b981', fontWeight: 'bold'}} 
+                                                                    axisLine={false} 
+                                                                    tickLine={false} 
+                                                                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`} 
+                                                                />
+                                                                <YAxis 
+                                                                    yAxisId="right"
+                                                                    orientation="right"
+                                                                    tick={{fontSize: 9, fill: '#6366f1', fontWeight: 'bold'}} 
+                                                                    axisLine={false} 
+                                                                    tickLine={false} 
+                                                                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`} 
+                                                                />
+                                                                <Tooltip 
+                                                                    contentStyle={{
+                                                                        borderRadius: '16px', 
+                                                                        border: '1px solid #e2e8f0', 
+                                                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05)', 
+                                                                        fontSize: '11px', 
+                                                                        fontWeight: 'bold',
+                                                                        backgroundColor: '#ffffff'
+                                                                    }} 
+                                                                    formatter={(value: any, name: any) => {
+                                                                        if (name === 'obrat') return [`${parseFloat(value).toLocaleString()} Kč`, 'Celkový Obrat'];
+                                                                        if (name === 'provize') return [`${parseFloat(value).toLocaleString()} Kč`, 'Získaná Provize'];
+                                                                        if (name === 'payout') return [`${parseFloat(value).toLocaleString()} Kč`, 'Celková Výplata'];
+                                                                        return [value, name];
+                                                                    }}
+                                                                />
+                                                                <Legend wrapperStyle={{fontSize: '11px', fontWeight: 'bold', paddingTop: '10px'}} />
+                                                                <Area 
+                                                                    yAxisId="left"
+                                                                    type="monotone" 
+                                                                    dataKey="obrat" 
+                                                                    name="obrat" 
+                                                                    stroke="#10b981" 
+                                                                    fillOpacity={1} 
+                                                                    fill="url(#colorObratDashboard)" 
+                                                                    strokeWidth={3}
+                                                                    dot={{r: 4, strokeWidth: 1, fill: '#10b981'}}
+                                                                    activeDot={{r: 6}}
+                                                                />
+                                                                <Area 
+                                                                    yAxisId="right"
+                                                                    type="monotone" 
+                                                                    dataKey="provize" 
+                                                                    name="provize" 
+                                                                    stroke="#6366f1" 
+                                                                    fillOpacity={1} 
+                                                                    fill="url(#colorProvizeDashboard)" 
+                                                                    strokeWidth={3}
+                                                                    dot={{r: 4, strokeWidth: 1, fill: '#6366f1'}}
+                                                                    activeDot={{r: 6}}
+                                                                />
+                                                            </AreaChart>
+                                                        </ResponsiveContainer>
+                                                    </div>
+
+                                                    {/* Monthly summary timeline detail boxes */}
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                        {individualChartData.map((d, idx) => (
+                                                            <div key={idx} className="bg-white p-3.5 rounded-2xl border border-slate-200/60 flex flex-col hover:border-slate-300 transition-all font-sans">
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{d.monthLabel}</span>
+                                                                <div className="text-xs font-extrabold text-slate-800 mt-1">
+                                                                    Obrat: <span className="text-emerald-600 font-mono font-black">{d.obrat.toLocaleString()} Kč</span>
+                                                                </div>
+                                                                <div className="text-xs font-semibold text-slate-600">
+                                                                    Provize: <span className="text-indigo-600 font-mono font-black">{d.provize.toLocaleString()} Kč</span>
+                                                                </div>
+                                                                <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tight">
+                                                                    {d.pocetZakazek} uzavřených zakázek
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    {comparisonChartData.length === 0 ? (
+                                                        <div className="text-center py-16 text-slate-400 space-y-2">
+                                                            <div className="text-2xl">📊</div>
+                                                            <div className="text-xs font-bold">Žádná data k zobrazení</div>
+                                                            <p className="text-[11px] text-slate-400 max-w-sm mx-auto font-normal">Pro vybraný měsíc {formatMonthLabel(selectedOzMonth)} nebyly zjištěny uzavřené zakázky s prodejním obratem.</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="h-[300px] md:h-[350px] w-full">
+                                                                <ResponsiveContainer width="100%" height="100%">
+                                                                    <BarChart data={comparisonChartData} margin={{ top: 15, right: 10, left: -20, bottom: 5 }}>
+                                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                                                        <XAxis 
+                                                                            dataKey="name" 
+                                                                            tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} 
+                                                                            axisLine={false} 
+                                                                            tickLine={false} 
+                                                                        />
+                                                                        <YAxis 
+                                                                            tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} 
+                                                                            axisLine={false} 
+                                                                            tickLine={false} 
+                                                                            tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`} 
+                                                                        />
+                                                                        <Tooltip 
+                                                                            contentStyle={{
+                                                                                borderRadius: '16px', 
+                                                                                border: '1px solid #e2e8f0', 
+                                                                                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05)', 
+                                                                                fontSize: '11px', 
+                                                                                fontWeight: 'bold',
+                                                                                backgroundColor: '#ffffff'
+                                                                            }} 
+                                                                            formatter={(value: any, name: any) => {
+                                                                                if (name === 'obrat') return [`${parseFloat(value).toLocaleString()} Kč`, 'Uzavřený Obrat'];
+                                                                                if (name === 'payout') return [`${parseFloat(value).toLocaleString()} Kč`, 'Celková Výplata'];
+                                                                                return [value, name];
+                                                                            }}
+                                                                        />
+                                                                        <Legend wrapperStyle={{fontSize: '11px', fontWeight: 'bold', paddingTop: '10px'}} />
+                                                                        <Bar dataKey="obrat" name="obrat" fill="#10b981" radius={[8, 8, 0, 0]} maxBarSize={45} />
+                                                                        <Bar dataKey="payout" name="payout" fill="#6366f1" radius={[8, 8, 0, 0]} maxBarSize={45} />
+                                                                    </BarChart>
+                                                                </ResponsiveContainer>
+                                                            </div>
+
+                                                            {/* Mini Leaderboard List */}
+                                                            <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
+                                                                <div className="grid grid-cols-12 bg-slate-50/80 p-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 font-mono">
+                                                                    <div className="col-span-5 md:col-span-6 pl-2">Obchodní zástupce (OZ)</div>
+                                                                    <div className="col-span-3 text-right">Uzavřený obrat</div>
+                                                                    <div className="col-span-4 md:col-span-3 text-right pr-2">Provize celkem</div>
+                                                                </div>
+                                                                <div className="divide-y divide-slate-100">
+                                                                    {comparisonChartData.sort((a, b) => b.obrat - a.obrat).map((d, index) => (
+                                                                        <div key={index} className="grid grid-cols-12 p-3 items-center text-xs hover:bg-slate-50/20 transition duration-150">
+                                                                            <div className="col-span-5 md:col-span-6 flex items-center gap-2 pl-2">
+                                                                                <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500">{index + 1}</span>
+                                                                                <div className="truncate">
+                                                                                    <div className="font-extrabold text-slate-800">{d.name}</div>
+                                                                                    <div className="text-[9px] text-slate-400 font-medium lowercase tracking-wide font-mono">{d.email}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="col-span-3 text-right font-black text-emerald-600 font-mono">
+                                                                                {d.obrat.toLocaleString()} Kč
+                                                                            </div>
+                                                                            <div className="col-span-4 md:col-span-3 text-right pr-2 font-black text-indigo-600 font-mono">
+                                                                                {d.provize.toLocaleString()} Kč
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     {/* Orders log list */}
                                     <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
@@ -2669,7 +3058,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* Tickets Listing & Ticket Creation */}
-                            <div className="lg:col-span-1 space-y-6 bg-white border border-slate-200 rounded-2xl p-6">
+                            <div className={`lg:col-span-1 space-y-6 bg-white border border-slate-200 rounded-2xl p-6 ${activeTicketId ? 'hidden lg:block' : 'block'}`}>
                                 <div className="flex justify-between items-center pb-3 border-b border-slate-100">
                                     <h3 className="font-bold text-slate-800">Moje Lístky</h3>
                                     <button 
@@ -2756,7 +3145,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
 
                             {/* Ticket Detail Chat View */}
-                            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl overflow-hidden h-[500px] flex flex-col justify-between">
+                            <div className={`lg:col-span-2 bg-white border border-slate-200 rounded-2xl overflow-hidden h-[500px] flex-col justify-between ${activeTicketId ? 'flex' : 'hidden lg:flex'}`}>
                                 {activeTicketId && tickets.find(t => t.id === activeTicketId) ? (() => {
                                     const activeTicketObj = tickets.find(t => t.id === activeTicketId)!;
                                     return (
@@ -3129,12 +3518,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
                 {/* --- COMMUNITY TAB (NEW) --- */}
                 {activeTab === 'community' && (
-                    <div className="h-[calc(100vh-160px)] grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:h-[calc(100vh-160px)] h-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left: Active Sessions */}
-                        <div className="lg:col-span-2 space-y-6 overflow-y-auto custom-scrollbar pr-2">
+                        <div className="lg:col-span-2 space-y-6 lg:overflow-y-auto overflow-y-visible custom-scrollbar pr-2">
                              <div className="bg-gradient-to-r from-indigo-50 to-white border border-indigo-200 rounded-2xl p-6">
                                  <h2 className="text-2xl font-bold mb-2 text-slate-900">Mastermind & Sessions</h2>
-                                 <p className="text-slate-600 text-sm">Připojte se k živým hovorům s mentory a ostatními studenty.</p>
+                                 <p className="text-slate-600 text-sm">Připojte se k živým hovorům s mentory a ostatními pracovníky.</p>
                              </div>
 
                              <div className="space-y-4">
@@ -3166,7 +3555,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
 
                         {/* Right: Community Chat / Feed */}
-                        <div className="bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden h-full">
+                        <div className="bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden h-[450px] lg:h-full">
                             <div className="p-4 border-b border-slate-200 bg-white/80">
                                 <h3 className="font-bold flex items-center gap-2"><MessageCircle size={18} className="text-green-500"/> Komunitní Feed</h3>
                             </div>
@@ -3306,8 +3695,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <p className="text-slate-500 mb-8">Vyměňte své tvrdě vydřené XP za boostery a odměny.</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {SHOP_ITEMS.map((item, idx) => (
+                                {(artifacts || []).map((item, idx) => (
                                     <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 relative group hover:border-amber-300 hover:shadow-md transition">
+                                        <div className="absolute top-4 right-4 text-xs font-bold px-2 py-1 rounded bg-slate-100 uppercase text-slate-500">{item.rarity}</div>
                                         <div className="text-4xl mb-4">{item.image}</div>
                                         <h3 className="font-bold text-slate-900 mb-2">{item.name}</h3>
                                         <p className="text-xs text-slate-500 h-10 mb-4">{item.description}</p>
@@ -3521,6 +3911,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                           return (
                               <>
+                                {/* Syllabus Sidebar (Desktop) */}
                                 <div className="w-80 bg-white border-r border-slate-200 flex flex-col h-full hidden lg:flex">
                                     <div className="p-4 border-b border-slate-200 flex items-center gap-2">
                                         <button onClick={() => setActiveCourseId(null)} className="p-2 hover:bg-slate-100 rounded-full"><ArrowLeft size={20}/></button>
@@ -3550,21 +3941,78 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Syllabus Sidebar (Mobile & Tablet overlay drawer) */}
+                                <AnimatePresence>
+                                    {isPlayerLessonsOpen && (
+                                        <div className="fixed inset-0 z-[110] lg:hidden flex">
+                                            <motion.div 
+                                                initial={{ opacity: 0 }} 
+                                                animate={{ opacity: 0.5 }} 
+                                                exit={{ opacity: 0 }}
+                                                onClick={() => setPlayerLessonsOpen(false)}
+                                                className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+                                            />
+                                            <motion.div 
+                                                initial={{ x: '-100%' }} 
+                                                animate={{ x: 0 }} 
+                                                exit={{ x: '-100%' }} 
+                                                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                                                className="relative w-80 max-w-[calc(100vw-3rem)] h-full bg-white flex flex-col shadow-2xl z-10"
+                                            >
+                                                <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                                                    <h3 className="font-bold truncate text-slate-950 text-sm">Osnova Kurzu</h3>
+                                                    <button onClick={() => setPlayerLessonsOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500"><X size={16}/></button>
+                                                </div>
+                                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                                    {course.modules.map(mod => (
+                                                        <div key={mod.id} className="border-b border-slate-200">
+                                                            <div className="p-4 bg-slate-50 font-bold text-xs text-slate-500 uppercase tracking-wider">{mod.title}</div>
+                                                            <div>
+                                                                {mod.lessons.map(lesson => {
+                                                                    const lessonCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);
+                                                                    const isActive = currentLesson?.id === lesson.id;
+                                                                    return (
+                                                                        <div 
+                                                                            key={lesson.id} 
+                                                                            onClick={() => { setActiveLessonId(lesson.id); setPlayerLessonsOpen(false); setLessonQuizState({step:'start',currentQuestionIndex:0,answers:{},score:0,passed:false}); }}
+                                                                             className={`p-3.5 pl-6 flex items-center gap-3 cursor-pointer text-sm hover:bg-slate-100 transition ${isActive ? 'bg-indigo-50 text-indigo-700 border-l-2 border-indigo-500 font-medium' : 'text-slate-600'} ${lessonCompleted ? 'opacity-50' : ''}`}
+                                                                        >
+                                                                            {lessonCompleted ? <CheckCircle size={14} className="text-green-500 shrink-0"/> : (lesson.type === 'video' ? <Play size={14} className="shrink-0"/> : lesson.type === 'quiz' ? <HelpCircle size={14} className="shrink-0"/> : <FileText size={14} className="shrink-0"/>)}
+                                                                            <span className="truncate">{lesson.title}</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        </div>
+                                    )}
+                                </AnimatePresence>
+
                                 <div className="flex-1 bg-slate-900 flex flex-col relative">
-                                    <div className="h-14 border-b border-slate-200 flex items-center justify-between px-4">
+                                    <div className="h-14 border-b border-slate-200 flex items-center justify-between px-4 bg-white">
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => setActiveCourseId(null)} className="lg:hidden text-slate-500"><ArrowLeft size={16}/></button>
-                                            <span className="text-sm font-bold text-slate-600 hidden md:block">{currentLesson?.title}</span>
+                                            <button onClick={() => setActiveCourseId(null)} className="text-slate-500 p-2 hover:bg-slate-100 rounded-lg shrink-0"><ArrowLeft size={16}/></button>
+                                            <button 
+                                                onClick={() => setPlayerLessonsOpen(true)} 
+                                                className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-250 rounded-lg text-xs font-bold transition shrink-0"
+                                            >
+                                                <Menu size={14} /> Lekce
+                                            </button>
+                                            <span className="text-sm font-bold text-slate-800 truncate hidden md:block">{currentLesson?.title}</span>
                                         </div>
                                         <button 
                                             onClick={() => setIsNotesOpen(!isNotesOpen)} 
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition ${isNotesOpen ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:text-slate-900'}`}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition shrink-0 ${isNotesOpen ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:text-slate-900'}`}
                                         >
                                             <Edit3 size={16}/> Poznámky
                                         </button>
                                     </div>
                                     <div className="flex-1 flex overflow-hidden relative bg-slate-50">
-                                        <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
+                                        <div className="flex-1 flex items-center justify-center p-3 sm:p-8 overflow-y-auto">
                                             {currentLesson && (
                                                 currentLesson.type === 'video' ? (
                                                     <div className="w-full max-w-5xl space-y-4">
@@ -3606,7 +4054,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                         )}
                                                     </div>
                                                 ) : currentLesson.type === 'text' ? (
-                                                    <div className="max-w-4xl w-full bg-white p-10 rounded-3xl border border-slate-200 shadow-xl overflow-y-auto">
+                                                    <div className="max-w-4xl w-full bg-white p-5 sm:p-10 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl overflow-y-auto">
                                                         <div className="border-b border-slate-100 pb-6 mb-8 text-center">
                                                             <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">Textová Lekce</span>
                                                             <h1 className="text-3xl font-extrabold text-slate-900 mt-2">{currentLesson.title}</h1>
@@ -3619,7 +4067,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                 ) : (
                                                     <div className="max-w-3xl w-full">
                                                         {lessonQuizState.step === 'start' && (
-                                                            <div className="text-center bg-white p-12 rounded-3xl border border-slate-200 shadow-xl">
+                                                            <div className="text-center bg-white p-6 sm:p-12 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl">
                                                                 <Brain size={64} className="mx-auto mb-6 text-violet-600 animate-bounce"/>
                                                                 <h2 className="text-3xl font-bold mb-3 text-slate-900">Kvíz k Lekci</h2>
                                                                 <p className="text-slate-500 mb-8 max-w-md mx-auto">Ověřte své znalosti z této lekce k zisku certifikátu a postupu dál.</p>
@@ -3627,7 +4075,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                             </div>
                                                         )}
                                                         {lessonQuizState.step === 'playing' && currentLesson.questions && (
-                                                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl">
+                                                            <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl">
                                                                 <div className="flex justify-between items-center mb-6">
                                                                     <span className="text-sm text-slate-500 font-medium">Otázka {lessonQuizState.currentQuestionIndex + 1} / {currentLesson.questions.length}</span>
                                                                     <span className="text-xs font-bold px-3 py-1 bg-violet-50 text-violet-700 border border-violet-100 rounded-full">Kvíz Lekce</span>
@@ -3690,7 +4138,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                             </div>
                                                         )}
                                                         {lessonQuizState.step === 'result' && (
-                                                            <div className="text-center bg-white p-12 rounded-3xl border border-slate-200 shadow-xl">
+                                                            <div className="text-center bg-white p-6 sm:p-12 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl">
                                                                 <div className="mb-6 inline-flex p-4 rounded-full bg-slate-50 border border-slate-100">
                                                                     {lessonQuizState.passed ? <Award size={48} className="text-green-500"/> : <X size={48} className="text-red-500"/>}
                                                                 </div>
@@ -3711,7 +4159,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         {/* Notes Sidebar */}
                                         <AnimatePresence>
                                             {isNotesOpen && (
-                                                <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 h-full w-80 bg-white border-l border-slate-200 z-10 flex flex-col shadow-2xl">
+                                                <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 h-full w-full sm:w-80 bg-white border-l border-slate-200 z-[120] flex flex-col shadow-2xl">
                                                     <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white">
                                                         <h3 className="font-bold text-sm flex items-center gap-2"><StickyNote size={16}/> Moje Poznámky</h3>
                                                         <button onClick={() => setIsNotesOpen(false)}><X size={16}/></button>

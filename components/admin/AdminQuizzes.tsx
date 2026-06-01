@@ -69,7 +69,7 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
         <div className="flex justify-between items-center">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900">Správa Kvízů</h2>
-                <p className="text-slate-500 text-sm">Testy znalostí a výzvy pro studenty.</p>
+                <p className="text-slate-500 text-sm">Testy znalostí a výzvy pro pracovníky.</p>
             </div>
             <button onClick={handleCreateQuiz} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-bold text-white flex items-center gap-2 transition shadow-lg shadow-purple-900/20">
                 <Plus size={18}/> Nový Kvíz

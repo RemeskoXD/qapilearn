@@ -4,7 +4,8 @@ import {
   Link as LinkIcon, RefreshCw, Check, ArrowUpRight, HelpCircle, AlertCircle, 
   History, Settings, Zap, CheckCircle2, FileText, Info, Coins, Users, 
   Calendar, DollarSign, AlertTriangle, Eye, EyeOff, Sparkles, Trophy,
-  Trash2, Plus, Edit3, Award, TrendingUp, Briefcase, BarChart2
+  Trash2, Plus, Edit3, Award, TrendingUp, Briefcase, BarChart2,
+  Search, ChevronDown, ChevronUp, User, X
 } from 'lucide-react';
 import { ToastMessage } from '../../types';
 
@@ -25,6 +26,7 @@ interface QhubUserItem {
   name: string | null;
   role: string;
   financialProfit: number;
+  profitHistory?: any[];
 }
 
 interface ReportItem {
@@ -327,6 +329,35 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
   const [userRates, setUserRates] = useState<Record<string, number>>({});
   const [ratesLoading, setRatesLoading] = useState(false);
   const [savingRates, setSavingRates] = useState(false);
+  
+  // Custom interactive tracking states
+  const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+  const [payoutsHistorySearch, setPayoutsHistorySearch] = useState('');
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [editingOrderDiscount, setEditingOrderDiscount] = useState<number>(0);
+
+  const handleUpdateDiscount = async (order: any, newDiscount: number) => {
+    try {
+      const resp = await fetch('/api/caflou/oz/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...order,
+          discount: newDiscount
+        })
+      });
+      if (resp.ok) {
+        notify('success', 'Sleva upravena', `Procentuální sleva u zakázky ${order.contractNumber} byla upravena.`);
+        setEditingOrderId(null);
+        fetchSalesData();
+      } else {
+        const err = await resp.json();
+        notify('error', 'Chyba', err.error || 'Nepodařilo se uložit změnu.');
+      }
+    } catch (e: any) {
+      notify('error', 'Chyba spojení', 'Chyba při odesílání požadavku na server.');
+    }
+  };
 
   // Payouts & Sync States
   const [syncLoading, setSyncLoading] = useState(false);
@@ -1183,6 +1214,154 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
               </p>
             </div>
           )}
+
+          {/* SEZNAM VŠECH LIDÍ S VYPLACENOU ČÁSTKOU A HISTORIÍ VÝPLAT */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6" id="payout-history-overview">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <History className="text-indigo-600" size={18} />
+                  Celkový přehled a historie výplat všech členů
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Přehled aktuálních celkových výplat v profilech uživatelů a kompletní historický rozpad schválených výplatních cyklů.
+                </p>
+              </div>
+
+              {/* Hledání */}
+              <div className="relative w-full sm:w-72">
+                <input
+                  type="text"
+                  placeholder="Vyhledat uživatele..."
+                  value={payoutsHistorySearch}
+                  onChange={(e) => setPayoutsHistorySearch(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                {payoutsHistorySearch && (
+                  <button
+                    onClick={() => setPayoutsHistorySearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {qhubUsers.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-xs">
+                U Q-Hubu zatím nejsou registrováni žádní uživatelé.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {qhubUsers
+                  .filter(u => {
+                    if (!payoutsHistorySearch) return true;
+                    const search = payoutsHistorySearch.toLowerCase();
+                    return (
+                      (u.name || '').toLowerCase().includes(search) ||
+                      u.email.toLowerCase().includes(search)
+                    );
+                  })
+                  .map(user => {
+                    const isExpanded = !!expandedUsers[user.id];
+                    const historyList = user.profitHistory || [];
+
+                    return (
+                      <div
+                        key={user.id}
+                        className="border border-slate-150 rounded-2xl overflow-hidden transition hover:border-slate-300 bg-slate-50/20"
+                      >
+                        {/* Header řádku */}
+                        <div
+                          onClick={() => {
+                            setExpandedUsers(prev => ({
+                              ...prev,
+                              [user.id]: !prev[user.id]
+                            }));
+                          }}
+                          className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer select-none bg-white hover:bg-slate-50/50 transition"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-50 text-indigo-700 rounded-full flex items-center justify-center font-bold text-sm">
+                              <User size={16} />
+                            </div>
+                            <div>
+                              <div className="font-bold text-xs text-slate-900 flex items-center gap-2">
+                                {user.name || <span className="text-slate-400 italic">Nepojmenovaný uživatel</span>}
+                                <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-slate-200">
+                                  {user.role}
+                                </span>
+                              </div>
+                              <div className="font-mono text-[10px] text-slate-500 mt-0.5">{user.email}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-6 self-stretch justify-between sm:self-auto sm:justify-start">
+                            <div className="text-right">
+                              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Celkově vyplaceno</span>
+                              <span className="font-extrabold text-xs text-emerald-700 font-mono">
+                                {(user.financialProfit ?? 0).toLocaleString()} Kč
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 text-xs text-indigo-600 font-bold">
+                              <span className="text-[10px] text-slate-400 font-bold mr-1 bg-slate-100 px-2 py-1 rounded-lg">
+                                {historyList.length} záznamů
+                              </span>
+                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Expandované detaily (historie) */}
+                        {isExpanded && (
+                          <div className="border-t border-slate-150 p-4 bg-slate-50/60 animate-fade-in">
+                            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-405 mb-3">
+                              Historie schválených výplat
+                            </h4>
+
+                            {historyList.length === 0 ? (
+                              <div className="text-[11px] text-slate-400 italic py-2">
+                                📭 Pro tohoto uživatele zatím nebyly uloženy žádné schválené výplaty přes Caflou modul.
+                              </div>
+                            ) : (
+                              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <table className="w-full text-left text-[11px] whitespace-nowrap">
+                                  <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                      <th className="p-3">Datum schválení</th>
+                                      <th className="p-3">Částka</th>
+                                      <th className="p-3 rounded-r-xl">Poznámka / Detaily</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-150 font-medium">
+                                    {historyList.map((entry: any) => (
+                                      <tr key={entry.id || entry.date} className="hover:bg-slate-50/50 transition">
+                                        <td className="p-3 font-mono text-slate-500">
+                                          {entry.date}
+                                        </td>
+                                        <td className="p-3 font-extrabold text-slate-900 text-emerald-700 font-mono">
+                                          {parseFloat(entry.amount || 0).toLocaleString()} Kč
+                                        </td>
+                                        <td className="p-3 text-slate-600 italic">
+                                          {entry.note || 'Měsíční finanční plnění'}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1833,7 +2012,60 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                                           <span className="font-bold text-slate-900">{o.customerName}</span>
                                           <span className="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded font-bold">{o.contractNumber}</span>
                                         </div>
-                                        <div className="text-[10px] text-slate-400 mt-0.5">{o.description || 'Instalace stínící techniky'} | Sleva: <strong className="text-slate-700">{o.discount}%</strong></div>
+                                        <div className="text-[10px] text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5 leading-none">
+                                          <span>{o.description || 'Instalace stínící techniky'}</span>
+                                          <span className="text-slate-300">|</span>
+                                          <span>Sleva:</span>
+                                          {editingOrderId === o.id ? (
+                                            <div className="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded border border-slate-300">
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={editingOrderDiscount}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => setEditingOrderDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                                                className="w-12 bg-white text-[11px] font-bold text-slate-800 text-center rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 py-px px-1 border border-slate-200"
+                                              />
+                                              <span className="text-[10px] font-bold text-slate-500">%</span>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleUpdateDiscount(o, editingOrderDiscount);
+                                                }}
+                                                className="p-0.5 text-emerald-600 hover:bg-emerald-50 rounded bg-white transition border border-slate-200"
+                                                title="Uložit slevu"
+                                              >
+                                                <Check size={10} strokeWidth={3} />
+                                              </button>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setEditingOrderId(null);
+                                                }}
+                                                className="p-0.5 text-rose-600 hover:bg-rose-50 rounded bg-white transition border border-slate-200"
+                                                title="Zrušit"
+                                              >
+                                                <X size={10} strokeWidth={3} />
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div className="inline-flex items-center gap-1">
+                                              <strong className="text-slate-700">{o.discount}%</strong>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setEditingOrderId(o.id);
+                                                  setEditingOrderDiscount(o.discount);
+                                                }}
+                                                className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer"
+                                                title="Upravit slevu"
+                                              >
+                                                <Edit3 size={10} />
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                       <div className="flex items-center gap-3">
                                         <div className="text-right">
@@ -2405,7 +2637,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                             <td className="py-2.5 text-slate-500 font-mono text-[11px]">{u.email}</td>
                             <td className="py-2.5">
                               <span className="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">
-                                {u.role === 'admin' ? 'Administrátor' : u.role === 'obchodnik' ? 'Obchodník' : 'Student'}
+                                {u.role === 'admin' ? 'Administrátor' : u.role === 'obchodnik' ? 'Obchodník' : 'Pracovník'}
                               </span>
                             </td>
                             <td className="py-2.5">

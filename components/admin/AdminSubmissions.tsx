@@ -61,7 +61,7 @@ const AdminSubmissions: React.FC<AdminSubmissionsProps> = ({
         <div className="flex justify-between items-center mb-6">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900">Úkoly a Review</h2>
-                <p className="text-slate-500 text-sm">Zadávejte speciální úkoly a kontrolujte práci studentů.</p>
+                <p className="text-slate-500 text-sm">Zadávejte speciální úkoly a kontrolujte práci pracovníků.</p>
             </div>
             <div className="flex bg-white rounded-xl p-1 border border-slate-200">
                 <button onClick={() => setActiveTab('reviews')} className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 ${activeTab === 'reviews' ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-900'}`}>

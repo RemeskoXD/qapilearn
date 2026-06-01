@@ -56,7 +56,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSetting
                     <div className="flex items-center justify-between">
                         <div>
                             <label className="font-bold text-slate-900 block">Režim Údržby (Maintenance)</label>
-                            <p className="text-xs text-slate-500 max-w-[250px]">Pokud je aktivní, studenti se nebudou moci přihlásit. Admini mají stále přístup.</p>
+                            <p className="text-xs text-slate-500 max-w-[250px]">Pokud je aktivní, pracovníci se nebudou moci přihlásit. Admini mají stále přístup.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" checked={localSettings.maintenanceMode} onChange={e => handleChange('maintenanceMode', e.target.checked)} className="sr-only peer"/>

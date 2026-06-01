@@ -160,7 +160,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
               </div>
               <div className="p-4 border-t border-slate-100 space-y-1 bg-slate-50/50">
                 <button onClick={() => { props.onNavigate('dashboard'); setSidebarOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition rounded-lg hover:bg-white border border-transparent hover:border-slate-200">
-                  <ArrowLeft size={16} /> Pohled studenta
+                  <ArrowLeft size={16} /> Pohled pracovníka
                 </button>
                 <button onClick={() => { props.onLogout(); setSidebarOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm font-medium text-rose-600 hover:text-rose-700 transition rounded-lg hover:bg-rose-50">
                   <LogOut size={16} /> Odhlásit
@@ -225,13 +225,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
         <div className={`p-4 border-t border-slate-200 space-y-1.5 ${isCollapsed ? 'flex flex-col items-center px-2' : ''}`}>
            <button 
              onClick={() => props.onNavigate('dashboard')} 
-             title={isCollapsed ? "Pohled studenta" : undefined}
+             title={isCollapsed ? "Pohled pracovníka" : undefined}
              className={`flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-all rounded-lg hover:bg-slate-50 ${
                isCollapsed ? 'justify-center h-10 w-10 p-0' : 'w-full gap-2 px-4 py-2.5'
              }`}
            >
               <ArrowLeft size={16} />
-              {!isCollapsed && <span className="text-xs">Pohled studenta</span>}
+              {!isCollapsed && <span className="text-xs">Pohled pracovníka</span>}
            </button>
            <button 
              onClick={props.onLogout} 

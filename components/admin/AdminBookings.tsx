@@ -82,7 +82,7 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
                 <thead className="bg-white/80 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
                     <tr>
                         <th className="p-4">Datum & Čas</th>
-                        <th className="p-4">Student</th>
+                        <th className="p-4">Pracovník</th>
                         <th className="p-4">Mentor</th>
                         <th className="p-4">Status</th>
                         <th className="p-4">Poznámka</th>
@@ -145,14 +145,14 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
 
                         <div className="space-y-4">
                             <div className="bg-white/80 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-4 text-sm">
-                                <div><span className="text-slate-500 block text-xs uppercase mb-1">Student</span> <span className="text-slate-900 font-bold">{editingBooking.userEmail}</span></div>
+                                <div><span className="text-slate-500 block text-xs uppercase mb-1">Pracovník</span> <span className="text-slate-900 font-bold">{editingBooking.userEmail}</span></div>
                                 <div><span className="text-slate-500 block text-xs uppercase mb-1">Mentor</span> <span className="text-slate-900 font-bold">{getMentorName(editingBooking.mentorId)}</span></div>
                                 <div><span className="text-slate-500 block text-xs uppercase mb-1">Datum</span> <span className="text-slate-900 font-mono">{new Date(editingBooking.date).toLocaleString()}</span></div>
                                 <div><span className="text-slate-500 block text-xs uppercase mb-1">Status</span> <span className="text-slate-900 capitalize">{editingBooking.status}</span></div>
                             </div>
 
                             <div>
-                                <label className="label">Poznámka studenta</label>
+                                <label className="label">Poznámka pracovníka</label>
                                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-705 font-medium italic">
                                     "{editingBooking.note}"
                                 </div>
@@ -164,12 +164,12 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ bookings, mentors, onUpda
                                     value={editingBooking.adminNote || ''} 
                                     onChange={e => setEditingBooking({...editingBooking, adminNote: e.target.value})} 
                                     className="input h-24 text-sm" 
-                                    placeholder="Soukromá poznámka k průběhu, hodnocení studenta..."
+                                    placeholder="Soukromá poznámka k průběhu, hodnocení pracovníka..."
                                 />
                             </div>
 
                             <div>
-                                <label className="label flex items-center gap-2"><Star size={14} className="text-yellow-500"/> Hodnocení studenta (1-5)</label>
+                                <label className="label flex items-center gap-2"><Star size={14} className="text-yellow-500"/> Hodnocení pracovníka (1-5)</label>
                                 <div className="flex gap-2">
                                     {[1,2,3,4,5].map(star => (
                                         <button 

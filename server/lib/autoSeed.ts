@@ -125,7 +125,7 @@ const EVENTS = [
   {
     id: 'e1',
     title: 'Jak prodávat High-Ticket Služby',
-    description: 'Exkluzivní interaktivní seminář pro studenty o tom, jak nastavit prodej služeb za 50k+ Kč a uzavřít prvního klienta do 14 dnů.',
+    description: 'Exkluzivní interaktivní seminář pro pracovníky o tom, jak nastavit prodej služeb za 50k+ Kč a uzavřít prvního klienta do 14 dnů.',
     date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
     type: 'webinar',
     link: 'https://zoom.us/live-link-dummy',

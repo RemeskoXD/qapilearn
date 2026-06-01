@@ -36,7 +36,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
 
   const stats = [
     {
-      label: 'Registrovaní Studenti',
+      label: 'Registrovaní pracovníci',
       value: allUsers.length,
       sub: `${activeUsers.length} aktivních · ${bannedCount} zablokovaných`,
       icon: <Users size={22} className="text-indigo-600" />,
@@ -65,7 +65,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
     {
       label: 'Celkový Pokrok Hubu',
       value: `${(totalPlatformXP / 1000).toFixed(1)}k`,
-      sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} XP na studenta`,
+      sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} XP na pracovníka`,
       icon: <Zap size={22} className="text-brand-gold" />,
       color: 'border-slate-200 hover:border-brand-gold bg-linear-to-b from-white to-slate-50/50',
       badge: 'Celkem XP',
@@ -77,7 +77,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
     { 
       label: 'Nevyřešené tickety', 
       value: openTickets, 
-      desc: 'Zprávy na zákaznické podpoře od studentů.', 
+      desc: 'Zprávy na zákaznické podpoře od pracovníků.', 
       icon: <MessageSquare size={20} />, 
       alert: openTickets > 0,
       alertColor: 'bg-rose-50 border-rose-100 text-rose-700'
@@ -112,7 +112,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
         <div>
           <span className="text-xs font-bold text-brand-gold uppercase tracking-widest bg-indigo-50 border border-brand-gold/30 px-3.5 py-1 rounded-full">Centrální dispečink Hubu</span>
           <h2 className="text-3xl font-black text-slate-900 mt-2 mb-1 tracking-tight">Vítejte v Administraci Q-Hubu</h2>
-          <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">Spravujte studenty, kurzy, herní prvky, podepisujte certifikáty a odpovídejte na dotazy podpory z jednoho intuitivního místa.</p>
+          <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">Spravujte pracovníky, kurzy, herní prvky, podepisujte certifikáty a odpovídejte na dotazy podpory z jednoho intuitivního místa.</p>
         </div>
         <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl">
           <Activity size={18} className="text-emerald-500 animate-pulse" />
@@ -217,8 +217,8 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
           <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl flex flex-col h-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
               <div>
-                <h3 className="font-black text-slate-900 text-lg">Nedávno registrovaní studenti</h3>
-                <p className="text-xs text-slate-400">Přehled posledních registrovaných studentů, jejich XP a oprávnění.</p>
+                <h3 className="font-black text-slate-900 text-lg">Nedávno registrovaní pracovníci</h3>
+                <p className="text-xs text-slate-400">Přehled posledních registrovaných pracovníků, jejich XP a oprávnění.</p>
               </div>
               <div className="relative w-full sm:w-48 text-[11px]">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
@@ -236,7 +236,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
               <table className="w-full text-left text-xs text-slate-550">
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    <th className="pb-3 pl-2">Student</th>
+                    <th className="pb-3 pl-2">Pracovník</th>
                     <th className="pb-3 text-right">Získáno XP</th>
                     <th className="pb-3">Plán / Role</th>
                     <th className="pb-3 text-right">Člen od</th>

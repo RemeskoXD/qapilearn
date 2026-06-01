@@ -575,7 +575,8 @@ router.get('/api/caflou/users', async (req, res) => {
         email: true,
         name: true,
         role: true,
-        financialProfit: true
+        financialProfit: true,
+        profitHistory: true
       },
       orderBy: { name: 'asc' }
     });
@@ -836,7 +837,7 @@ router.post('/api/caflou/import-users', async (req, res) => {
 
 // 6. Synchronizace výkazů z Caflou a výpočet výplat
 router.post('/api/caflou/sync-timesheets', async (req, res) => {
-  const { month, year, useDemo } = req.body ?? {};
+  const { month, year } = req.body ?? {};
   
   if (!month || !year) {
     return res.status(400).json({ error: 'Nebylo zadáno období (měsíc a rok).' });
@@ -856,49 +857,10 @@ router.post('/api/caflou/sync-timesheets', async (req, res) => {
   const rates = readRates();
   const config = readConfig();
 
-  // --- REŽIM DEMO NEBO FALLBACK PRO SNADNÉ TESTOVÁNÍ ---
-  if (useDemo || !config.caflouToken) {
-    // Simulujeme dotažená a realistická data napříč registrovanými uživateli
-    console.log('[Caflou] Pouštím simulovaný demo režim (nebo chybí Token)');
-    
-    // Vybereme několik uživatelů u nás pro vygenerování realistického reportu
-    const simulatedEntries: any[] = [];
-    const demoTasks = [
-      'Úprava PPC kampaní a testování konverzí',
-      'Servis fotovoltaické stanice u klienta',
-      'Telefonická podpora studentů a řešení tiketů',
-      'Příprava marketingových podkladů pro Q-Hub',
-      'Analýza obchodních výsledků za minulý týden',
-      'Schůzka s týmem a koordinace techniků',
-      'Tvorba grafických bannerů a textace profilů'
-    ];
-
-    qhubUsers.forEach((u, idx) => {
-      // Pro každého registrovaného uživatele vytvoříme pár náhodných zápisů do výkazů,
-      // pokud mají rozumné role (student/admin atp).
-      const taskCount = 2 + (idx % 4);
-      for (let i = 0; i < taskCount; i++) {
-        // Vygenerujeme odpracovaný čas (např. 2 až 8 hodin na úkol)
-        const hours = parseFloat((3 + (idx * 1.5 + i * 2.3) % 6).toFixed(1));
-        const taskName = demoTasks[(idx + i) % demoTasks.length];
-        simulatedEntries.push({
-          id: `sim-entry-${u.id}-${i}`,
-          title: taskName,
-          hours: hours,
-          date_work: `${year}-${String(month).padStart(2, '0')}-${10 + i}`,
-          user: {
-            name: u.name || 'Student Q-Hub',
-            email: u.email
-          }
-        });
-      }
-    });
-
-    const report = processCaflouEntries(simulatedEntries, qhubUsers, rates, month, year);
-    return res.json({ 
-      report, 
-      isDemo: true, 
-      warning: !config.caflouToken ? 'Pozor: Nebyl nakonfigurován Caflou API Token. Zobrazují se demo data simulovaná z vašich Q-Hub uživatelů pro vyzkoušení funkčnosti.' : undefined 
+  // --- SYSTÉM VYŽADUJE REÁLNÉ ÚDAJE (ŽÁDNÁ DEMO DATA) ---
+  if (!config.caflouToken) {
+    return res.status(400).json({
+      error: 'Není nakonfigurován Caflou API Token. Vložte jej prosím v nastavení nebo jako secret CAFLOU_TOKEN.'
     });
   }
 
@@ -954,27 +916,8 @@ router.post('/api/caflou/sync-timesheets', async (req, res) => {
 
   } catch (err: any) {
     console.error('[Caflou] Selhalo spojení s reálným API:', err.message);
-    
-    // Fallback: Pokud reálné API selže (např. neplatný token), automaticky informujeme administrátora,
-    // ale vrátíme i simulovaná data, aby neměl rozbitou stránku a mohl systém bez obav předvést!
-    const simulatedEntries: any[] = [];
-    qhubUsers.slice(0, 5).forEach((u, idx) => {
-      simulatedEntries.push({
-        id: `sim-fallback-${u.id}`,
-        title: 'Práce na klientském projektu (API Fail Fallback)',
-        hours: 24.5 + idx * 4,
-        date_work: `${year}-${String(month).padStart(2, '0')}-15`,
-        user: { name: u.name, email: u.email }
-      });
-    });
-    
-    const report = processCaflouEntries(simulatedEntries, qhubUsers, rates, month, year);
-    return res.json({ 
-      report, 
-      isDemo: true, 
-      errorOccurred: true,
-      errorMessage: err.message,
-      warning: `Reálné propojení s Caflou selhalo (${err.message}). Byla načtena náhradní ukázková data pro demonstrační účely.`
+    return res.status(500).json({
+      error: `Reálné propojení s Caflou selhalo (${err.message}).`
     });
   }
 });
@@ -1202,10 +1145,15 @@ function readOZData(): OZDataContainer {
   try {
     if (fs.existsSync(OZ_DATA_FILE)) {
       const parsed = JSON.parse(fs.readFileSync(OZ_DATA_FILE, 'utf-8'));
+      const rawOrders: OZOrder[] = parsed.orders || [];
+      const cleanOrders = rawOrders.filter(o => o.id && o.id.startsWith('caflou-prj-'));
+      const rawAdjustments: OZAdjustment[] = parsed.adjustments || [];
+      const cleanAdjustments = rawAdjustments.filter(a => a.id && !a.id.startsWith('adj-'));
+      
       return {
         userConfigs: parsed.userConfigs || {},
-        orders: parsed.orders || [],
-        adjustments: parsed.adjustments || [],
+        orders: cleanOrders,
+        adjustments: cleanAdjustments,
         payouts: parsed.payouts || []
       };
     }

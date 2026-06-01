@@ -631,7 +631,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                                     <h4 className="font-bold text-indigo-905 flex items-center gap-2 text-sm">
                                         <MessageSquare size={18} className="text-indigo-505" /> 
-                                        Osobní vzkaz na Dashboardu studenta
+                                        Osobní vzkaz na Dashboardu pracovníka
                                     </h4>
                                     <label className="flex items-center gap-2.5 cursor-pointer bg-indigo-100 hover:bg-indigo-200/80 px-4 py-2 rounded-xl border border-indigo-202 transition-all select-none">
                                         <span className="text-[11px] text-indigo-705 uppercase font-bold tracking-wider">Aktivní vzkaz</span>
@@ -650,7 +650,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                     placeholder="Sem vepište motivaci, oznámení o bonusovém obsahu nebo úkolech..."
                                 />
                                 <p className="text-[10.5px] text-slate-600 font-medium flex items-center gap-1">
-                                    <Sparkles size={12} className="text-indigo-505 animate-pulse" /> Student uvidí tento vzkaz zazářit ve widgetu na hlavní stránce okamžitě po svém přihlášení.
+                                    <Sparkles size={12} className="text-indigo-505 animate-pulse" /> Pracovník uvidí tento vzkaz zazářit ve widgetu na hlavní stránce okamžitě po svém přihlášení.
                                 </p>
                             </div>
 
@@ -806,7 +806,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                     })}
                                 </div>
                                 <p className="text-[10px] text-slate-500">
-                                    💡 Tyto pracovní pozice dají studentovi přístup k vybraným materiálům ihned po jeho prvním přihlášení.
+                                    💡 Tyto pracovní pozice dají pracovníkovi přístup k vybraným materiálům ihned po jeho prvním přihlášení.
                                 </p>
                             </div>
 
