@@ -54,14 +54,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-violet-200/40 rounded-full blur-3xl"></div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-slate-900 border-2 border-brand-gold rounded-xl flex items-center justify-center text-brand-gold font-black text-lg shadow-lg">
-              Q
-            </div>
-            <div>
-              <h1 className="font-bold text-slate-900 text-lg leading-none">Q-Hub</h1>
-              <p className="text-xs text-slate-500 mt-1">Interní vzdělávací systém</p>
-            </div>
+          <div className="flex flex-col items-start gap-1">
+            <img 
+              src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" 
+              alt="Q-Hub Logo" 
+              className="h-16 w-auto object-contain"
+            />
+            <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase mt-0.5">Interní vzdělávací systém</p>
           </div>
         </div>
 
@@ -95,14 +94,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           className="w-full max-w-md"
         >
           {/* Logo na mobilu */}
-          <div className="flex items-center gap-3 mb-10 lg:hidden">
-            <div className="w-10 h-10 bg-slate-900 border-2 border-brand-gold rounded-xl flex items-center justify-center text-brand-gold font-black">
-              Q
-            </div>
-            <div>
-              <h1 className="font-bold text-slate-900 leading-none">Q-Hub</h1>
-              <p className="text-xs text-slate-500 mt-1">Interní vzdělávací systém</p>
-            </div>
+          <div className="flex flex-col items-center text-center gap-1 mb-10 lg:hidden">
+            <img 
+              src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" 
+              alt="Q-Hub Logo" 
+              className="h-14 w-auto object-contain"
+            />
+            <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase mt-0.5">Interní vzdělávací systém</p>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">

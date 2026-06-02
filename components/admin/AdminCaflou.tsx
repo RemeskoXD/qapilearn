@@ -180,7 +180,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
         })
       });
       if (resp.ok) {
-        notify('success', 'Úprava uložena', `Sankce/Pokuta byla přičtena do evidence.`);
+        notify('success', 'Úprava uložena', adjType === 'bonus' ? 'Bonus/Odměna byla připsána do evidence.' : 'Sankce/Pokuta byla přičtena do evidence.');
         setAdjUserEmail('');
         setAdjReason('');
         setAdjAmount(1000);
@@ -333,8 +333,13 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
   // Custom interactive tracking states
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
   const [payoutsHistorySearch, setPayoutsHistorySearch] = useState('');
+  const [positionFilter, setPositionFilter] = useState('');
+  const [historyPages, setHistoryPages] = useState<Record<string, number>>({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [editingOrderDiscount, setEditingOrderDiscount] = useState<number>(0);
+  const [editingOrderCommId, setEditingOrderCommId] = useState<string | null>(null);
+  const [editingOrderCommPercent, setEditingOrderCommPercent] = useState<string>('');
 
   const handleUpdateDiscount = async (order: any, newDiscount: number) => {
     try {
@@ -356,6 +361,49 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
       }
     } catch (e: any) {
       notify('error', 'Chyba spojení', 'Chyba při odesílání požadavku na server.');
+    }
+  };
+
+  const handleUpdateCommPercent = async (order: any, percentVal: string) => {
+    try {
+      const parsedVal = percentVal === '' ? null : parseFloat(percentVal);
+      const resp = await fetch('/api/caflou/oz/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...order,
+          customCommissionPercent: parsedVal !== null && !isNaN(parsedVal) ? parsedVal : null
+        })
+      });
+      if (resp.ok) {
+        notify('success', 'Provize OZ upravena', `Individuální provizní procento u zakázky ${order.contractNumber} bylo uloženo.`);
+        setEditingOrderCommId(null);
+        fetchSalesData();
+      } else {
+        const err = await resp.json();
+        notify('error', 'Chyba', err.error || 'Nepodařilo se uložit změnu.');
+      }
+    } catch (e: any) {
+      notify('error', 'Chyba spojení', 'Chyba při odesílání požadavku na server.');
+    }
+  };
+
+  const executeDeletePayout = async (email: string, entryId: string) => {
+    try {
+      const resp = await fetch(`/api/caflou/oz/payout?email=${encodeURIComponent(email)}&entryId=${encodeURIComponent(entryId)}`, {
+        method: 'DELETE'
+      });
+      if (resp.ok) {
+        notify('success', 'Výplata smazána', 'Záznam o výplatě byl úspěšně smazán, odpracované zakázky byly uvolněny a finance se odečetly.');
+        setConfirmDeleteId(null);
+        fetchRatesAndUsers();
+        fetchSalesData();
+      } else {
+        const err = await resp.json();
+        notify('error', 'Chyba při mazání', err.error || 'Nepodařilo se smazat výplatu.');
+      }
+    } catch (e: any) {
+      notify('error', 'Chyba spojení', 'Nepodařilo se spojit se serverem.');
     }
   };
 
@@ -1228,24 +1276,39 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                 </p>
               </div>
 
-              {/* Hledání */}
-              <div className="relative w-full sm:w-72">
-                <input
-                  type="text"
-                  placeholder="Vyhledat uživatele..."
-                  value={payoutsHistorySearch}
-                  onChange={(e) => setPayoutsHistorySearch(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
-                />
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                {payoutsHistorySearch && (
-                  <button
-                    onClick={() => setPayoutsHistorySearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs"
-                  >
-                    ×
-                  </button>
-                )}
+              {/* Filtry: Vyhledávání a Pozice */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <select
+                  value={positionFilter}
+                  onChange={(e) => setPositionFilter(e.target.value)}
+                  className="w-full sm:w-44 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition cursor-pointer"
+                >
+                  <option value="">Všechny pozice</option>
+                  {Array.from(new Set(qhubUsers.map((u) => u.role).filter(Boolean))).map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="relative w-full sm:w-60">
+                  <input
+                    type="text"
+                    placeholder="Vyhledat uživatele..."
+                    value={payoutsHistorySearch}
+                    onChange={(e) => setPayoutsHistorySearch(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition"
+                  />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  {payoutsHistorySearch && (
+                    <button
+                      onClick={() => setPayoutsHistorySearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1257,6 +1320,9 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
               <div className="space-y-3">
                 {qhubUsers
                   .filter(u => {
+                    if (positionFilter && u.role !== positionFilter) {
+                      return false;
+                    }
                     if (!payoutsHistorySearch) return true;
                     const search = payoutsHistorySearch.toLowerCase();
                     return (
@@ -1316,46 +1382,116 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                         </div>
 
                         {/* Expandované detaily (historie) */}
-                        {isExpanded && (
-                          <div className="border-t border-slate-150 p-4 bg-slate-50/60 animate-fade-in">
-                            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-405 mb-3">
-                              Historie schválených výplat
-                            </h4>
+                        {isExpanded && (() => {
+                          const currentPage = historyPages[user.id] || 1;
+                          const itemsPerPage = 5;
+                          const totalPages = Math.ceil(historyList.length / itemsPerPage);
+                          const paginatedHistory = historyList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-                            {historyList.length === 0 ? (
-                              <div className="text-[11px] text-slate-400 italic py-2">
-                                📭 Pro tohoto uživatele zatím nebyly uloženy žádné schválené výplaty přes Caflou modul.
-                              </div>
-                            ) : (
-                              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                                <table className="w-full text-left text-[11px] whitespace-nowrap">
-                                  <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                      <th className="p-3">Datum schválení</th>
-                                      <th className="p-3">Částka</th>
-                                      <th className="p-3 rounded-r-xl">Poznámka / Detaily</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-150 font-medium">
-                                    {historyList.map((entry: any) => (
-                                      <tr key={entry.id || entry.date} className="hover:bg-slate-50/50 transition">
-                                        <td className="p-3 font-mono text-slate-500">
-                                          {entry.date}
-                                        </td>
-                                        <td className="p-3 font-extrabold text-slate-900 text-emerald-700 font-mono">
-                                          {parseFloat(entry.amount || 0).toLocaleString()} Kč
-                                        </td>
-                                        <td className="p-3 text-slate-600 italic">
-                                          {entry.note || 'Měsíční finanční plnění'}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          return (
+                            <div className="border-t border-slate-150 p-4 bg-slate-50/60 animate-fade-in">
+                              <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-3">
+                                Historie schválených výplat
+                              </h4>
+
+                              {historyList.length === 0 ? (
+                                <div className="text-[11px] text-slate-400 italic py-2">
+                                  📭 Pro tohoto uživatele zatím nebyly uloženy žádné schválené výplaty přes Caflou modul.
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm font-sans">
+                                    <table className="w-full text-left text-[11px] whitespace-nowrap">
+                                      <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                          <th className="p-3">Datum schválení</th>
+                                          <th className="p-3">Částka</th>
+                                          <th className="p-3">Poznámka / Detaily</th>
+                                          <th className="p-3 rounded-r-xl text-center w-20">Akce</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-slate-150 font-medium">
+                                        {paginatedHistory.map((entry: any) => (
+                                          <tr key={entry.id || entry.date} className="hover:bg-slate-50/50 transition">
+                                            <td className="p-3 font-mono text-slate-500">
+                                              {entry.date}
+                                            </td>
+                                            <td className="p-3 font-extrabold text-slate-900 text-emerald-700 font-mono">
+                                              {parseFloat(entry.amount || 0).toLocaleString()} Kč
+                                            </td>
+                                            <td className="p-3 text-slate-600 italic whitespace-normal max-w-xs break-words leading-relaxed">
+                                              {entry.note || 'Měsíční mzdová výplata'}
+                                            </td>
+                                            <td className="p-3 text-center">
+                                              {confirmDeleteId === entry.id ? (
+                                                <div className="inline-flex items-center gap-1 bg-rose-50 border border-rose-200 p-1 rounded-lg">
+                                                  <span className="text-[9px] font-black text-rose-750 px-1">Smazat?</span>
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      executeDeletePayout(user.email, entry.id);
+                                                    }}
+                                                    className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9px] rounded transition cursor-pointer"
+                                                  >
+                                                    Ano
+                                                  </button>
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setConfirmDeleteId(null);
+                                                    }}
+                                                    className="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-850 font-extrabold text-[9px] rounded border border-slate-305 transition cursor-pointer"
+                                                  >
+                                                    Ne
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setConfirmDeleteId(entry.id);
+                                                  }}
+                                                  className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg bg-rose-50 hover:text-rose-700 transition cursor-pointer flex items-center justify-center mx-auto"
+                                                  title="Smazat záznam o výplatě"
+                                                >
+                                                  <Trash2 size={12} />
+                                                </button>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  {totalPages > 1 && (
+                                    <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+                                      <span className="text-[10px] text-slate-450 font-bold">
+                                        Strana {currentPage} z {totalPages} (Celkem {historyList.length} záznamů)
+                                      </span>
+                                      <div className="flex gap-1.5">
+                                        <button
+                                          onClick={() => setHistoryPages(prev => ({ ...prev, [user.id]: Math.max(1, currentPage - 1) }))}
+                                          disabled={currentPage === 1}
+                                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-extrabold rounded-lg transition disabled:opacity-40 cursor-pointer"
+                                        >
+                                          Předchozí
+                                        </button>
+                                        <button
+                                          onClick={() => setHistoryPages(prev => ({ ...prev, [user.id]: Math.min(totalPages, currentPage + 1) }))}
+                                          disabled={currentPage === totalPages}
+                                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-extrabold rounded-lg transition disabled:opacity-40 cursor-pointer"
+                                        >
+                                          Další
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}
@@ -1761,7 +1897,10 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       }
 
                       // Individual order commission calculations
-                      const calculateIndividualCommission = (amount: number, discount: number) => {
+                      const calculateIndividualCommission = (amount: number, discount: number, overridePercent?: number) => {
+                          if (overridePercent !== undefined && overridePercent !== null) {
+                              return amount * (overridePercent / 100);
+                          }
                           if (discount > 60) return 0; // penalty
 
                           const tier1 = discount >= 33 && discount <= 45; // reduced (33% - 45%)
@@ -1797,7 +1936,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       };
 
                       const totalCommissions = (config.userType === 'commission' || config.userType === 'both')
-                          ? monthOrders.reduce((sum, o) => sum + calculateIndividualCommission(o.amount, o.discount), 0)
+                          ? monthOrders.reduce((sum, o) => sum + calculateIndividualCommission(o.amount, o.discount, o.customCommissionPercent), 0)
                           : 0;
 
                       // Fix Salary basic rate
@@ -2007,7 +2146,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                             ) : (
                               <div className="space-y-2 text-[11px] font-medium leading-normal">
                                 {monthOrders.map(o => {
-                                  const cPrice = calculateIndividualCommission(o.amount, o.discount);
+                                  const cPrice = calculateIndividualCommission(o.amount, o.discount, o.customCommissionPercent);
                                   return (
                                     <div key={o.id} className="bg-white border border-slate-200 rounded-xl p-3 flex justify-between items-center group">
                                       <div>
@@ -2063,6 +2202,61 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                                                 }}
                                                 className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer"
                                                 title="Upravit slevu"
+                                              >
+                                                <Edit3 size={10} />
+                                              </button>
+                                            </div>
+                                          )}
+
+                                          <span className="text-slate-300">|</span>
+                                          <span>Provize OZ:</span>
+                                          {editingOrderCommId === o.id ? (
+                                            <div className="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded border border-slate-300">
+                                              <input
+                                                type="number"
+                                                min="0"
+                                                max="150"
+                                                step="0.1"
+                                                value={editingOrderCommPercent}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => setEditingOrderCommPercent(e.target.value)}
+                                                className="w-12 bg-white text-[11px] font-bold text-slate-800 text-center rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 py-px px-1 border border-slate-200"
+                                              />
+                                              <span className="text-[10px] font-bold text-slate-500">%</span>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleUpdateCommPercent(o, editingOrderCommPercent);
+                                                }}
+                                                className="p-0.5 text-emerald-600 hover:bg-emerald-50 rounded bg-white transition border border-slate-200"
+                                                title="Uložit provizi"
+                                              >
+                                                <Check size={10} strokeWidth={3} />
+                                              </button>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setEditingOrderCommId(null);
+                                                }}
+                                                className="p-0.5 text-rose-600 hover:bg-rose-50 rounded bg-white transition border border-slate-200"
+                                                title="Zrušit"
+                                              >
+                                                <X size={10} strokeWidth={3} />
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div className="inline-flex items-center gap-1">
+                                              <strong className="text-indigo-700">
+                                                {o.customCommissionPercent !== undefined && o.customCommissionPercent !== null ? `${o.customCommissionPercent}%` : `${(o.amount > 0 ? (cPrice / o.amount) * 100 : 0).toFixed(1)}%`}
+                                              </strong>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setEditingOrderCommId(o.id);
+                                                  setEditingOrderCommPercent(o.customCommissionPercent !== undefined && o.customCommissionPercent !== null ? o.customCommissionPercent.toString() : (o.amount > 0 ? ((cPrice / o.amount) * 100).toFixed(1) : '8'));
+                                                }}
+                                                className="text-indigo-600 hover:text-indigo-800 p-0.5 rounded bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer"
+                                                title="Upravit provizi OZ"
                                               >
                                                 <Edit3 size={10} />
                                               </button>

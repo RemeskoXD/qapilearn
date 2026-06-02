@@ -135,8 +135,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             >
               <div className="p-6 flex items-center justify-between border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-slate-900 border border-brand-gold rounded-lg flex items-center justify-center text-brand-gold"><Shield size={16} /></div>
-                  <span className="font-bold text-slate-900 text-sm">Q-Hub Admin</span>
+                  <img 
+                    src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" 
+                    alt="QHUB Logo" 
+                    className="h-12 w-auto object-contain flex-shrink-0" 
+                    style={{ filter: 'invert(15%) sepia(95%) saturate(6500%) hue-rotate(358deg) brightness(85%) contrast(115%)' }}
+                  />
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-slate-700 p-1">
                   <X size={18} />
@@ -175,11 +179,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
       <div className={`bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
          <div className={`p-6 border-b border-slate-100 flex items-center ${isCollapsed ? 'flex-col gap-4 p-4 justify-center' : 'justify-between'}`}>
            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-9 h-9 bg-slate-900 border border-brand-gold rounded-xl flex items-center justify-center text-brand-gold shadow-md flex-shrink-0"><Shield size={18} /></div>
+              <img 
+                src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" 
+                alt="QHUB Logo" 
+                className="h-14 w-auto object-contain flex-shrink-0"
+                style={{ filter: 'invert(15%) sepia(95%) saturate(6500%) hue-rotate(358deg) brightness(85%) contrast(115%)' }}
+              />
               {!isCollapsed && (
                 <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
-                  <div className="font-bold text-slate-900 leading-none text-sm tracking-tight whitespace-nowrap">Q-Hub Admin</div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">CMS Panel</p>
+
+
                 </motion.div>
               )}
            </div>

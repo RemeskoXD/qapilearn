@@ -1109,6 +1109,7 @@ export interface OZOrder {
   discount: number;
   status: 'completed' | 'pending';
   payoutMonth?: string;
+  customCommissionPercent?: number;
 }
 
 export interface OZUserConfig {
@@ -1146,9 +1147,9 @@ function readOZData(): OZDataContainer {
     if (fs.existsSync(OZ_DATA_FILE)) {
       const parsed = JSON.parse(fs.readFileSync(OZ_DATA_FILE, 'utf-8'));
       const rawOrders: OZOrder[] = parsed.orders || [];
-      const cleanOrders = rawOrders.filter(o => o.id && o.id.startsWith('caflou-prj-'));
+      const cleanOrders = rawOrders.filter(o => o.id && (o.id.startsWith('caflou-prj-') || o.id.startsWith('ord-')));
       const rawAdjustments: OZAdjustment[] = parsed.adjustments || [];
-      const cleanAdjustments = rawAdjustments.filter(a => a.id && !a.id.startsWith('adj-'));
+      const cleanAdjustments = rawAdjustments.filter(a => a.id && a.id.startsWith('adj-'));
       
       return {
         userConfigs: parsed.userConfigs || {},
@@ -1196,7 +1197,8 @@ router.post('/api/caflou/oz/orders', async (req, res) => {
     amount: parseFloat(order.amount),
     discount: parseFloat(order.discount || 0),
     status: order.status || 'completed',
-    payoutMonth: order.payoutMonth || undefined
+    payoutMonth: order.payoutMonth || undefined,
+    customCommissionPercent: (order.customCommissionPercent !== undefined && order.customCommissionPercent !== null && order.customCommissionPercent !== '') ? parseFloat(order.customCommissionPercent) : undefined
   };
 
   const existingIndex = data.orders.findIndex(o => o.id === newOrder.id);
@@ -1345,9 +1347,13 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
   let calculatedCommission = 0;
   if (userConfig.userType === 'commission' || userConfig.userType === 'both') {
     userMonthOrders.forEach(o => {
-      // If discount > 60%, commission is fully penalized to 0%
-      const ratePerc = o.discount > 60 ? 0 : getCommissionRate(totalVolume, o.discount, userConfig);
-      calculatedCommission += o.amount * (ratePerc / 100);
+      if (o.customCommissionPercent !== undefined && o.customCommissionPercent !== null) {
+        calculatedCommission += o.amount * (o.customCommissionPercent / 100);
+      } else {
+        // If discount > 60%, commission is fully penalized to 0%
+        const ratePerc = o.discount > 60 ? 0 : getCommissionRate(totalVolume, o.discount, userConfig);
+        calculatedCommission += o.amount * (ratePerc / 100);
+      }
     });
   }
 
@@ -1445,6 +1451,62 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
     ok: true,
     message: 'Provize byly úspěšně propočteny, uzamčeny a zapsány do financí uživatele.',
     record: payoutRecord
+  });
+});
+
+// 7b. Delete / Revert payout record
+router.delete('/api/caflou/oz/payout', async (req, res) => {
+  const { email, entryId } = req.query ?? {};
+
+  if (!email || !entryId) {
+    return res.status(400).json({ error: 'Chybí parametry email nebo entryId.' });
+  }
+
+  const normEmail = (email as string).toLowerCase().trim();
+  const dbUser = await prisma.qhubUser.findUnique({ where: { email: normEmail } });
+
+  if (!dbUser) {
+    return res.status(404).json({ error: `Uživatel s e-mailem ${normEmail} nebyl nalezen.` });
+  }
+
+  const currentHistory = Array.isArray(dbUser.profitHistory) ? dbUser.profitHistory : [];
+  const entryToDelete = currentHistory.find((entry: any) => entry.id === entryId);
+
+  if (!entryToDelete) {
+    return res.status(404).json({ error: 'Záznam o výplatě v historii nebyl nalezen.' });
+  }
+
+  const updatedHistory = currentHistory.filter((entry: any) => entry.id !== entryId);
+  const freshProfit = Math.max(0, (dbUser.financialProfit ?? 0) - (entryToDelete.amount || 0));
+
+  const monthMatch = (entryToDelete.note || '').match(/\((\d{4}-\d{2})\)/);
+  const payoutMonth = monthMatch ? monthMatch[1] : null;
+
+  const data = readOZData();
+  
+  if (payoutMonth) {
+    data.payouts = data.payouts.filter(p => !(p.email.toLowerCase() === normEmail && p.month === payoutMonth));
+
+    data.orders.forEach(o => {
+      if (o.email.toLowerCase() === normEmail && o.payoutMonth === payoutMonth) {
+        o.payoutMonth = undefined;
+      }
+    });
+
+    writeOZData(data);
+  }
+
+  await prisma.qhubUser.update({
+    where: { id: dbUser.id },
+    data: {
+      financialProfit: freshProfit,
+      profitHistory: updatedHistory as any
+    }
+  });
+
+  return res.json({
+    ok: true,
+    message: 'Výplata byla úspěšně smazána z historie, finance byly odečteny a zakázky odemčeny.'
   });
 });
 

@@ -618,9 +618,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     { icon: <Award size={20} />, label: "Certifikáty", id: 'certificates' },
   ];
 
-  if (user.role === 'vip' || user.role === 'admin') {
-      sidebarLinks.push({ icon: <Crown size={20} />, label: "VIP Zóna", id: 'vip-zone' });
-  }
+  // VIP Zóna je dočasně skrytá z menu podle požadavku uživatele
+  // if (user.role === 'vip' || user.role === 'admin') {
+  //     sidebarLinks.push({ icon: <Crown size={20} />, label: "VIP Zóna", id: 'vip-zone' });
+  // }
 
   const unreadMessages = user.messages.filter(m => !m.read).length;
   const isBoostActive = user.xpBoostUntil && new Date(user.xpBoostUntil) > new Date();
@@ -727,12 +728,20 @@ const Dashboard: React.FC<DashboardProps> = ({
       setLessonQuizState(prev => ({ ...prev, step: 'result', score, passed: score >= 70 }));
   };
 
+  // Certificate Selection for Print
+  const [printingCertId, setPrintingCertId] = useState<string | null>(null);
+
   // Certificate Download Handler
   const handleDownloadCertificate = (certId: string) => {
-      notify('info', 'Připravuji dokument...', 'Otevře se tiskové okno. Prosím zvolte "Uložit jako PDF".');
+      setPrintingCertId(certId);
+      notify('info', 'Připravuji dokument...', 'Otevře se tiskové okno. Pro optimální tisk zvolte formát "Na výšku" (A4) a v pokročilém nastavení zapněte možnost "Grafika na pozadí" (Background graphics).');
       setTimeout(() => {
           window.print();
-      }, 500);
+          // Reset after a modest amount of time so layout goes back to normal
+          setTimeout(() => {
+              setPrintingCertId(null);
+          }, 1500);
+      }, 600);
   };
 
   // Sort users for leaderboard
@@ -750,6 +759,104 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
+      
+      {/* PERFECTLY FORMATTED VERTICAL A4 CERTIFICATE FOR PRINTING */}
+      {printingCertId && (() => {
+          const cert = user.certificates.find(c => c.id === printingCertId);
+          if (!cert) return null;
+          
+          return (
+              <div id="certificate-print-area" className="hidden print:flex flex-col justify-between bg-white text-slate-900 border-[16px] border-double border-amber-500/80 p-12 relative overflow-hidden" style={{ minHeight: '297mm', width: '210mm' }}>
+                  {/* Fine border decoration */}
+                  <div className="absolute inset-4 border-2 border-amber-600/40 pointer-events-none"></div>
+                  
+                  {/* Subtle watermarks / background circles */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border-4 border-dashed border-amber-500/5 opacity-[0.06] pointer-events-none"></div>
+                  
+                  {/* TOP HEADER BLOCK */}
+                  <div className="flex flex-col items-center text-center mt-6">
+                      <img src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" alt="QHub Logo" className="h-12 w-auto object-contain mb-4" />
+                      <div className="tracking-[0.25em] text-xs font-bold text-amber-600 uppercase mb-2">PROFESNÍ VZDĚLÁVACÍ SYSTÉM Q-HUB</div>
+                      <div className="w-16 border-t-2 border-amber-500/50 mb-4"></div>
+                  </div>
+                  
+                  {/* CERTIFICATE MAIN TITLE */}
+                  <div className="text-center my-4">
+                      <h1 className="text-4xl font-extrabold tracking-widest text-slate-900 font-serif uppercase mb-1">CERTIFIKÁT</h1>
+                      <div className="text-xs tracking-wider text-slate-500 italic">o absolvování kurzu a úspěšném ověření znalostí</div>
+                  </div>
+
+                  {/* RECIPIENT BLOCK */}
+                  <div className="text-center my-4">
+                      <p className="text-xs uppercase tracking-widest text-slate-400 mb-2">Tento dokument potvrzuje, že</p>
+                      <h2 className="text-3xl font-extrabold text-amber-700 font-serif border-b border-amber-200 pb-2 px-12 inline-block">
+                          {cert.studentName || 'Vážený Student'}
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-2">úspěšně splnil(a) všechny stanovené akademické a praktické standardy</p>
+                  </div>
+
+                  {/* COURSE NAME BLOCK */}
+                  <div className="text-center my-6">
+                      <p className="text-[10px] uppercase tracking-widest text-slate-400 mb-1">v rámci vzdělávacího programu</p>
+                      <div className="bg-gradient-to-r from-amber-500/5 via-amber-500/10 to-amber-500/5 border-y border-amber-500/20 py-4 px-6 my-2">
+                          <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight">
+                              {cert.courseName}
+                          </h3>
+                      </div>
+                  </div>
+
+                  {/* METRICS / STATS */}
+                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto my-4 text-center border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                      <div>
+                          <div className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Datum udělení</div>
+                          <div className="text-xs font-bold text-slate-800 font-mono mt-0.5">{cert.issueDate ? new Date(cert.issueDate).toLocaleDateString('cs-CZ') : new Date().toLocaleDateString('cs-CZ')}</div>
+                      </div>
+                      <div>
+                          <div className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Stav certifikátu</div>
+                          <div className="text-xs font-bold text-emerald-600 mt-0.5 uppercase tracking-wider font-sans">Aktivní / Ověřený</div>
+                      </div>
+                  </div>
+
+                  {/* BOTTOM BLOCK: SIGNATURE, SEAL & QR VALIDATOR */}
+                  <div className="grid grid-cols-3 items-center gap-6 mt-6 pt-6 border-t border-slate-100 relative">
+                      {/* Left: QR code for verification */}
+                      <div className="flex flex-col items-start gap-1">
+                          {cert.qrCodeUrl ? (
+                              <img src={cert.qrCodeUrl} className="w-20 h-20 mix-blend-multiply border border-slate-200 p-0.5 rounded shadow-xs" alt="Ověřovací kód" />
+                          ) : (
+                              <div className="w-16 h-16 bg-slate-100 rounded flex items-center justify-center text-[10px] text-slate-400">QR CODE</div>
+                          )}
+                          <div className="text-[8px] text-slate-400 font-mono tracking-wider mt-1 uppercase">Ověření: {cert.code || 'Q-HUB-' + cert.id.substring(0,6)}</div>
+                      </div>
+
+                      {/* Middle: Golden Seal Image or Badge */}
+                      <div className="flex justify-center">
+                          <div className="relative flex items-center justify-center w-20 h-20">
+                              {/* Golden SVG Seal Badge */}
+                              <svg className="w-20 h-20 text-amber-500 fill-current drop-shadow-md" viewBox="0 0 100 100">
+                                  <path d="M50 5 L55 20 L70 15 L65 30 L80 35 L70 45 L80 55 L65 60 L70 75 L55 70 L50 85 L45 70 L30 75 L35 60 L20 55 L30 45 L20 35 L35 30 L30 15 L45 20 Z" />
+                                  <circle cx="50" cy="45" r="22" className="text-amber-600" />
+                                  <circle cx="50" cy="45" r="20" className="text-amber-500" />
+                                  <text x="50" y="42" textAnchor="middle" className="text-amber-950 font-sans font-bold text-[8px] uppercase tracking-widest">Q-HUB</text>
+                                  <text x="50" y="51" textAnchor="middle" className="text-amber-950 font-sans font-black text-[9px] uppercase tracking-tight">SEAL</text>
+                              </svg>
+                          </div>
+                      </div>
+
+                      {/* Right: Signature stamp */}
+                      <div className="text-center flex flex-col items-center justify-end h-full">
+                          {/* Fake elegant cursive signature signature image or handwriting-like look */}
+                          <div className="h-10 flex items-center justify-center">
+                              <span className="font-serif italic text-xl text-indigo-900 font-bold tracking-wider select-none pr-2 opacity-80" style={{ fontFamily: 'Georgia, serif' }}>Novotný Jan</span>
+                          </div>
+                          <div className="w-28 border-t border-slate-300 mt-1"></div>
+                          <div className="text-[9px] text-slate-500 font-bold mt-1 uppercase">Vzdělávací Komise Q-Hub</div>
+                          <div className="text-[8px] text-slate-400">Garant a CEO platformy</div>
+                      </div>
+                  </div>
+              </div>
+          );
+      })()}
       
       {/* Mobile Sidebar (Drawer) */}
       <AnimatePresence>
@@ -773,11 +880,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="p-6 flex items-center justify-between border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
-                   <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-base shadow-md shadow-indigo-600/20">Q</div>
-                   <div>
-                     <div className="font-bold text-slate-900 leading-none">Q-Hub</div>
-                     <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Learning System</div>
-                   </div>
+                    <img src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" alt="QHUB Logo" className="h-14 w-auto object-contain flex-shrink-0" />
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-slate-700 p-1">
                   <X size={18} />
@@ -839,11 +942,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="w-72 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex">
         <div className="p-8">
            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-base shadow-md shadow-indigo-600/20">Q</div>
-              <div>
-                <div className="font-bold text-slate-900 leading-none">Q-Hub</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Learning System</div>
-              </div>
+              <img src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" alt="QHUB Logo" className="h-14 w-auto object-contain flex-shrink-0" />
            </div>
         </div>
         
@@ -1958,34 +2057,59 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                 )}
                 
-                {/* CERTIFICATES TAB (UNCHANGED but contextually relevant) */}
+                {/* CERTIFICATES TAB */}
                 {activeTab === 'certificates' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {user.certificates.length > 0 ? user.certificates.map(cert => (
-                            <div key={cert.id} className="bg-white text-black p-6 rounded-xl border-4 border-double border-gray-200 relative overflow-hidden shadow-2xl group">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-10 -mt-10"></div>
-                                <div className="relative z-10 text-center">
-                                    <div className="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center mb-4 text-slate-900">
-                                        <Award size={32}/>
+                            <div key={cert.id} className="bg-white text-slate-900 p-6 rounded-2xl border-4 border-double border-amber-400 relative overflow-hidden shadow-xl group transition hover:shadow-2xl flex flex-col justify-between">
+                                {/* Gold Corner Ribbon decoration */}
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-400/20 to-yellow-500/10 rounded-bl-full -mr-4 -mt-4"></div>
+                                
+                                <div className="relative z-10 text-center flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <div className="w-14 h-14 mx-auto bg-amber-50 rounded-full flex items-center justify-center mb-4 text-amber-600 border border-amber-200 shadow-inner">
+                                            <Award size={28} className="animate-pulse"/>
+                                        </div>
+                                        <h3 className="font-serif font-black text-xs uppercase tracking-[0.2em] text-amber-600 mb-1">DIPLOM & CERTIFIKÁT</h3>
+                                        <p className="text-[9px] uppercase tracking-widest text-slate-400 mb-4 font-mono">Platforma Q-HUB</p>
+                                        
+                                        <h4 className="font-bold text-slate-900 text-base mb-3 leading-snug min-h-[2.5rem] flex items-center justify-center">
+                                            {cert.courseName}
+                                        </h4>
+                                        
+                                        <div className="text-xs text-slate-500 mb-4 bg-slate-50 py-2.5 rounded-xl border border-slate-100">
+                                            Uděleno pracovníkovi:<br/>
+                                            <span className="font-black text-slate-800 text-sm">{cert.workerName || cert.studentName}</span>
+                                        </div>
                                     </div>
-                                    <h3 className="font-serif font-bold text-xl mb-1">CERTIFIKÁT</h3>
-                                    <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-4">o absolvování kurzu</p>
-                                    <h4 className="font-bold text-blue-900 mb-4">{cert.courseName}</h4>
-                                    <div className="text-xs text-slate-500 mb-6">
-                                        Uděleno pracovníkovi<br/>
-                                        <span className="font-bold text-black text-sm">{cert.workerName || cert.studentName}</span>
+
+                                    <div>
+                                        {/* Golden Seal element wrapper on screen */}
+                                        <div className="flex items-center justify-center gap-4 my-3 bg-amber-500/5 py-2 rounded-xl border border-amber-500/10 mb-4">
+                                            {cert.qrCodeUrl ? (
+                                                <img src={cert.qrCodeUrl} className="w-14 h-14 mix-blend-multiply opacity-90 border border-amber-200/50 p-0.5 rounded bg-white"/>
+                                            ) : (
+                                                <div className="w-12 h-12 bg-slate-100 rounded text-[8px] flex items-center justify-center text-slate-400 font-mono">QR</div>
+                                            )}
+                                            <div className="text-left">
+                                                <div className="text-[8px] font-mono text-slate-400 tracking-wider">KÓD CERTIFIKÁTU</div>
+                                                <div className="text-[10px] font-bold text-slate-700 font-mono">{cert.code || 'QHB-' + cert.id.substring(0, 8).toUpperCase()}</div>
+                                                <div className="text-[8px] text-amber-600 font-semibold mt-0.5 font-sans flex items-center gap-0.5">● Ověřený profil</div>
+                                            </div>
+                                        </div>
+
+                                        <button 
+                                            onClick={() => handleDownloadCertificate(cert.id)} 
+                                            className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-bold rounded-xl transition duration-300 flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 active:scale-[0.98]"
+                                        >
+                                            <Download size={13}/> Vytisknout / Stáhnout A4
+                                        </button>
                                     </div>
-                                    <div className="flex justify-center mb-4">
-                                        <img src={cert.qrCodeUrl} className="w-20 h-20 mix-blend-multiply opacity-80"/>
-                                    </div>
-                                    <button onClick={() => handleDownloadCertificate(cert.id)} className="w-full py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-slate-800 transition flex items-center justify-center gap-2">
-                                        <Download size={12}/> Stáhnout PDF
-                                    </button>
                                 </div>
                             </div>
                         )) : (
                             <div className="col-span-full text-center py-20 text-slate-500">
-                                <Award size={48} className="mx-auto mb-4 opacity-50"/>
+                                <Award size={48} className="mx-auto mb-4 opacity-50 text-amber-500"/>
                                 <p>Zatím nemáte žádné certifikáty. Dokončete kurz pro získání prvního!</p>
                             </div>
                         )}
@@ -2289,6 +2413,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 }
 
                                 const mTotalCommissions = mMonthOrders.reduce((sum, o) => {
+                                    if (o.customCommissionPercent !== undefined && o.customCommissionPercent !== null) {
+                                        return sum + (o.amount * (o.customCommissionPercent / 100));
+                                    }
                                     if (o.discount > 60) return sum;
 
                                     let rate = mBaseRatePercent;
@@ -2385,7 +2512,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                             }
 
                             // Individual order commission calculations
-                            const calculateOrderCommission = (amount: number, discount: number) => {
+                            const calculateOrderCommission = (amount: number, discount: number, overridePercent?: number) => {
+                                if (overridePercent !== undefined && overridePercent !== null) {
+                                    return amount * (overridePercent / 100);
+                                }
                                 if (discount > 60) return 0; // complete penalty
 
                                 let rate = baseRatePercent;
@@ -2418,7 +2548,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             };
 
                             const totalCommissions = (config.userType === 'commission' || config.userType === 'both')
-                                ? monthOrders.reduce((sum, o) => sum + calculateOrderCommission(o.amount, o.discount), 0)
+                                ? monthOrders.reduce((sum, o) => sum + calculateOrderCommission(o.amount, o.discount, o.customCommissionPercent), 0)
                                 : 0;
 
                             // Monthly Fix rate
@@ -2840,11 +2970,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100 text-xs text-slate-700 animate-none">
                                                         {monthOrders.map((o) => {
-                                                            const orderCommValue = config.userType === 'fix' ? 0 : calculateOrderCommission(o.amount, o.discount);
+                                                            const orderCommValue = config.userType === 'fix' ? 0 : calculateOrderCommission(o.amount, o.discount, o.customCommissionPercent);
                                                             
                                                             // Determine percentage
                                                             let currentRateStr = `${baseRatePercent}%`;
-                                                            if (o.discount > 60) currentRateStr = '0%';
+                                                            if (o.customCommissionPercent !== undefined && o.customCommissionPercent !== null) {
+                                                                currentRateStr = `${o.customCommissionPercent}%`;
+                                                            } else if (o.discount > 60) currentRateStr = '0%';
                                                             else if (o.discount > 45) {
                                                                 if (totalVolume <= 400000) currentRateStr = '3%';
                                                                 else if (totalVolume <= 700000) currentRateStr = '5%';
