@@ -24,7 +24,9 @@ export const CZECH_REGIONS = [
   'Brno',
   'České Budějovice',
   'Liberec',
-  'Hradec Králové'
+  'Hradec Králové',
+  'Olomouc',
+  'Středočeský kraj'
 ];
 
 const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdateUser, onDeleteUser, notify }) => {

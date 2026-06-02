@@ -89,6 +89,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
     orders: any[];
     adjustments: any[];
     payouts: any[];
+    defaultBillingMonth?: string;
   }>({ userConfigs: {}, orders: [], adjustments: [], payouts: [] });
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesStartDate, setSalesStartDate] = useState(() => {
@@ -404,6 +405,25 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
       }
     } catch (e: any) {
       notify('error', 'Chyba spojení', 'Nepodařilo se spojit se serverem.');
+    }
+  };
+
+  const handleSaveDefaultBillingMonth = async (monthVal: string) => {
+    try {
+      const resp = await fetch('/api/caflou/oz/default-month', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ defaultBillingMonth: monthVal })
+      });
+      if (resp.ok) {
+        notify('success', 'Výchozí měsíc nastaven', `Výchozí zúčtovací měsíc pro pracovníky byl změněn na ${monthVal}.`);
+        fetchSalesData();
+      } else {
+        const err = await resp.json();
+        notify('error', 'Chyba', err.error || 'Nepodařilo se nastavit měsíc.');
+      }
+    } catch (e: any) {
+      notify('error', 'Chyba spojení', 'Chyba při změně výchozího zúčtovacího měsíce.');
     }
   };
 
@@ -1606,21 +1626,37 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
             </div>
 
             {/* Global controls */}
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl w-full md:w-auto self-stretch md:self-auto">
-              <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Od</span>
-              <input
-                type="date"
-                value={salesStartDate}
-                onChange={(e) => setSalesStartDate(e.target.value)}
-                className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Do</span>
-              <input
-                type="date"
-                value={salesEndDate}
-                onChange={(e) => setSalesEndDate(e.target.value)}
-                className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl w-full md:w-auto self-stretch md:self-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Od</span>
+                <input
+                  type="date"
+                  value={salesStartDate}
+                  onChange={(e) => setSalesStartDate(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2">Do</span>
+                <input
+                  type="date"
+                  value={salesEndDate}
+                  onChange={(e) => setSalesEndDate(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="hidden sm:block h-6 w-px bg-slate-200 mx-1" />
+
+              <div className="flex items-center gap-2 border-t sm:border-t-0 border-slate-150 pt-2 sm:pt-0">
+                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest pl-2" title="Výchozí zúčtovací měsíc zobrazený na osobním panelu OZ">
+                  Aktivní měsíc pro OZ:
+                </span>
+                <input
+                  type="month"
+                  value={salesData?.defaultBillingMonth || '2026-06'}
+                  onChange={(e) => handleSaveDefaultBillingMonth(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                />
+              </div>
             </div>
           </div>
 

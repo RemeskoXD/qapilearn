@@ -20,7 +20,9 @@ const CZECH_REGIONS = [
   'Brno',
   'České Budějovice',
   'Liberec',
-  'Hradec Králové'
+  'Hradec Králové',
+  'Olomouc',
+  'Středočeský kraj'
 ];
 
 // Helper to render basic markdown for course lessons with full styling support
@@ -193,9 +195,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     orders: any[];
     adjustments: any[];
     payouts: any[];
+    defaultBillingMonth?: string;
   }>({ userConfigs: {}, orders: [], adjustments: [], payouts: [] });
   const [ozLoading, setOzLoading] = useState(false);
-  const [selectedOzMonth, setSelectedOzMonth] = useState('2026-05');
+  const [selectedOzMonth, setSelectedOzMonth] = useState('2026-06');
+  const [isDefaultMonthSet, setIsDefaultMonthSet] = useState(false);
   const [claimSubject, setClaimSubject] = useState('');
   const [claimText, setClaimText] = useState('');
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
@@ -218,6 +222,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (res.ok) {
         const data = await res.json();
         setOzData(data);
+        if (!isDefaultMonthSet && data.defaultBillingMonth) {
+          setSelectedOzMonth(data.defaultBillingMonth);
+          setIsDefaultMonthSet(true);
+        }
       }
     } catch (e) {
       console.error('[Dashboard] Failed to fetch OZ sales data:', e);
@@ -2328,15 +2336,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                             {/* Month Switcher */}
                             <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-2xl w-full md:w-auto self-stretch md:self-auto">
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-2">Zúčtovací měsíc</span>
-                                <select
+                                <input
+                                    type="month"
                                     value={selectedOzMonth}
                                     onChange={(e) => setSelectedOzMonth(e.target.value)}
-                                    className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                >
-                                    <option value="2026-05">Květen 2026 🌸</option>
-                                    <option value="2026-06">Červen 2026 ☀️</option>
-                                    <option value="2026-07">Červenec 2026 🌴</option>
-                                </select>
+                                    className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                                />
                             </div>
                         </div>
 

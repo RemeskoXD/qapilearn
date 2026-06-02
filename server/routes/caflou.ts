@@ -1139,6 +1139,7 @@ export interface OZDataContainer {
   orders: OZOrder[];
   adjustments: OZAdjustment[];
   payouts: any[];
+  defaultBillingMonth?: string;
 }
 
 // Helpers for reading/writing our robust sales data
@@ -1155,13 +1156,14 @@ function readOZData(): OZDataContainer {
         userConfigs: parsed.userConfigs || {},
         orders: cleanOrders,
         adjustments: cleanAdjustments,
-        payouts: parsed.payouts || []
+        payouts: parsed.payouts || [],
+        defaultBillingMonth: parsed.defaultBillingMonth || '2026-06'
       };
     }
   } catch (e) {
     console.error('[Caflou OZ] Failed to read OZ data:', e);
   }
-  return { userConfigs: {}, orders: [], adjustments: [], payouts: [] };
+  return { userConfigs: {}, orders: [], adjustments: [], payouts: [], defaultBillingMonth: '2026-06' };
 }
 
 function writeOZData(data: OZDataContainer) {
@@ -1176,6 +1178,20 @@ function writeOZData(data: OZDataContainer) {
 router.get('/api/caflou/oz/data', async (req, res) => {
   const data = readOZData();
   return res.json(data);
+});
+
+// 1b. Update default billing month
+router.post('/api/caflou/oz/default-month', async (req, res) => {
+  const { defaultBillingMonth } = req.body ?? {};
+  if (!defaultBillingMonth || !defaultBillingMonth.match(/^\d{4}-\d{2}$/)) {
+    return res.status(400).json({ error: 'Neplatný formát měsíce (očekáván YYYY-MM).' });
+  }
+
+  const data = readOZData();
+  data.defaultBillingMonth = defaultBillingMonth;
+  writeOZData(data);
+
+  return res.json({ ok: true, defaultBillingMonth: data.defaultBillingMonth });
 });
 
 // 2. Put order (upsert completed job / contract)
