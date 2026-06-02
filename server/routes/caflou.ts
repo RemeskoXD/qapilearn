@@ -1604,17 +1604,106 @@ router.post('/api/caflou/finished-projects', async (req, res) => {
 
     // We also need OZ Configs to do calculations locally or send them along
     const ozData = readOZData();
+
+    // NAČÍTÁNÍ FAKTUR PRO MOŽNÉ SPÁROVÁNÍ SLEVY Z POLOŽEK (POLOŽKA 'sale')
+    let allInvoices: any[] = [];
+    try {
+      console.log('[Caflou] Načítám nedávné faktury pro automatické párování slev...');
+      const invoicesHeaders: Record<string, string> = {
+        'Authorization': `Bearer ${config.caflouToken}`,
+        'Accept': 'application/json'
+      };
+      
+      const [invResp1, invResp2] = await Promise.all([
+        fetchCaflou('/v1/invoices?per=100&page=1', { method: 'GET', headers: invoicesHeaders }),
+        fetchCaflou('/v1/invoices?per=100&page=2', { method: 'GET', headers: invoicesHeaders }).catch(() => null)
+      ]);
+      
+      if (invResp1 && invResp1.ok) {
+        const invData = await invResp1.json();
+        const list1 = Array.isArray(invData) ? invData : (invData.results || invData.data || invData.invoices || []);
+        allInvoices = allInvoices.concat(list1);
+      }
+      if (invResp2 && invResp2.ok) {
+        const invData = await invResp2.json();
+        const list2 = Array.isArray(invData) ? invData : (invData.results || invData.data || invData.invoices || []);
+        allInvoices = allInvoices.concat(list2);
+      }
+      console.log(`[Caflou] Staženo celkem ${allInvoices.length} faktur k analýze.`);
+    } catch (err: any) {
+      console.warn(`[Caflou] Nepodařilo se načíst faktury pro slevy:`, err.message || err);
+    }
+
+    // Vyrovnávací paměť pro stažené detaily faktur během tohoto požadavku (abychom tutéž fakturu nestahovali víckrát)
+    const invoiceDetailsCache: Record<string, any> = {};
     
     // Nové: V momentě načítání zakázek automaticky synchronizujeme (upsertujeme)
     // dokončené zakázky do lokálního úložiště pro účely Provizního systému OZ.
     let updatedOzOrders = false;
-    projects.forEach((p: any) => {
+    
+    for (const p of projects) {
       const amount = parseFloat(p.custom_column_celkova_hodnota || p.earnings_price) || 0;
-      if (amount <= 0) return;
+      if (amount <= 0) continue;
+
+      let detectedDiscount = 0;
       
-      const desc = p.description || p.description_original || p.name || '';
-      const match = desc.match(/sleva\s*(\d+)%?/i);
-      const discount = match ? parseInt(match[1]) : 0;
+      // Hledáme spárované faktury k projektu p.id
+      const matchingInvoices = allInvoices.filter((inv: any) => {
+        const pIdStr = String(p.id);
+        const invProjId = inv.project_id ? String(inv.project_id) : null;
+        const invProjIdNested = (inv.project && inv.project.id) ? String(inv.project.id) : null;
+        return invProjId === pIdStr || invProjIdNested === pIdStr;
+      });
+
+      if (matchingInvoices.length > 0) {
+        console.log(`[Caflou] K projektu ID ${p.id} byly nalezeny ${matchingInvoices.length} faktury.`);
+        for (const inv of matchingInvoices) {
+          let items = inv.invoice_items || inv.invoice_items_attributes || inv.items;
+          
+          // Pokud u faktury v seznamu nejsou položky, stáhneme si její kompletní detail
+          if (!items || !Array.isArray(items) || items.length === 0) {
+            const cacheKey = String(inv.id);
+            if (invoiceDetailsCache[cacheKey]) {
+              items = invoiceDetailsCache[cacheKey];
+            } else {
+              try {
+                console.log(`[Caflou] Stahuji detail položek pro fakturu ID ${inv.id}...`);
+                const detHeaders: Record<string, string> = {
+                  'Authorization': `Bearer ${config.caflouToken}`,
+                  'Accept': 'application/json'
+                };
+                const detResp = await fetchCaflou(`/v1/invoices/${inv.id}`, { method: 'GET', headers: detHeaders });
+                if (detResp.ok) {
+                  const detData = await detResp.json();
+                  const fetchedItems = detData.invoice_items || detData.invoice_items_attributes || detData.items || [];
+                  invoiceDetailsCache[cacheKey] = fetchedItems;
+                  items = fetchedItems;
+                }
+              } catch (detErr: any) {
+                console.warn(`[Caflou] Chyba při načítání detailu faktury ${inv.id}:`, detErr.message || detErr);
+              }
+            }
+          }
+
+          if (Array.isArray(items)) {
+            items.forEach((item: any) => {
+              // Načteme slevu ("sale") z položky faktury
+              const saleVal = parseFloat(item.sale ?? item.discount ?? item.discount_percent ?? 0) || 0;
+              if (saleVal > detectedDiscount) {
+                detectedDiscount = saleVal;
+              }
+            });
+          }
+        }
+      }
+      
+      // Fallback: Pokud jsme nezískali žádnou slevu z položek faktur, použijeme regex z popisu jako dosud
+      let discount = detectedDiscount;
+      if (discount <= 0) {
+        const desc = p.description || p.description_original || p.name || '';
+        const match = desc.match(/sleva\s*(\d+)%?/i);
+        discount = match ? parseInt(match[1]) : 0;
+      }
 
       const dateValue = p.custom_column_realizovano || p.end_date || p.start_date || p.finished_at || p.updated_at || p.created_at;
       let dateStr = new Date().toISOString().split('T')[0];
@@ -1638,13 +1727,13 @@ router.post('/api/caflou/finished-projects', async (req, res) => {
 
       const existingIndex = ozData.orders.findIndex((o: any) => o.id === orderId);
       if (existingIndex > -1) {
-        // Pouze aktualizujeme pokud je to nutné (můžete zkontrolovat rozdíl)
+        // Pouze aktualizujeme pokud je to nutné
         ozData.orders[existingIndex] = { ...ozData.orders[existingIndex], ...newOrder };
       } else {
         ozData.orders.push(newOrder);
       }
       updatedOzOrders = true;
-    });
+    }
 
     if (updatedOzOrders) {
       writeOZData(ozData); // ULOŽ DO LOKÁLNÍ DATABÁZE V REALTIME

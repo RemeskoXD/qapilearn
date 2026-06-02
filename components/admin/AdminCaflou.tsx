@@ -1598,7 +1598,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                     </div>
 
                     <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                      ⚠️ Minimální doporučená cena těsnění je 120 Kč (sleva 33%). Slevy do 20 % jsou bez omezení. Slevy 33-45 % snižují provizi zakázky na 8-10 %, slevy 45-60 % ji snižují na 3-7 % podle celkového obratu. Sleva nad 60 % anuluje provizi na 0.
+                      ⚠️ Minimální doporučená cena těsnění je 120 Kč (sleva 33%). Slevy do 20 % jsou bez omezení. Slevy 33-45 % snižují provizi u dané zakázky na 6-10 %, slevy 45-60 % ji snižují na 3-7 % podle výše konkrétní zakázky. Sleva nad 60 % anuluje provizi na 0.
                     </p>
 
                     <button
@@ -1764,33 +1764,36 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       const calculateIndividualCommission = (amount: number, discount: number) => {
                           if (discount > 60) return 0; // penalty
 
-                          let rate = baseRatePercent;
-                          const tier1 = discount >= 33 && discount <= 45; // reduced
-                          const tier2 = discount > 45 && discount <= 60; // penalized
+                          const tier1 = discount >= 33 && discount <= 45; // reduced (33% - 45%)
+                          const tier2 = discount > 45 && discount <= 60; // penalized (45.1% - 60%)
 
-                          let r1 = config.customRates?.b1 ?? 8;
-                          let r2 = config.customRates?.b2 ?? 10;
-                          let r3 = config.customRates?.b3 ?? 11;
-                          let r4 = config.customRates?.b4 ?? 12;
-
-                          if (totalVolume <= 400000) {
-                              if (tier2) rate = 3;
-                              else if (tier1) rate = 6;
-                              else rate = r1;
-                          } else if (totalVolume <= 700000) {
-                              if (tier2) rate = 5;
-                              else if (tier1) rate = 8;
-                              else rate = r2;
-                          } else if (totalVolume <= 1000000) {
-                              if (tier2) rate = 6;
-                              else if (tier1) rate = 9;
-                              else rate = r3;
+                          if (tier1) {
+                              // Sleva 33% - 45%: rate is determined strictly by the individual order amount
+                              if (amount <= 400000) return amount * 0.06;
+                              if (amount <= 700000) return amount * 0.08;
+                              if (amount <= 1000000) return amount * 0.09;
+                              return amount * 0.10;
+                          } else if (tier2) {
+                              // Sleva 45.1% - 60%: rate is determined strictly by the individual order amount
+                              if (amount <= 400000) return amount * 0.03;
+                              if (amount <= 700000) return amount * 0.05;
+                              if (amount <= 1000000) return amount * 0.06;
+                              return amount * 0.07;
                           } else {
-                              if (tier2) rate = 7;
-                              else if (tier1) rate = 10;
+                              // Normal discount (< 33%): rate is determined by total monthly volume (totalVolume)
+                              let rate = baseRatePercent;
+                              let r1 = config.customRates?.b1 ?? 8;
+                              let r2 = config.customRates?.b2 ?? 10;
+                              let r3 = config.customRates?.b3 ?? 11;
+                              let r4 = config.customRates?.b4 ?? 12;
+
+                              if (totalVolume <= 400000) rate = r1;
+                              else if (totalVolume <= 700000) rate = r2;
+                              else if (totalVolume <= 1000000) rate = r3;
                               else rate = r4;
+
+                              return amount * (rate / 100);
                           }
-                          return amount * (rate / 100);
                       };
 
                       const totalCommissions = (config.userType === 'commission' || config.userType === 'both')
