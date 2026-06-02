@@ -232,7 +232,7 @@ router.post('/api/webhooks/caflou', async (req, res) => {
     where: { id: user.id },
     data: {
       xp: newXp,
-      level: newLevel,
+      /* level was removed here to prevent overriding admin configuration */
       messages: updatedMessages as any
     }
   });
@@ -1073,7 +1073,7 @@ router.post('/api/caflou/payout', async (req, res) => {
         financialProfit: freshProfit,
         profitHistory: updatedHistory as any,
         xp: updatedXp,
-        level: updatedLevel,
+        /* level was removed here to prevent overriding admin configuration */
         messages: updatedMessages as any
       }
     });
@@ -1458,7 +1458,7 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
       financialProfit: freshProfit,
       profitHistory: updatedHistory as any,
       xp: updatedXp,
-      level: updatedLevel,
+      /* level was removed here to prevent overriding admin configuration */
       messages: updatedMessages as any
     }
   });

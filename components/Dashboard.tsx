@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, Course, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, CommunitySession, ToastMessage, ProfitEntry, QhubPosition, QHUB_POSITIONS } from '../types';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+import { SecretGame } from './SecretGame';
+
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
 
@@ -188,6 +190,21 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [activeTab, setActiveTab] = useState(isExpired ? 'settings' : 'dashboard');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showSecretGame, setShowSecretGame] = useState(false);
+
+  const handleLogoClick = () => {
+    setLogoClicks(prev => {
+      const next = prev + 1;
+      if (next >= 10) {
+        setShowSecretGame(true);
+        notify('success', '🏆 Úspěch!', 'Našel jsi tajnou hru Q-Hubu! Lov padající zakázky!');
+        return 0;
+      }
+      return next;
+    });
+  };
 
   // --- OZ Sales Commission State & Handlers ---
   const [ozData, setOzData] = useState<{
@@ -768,6 +785,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
       
+      {showSecretGame && (
+         <SecretGame onClose={() => setShowSecretGame(false)} userEmail={user.email} />
+      )}
+      
       {/* PERFECTLY FORMATTED VERTICAL A4 CERTIFICATE FOR PRINTING */}
       {printingCertId && (() => {
           const cert = user.certificates.find(c => c.id === printingCertId);
@@ -887,7 +908,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               className="relative w-80 max-w-[calc(100vw-3rem)] h-full bg-white flex flex-col shadow-2xl z-10"
             >
               <div className="p-6 flex items-center justify-between border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
+                <div onClick={handleLogoClick} className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 active:scale-95 transition-all" title="Klikni 10x pro tajnou hru">
                     <img src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" alt="QHUB Logo" className="h-14 w-auto object-contain flex-shrink-0" />
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-slate-700 p-1">
@@ -949,7 +970,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Sidebar (Desktop) */}
       <div className="w-72 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col hidden lg:flex">
         <div className="p-8">
-           <div className="flex items-center gap-2.5">
+           <div onClick={handleLogoClick} className="flex items-center gap-2.5 cursor-pointer hover:opacity-85 active:scale-95 transition-all" title="Klikni 10x pro tajnou hru">
               <img src="https://web2.itnahodinu.cz/QAPI/QHUB.jpeg" alt="QHUB Logo" className="h-14 w-auto object-contain flex-shrink-0" />
            </div>
         </div>
@@ -1000,7 +1021,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                  <p className="text-xs text-indigo-600 flex items-center gap-1 uppercase font-bold mt-0.5">{user.role === 'admin' ? <><Shield size={10} /> ADMIN</> : <><Gem size={10}/> {user.role === 'expired' ? 'EXPIRED' : user.role}</>}</p>
                  <div className="mt-1 space-y-1">
                     <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 leading-none">
-                        <span className="flex items-center gap-0.5 font-bold font-mono text-slate-700">
+                        <span className="flex items-center gap-0.5 font-bold font-mono text-slate-700 hidden">
                             <Zap size={10} className="text-yellow-500" fill="currentColor" /> {user.xp?.toLocaleString() || 0} XP
                         </span>
                         <span className="text-[10px] text-indigo-600 font-extrabold bg-indigo-50 border border-indigo-150 px-1.5 py-0.5 rounded leading-none">
@@ -1008,7 +1029,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                     </div>
                     {nextLevelRequirement && (
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 hidden">
                             <div className="h-full bg-indigo-500 rounded-full" style={{width: `${Math.min(100, (user.xp / nextLevelRequirement.xpRequired) * 105)}%`}}></div>
                         </div>
                     )}
@@ -1032,10 +1053,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {nextLevelRequirement && !isExpired && (
                       <div className="flex items-center gap-3 mt-1 hidden md:flex">
                           <div className="text-xs font-mono text-indigo-600 font-bold bg-indigo-50 border border-indigo-150 px-1.5 py-0.5 rounded">{user.level === 2 ? 'Senior' : user.level >= 3 ? 'Expert' : 'Junior'}</div>
-                          <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden relative group">
+                          <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden relative group hidden">
                               <div className="h-full bg-indigo-500" style={{width: `${Math.min(100, (user.xp / nextLevelRequirement.xpRequired) * 100)}%`}}></div>
                           </div>
-                          <div className="text-xs font-mono text-slate-500">{nextLevelRequirement.title}</div>
+                          <div className="text-xs font-mono text-slate-500 hidden">{nextLevelRequirement.title}</div>
                       </div>
                   )}
                   {isExpired && <span className="text-xs text-red-600 font-bold bg-rose-50 px-2 py-1 rounded mt-1 inline-block border border-rose-300">ÚČET DEAKTIVOVÁN</span>}
@@ -1136,9 +1157,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                             {/* Level summary badges */}
                             <div className="flex flex-wrap items-center gap-2 mt-4">
                                <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                                  <Crown size={14} className="text-brand-gold"/> Level {user.level}
+                                  <Crown size={14} className="text-brand-gold"/> Profesní úroveň: {user.level === 2 ? '🥈 Senior' : user.level >= 3 ? '🥇 Expert' : '🥉 Junior'}
                                </span>
-                               <span className="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                               <span className="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 hidden">
                                   🏆 {user.xp} XP Celkem
                                </span>
                                {user.xpBoostUntil && new Date(user.xpBoostUntil) > new Date() && (
@@ -1150,7 +1171,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                          </div>
                          
                          {/* Next Level progress circular gauge */}
-                         <div className="z-10 bg-slate-50/60 rounded-3xl p-4 border border-slate-100 flex items-center gap-4 max-w-sm w-full md:w-auto">
+                         <div className="z-10 bg-slate-50/60 rounded-3xl p-4 border border-slate-100 flex items-center gap-4 max-w-sm w-full md:w-auto hidden">
                             {nextLevelRequirement ? (
                                <>
                                   <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
@@ -1271,7 +1292,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                        </div>
 
                        {/* --- XP PROGRESS CHART / GRAF --- */}
-                       <div className="bg-white border border-slate-150 rounded-3xl p-6 md:p-8 shadow-sm">
+                       <div className="bg-white border border-slate-150 rounded-3xl p-6 md:p-8 shadow-sm hidden">
                           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
                              <div className="text-left">
                                 <h3 className="text-lg font-extrabold text-slate-950 flex items-center gap-2">
