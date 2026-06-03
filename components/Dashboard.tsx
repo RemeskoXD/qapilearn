@@ -194,12 +194,27 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [logoClicks, setLogoClicks] = useState(0);
   const [showSecretGame, setShowSecretGame] = useState(false);
 
+  const [shopClicks, setShopClicks] = useState(0);
+  const [showPetrErikModal, setShowPetrErikModal] = useState(false);
+
   const handleLogoClick = () => {
     setLogoClicks(prev => {
       const next = prev + 1;
       if (next >= 10) {
         setShowSecretGame(true);
         notify('success', '🏆 Úspěch!', 'Našel jsi tajnou hru Q-Hubu! Lov padající zakázky!');
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  const handleShopIconClick = () => {
+    setShopClicks(prev => {
+      const next = prev + 1;
+      if (next >= 10) {
+        setShowPetrErikModal(true);
+        notify('success', '🕵️‍♂️ Úspěch!', 'Objevil jsi tajné společenství Petra a Erika!');
         return 0;
       }
       return next;
@@ -787,6 +802,42 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       {showSecretGame && (
          <SecretGame onClose={() => setShowSecretGame(false)} userEmail={user.email} />
+      )}
+
+      {showPetrErikModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 max-w-lg w-full relative flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setShowPetrErikModal(false)}
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-800 p-2 rounded-full font-bold transition z-20"
+              aria-label="Zavřít"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="p-6 pb-2">
+              <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                🕵️‍♂️ Tajná sekce: Petr & Erik
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">Objevil jsi skryté společenství zakladatelů Q-Hubu!</p>
+            </div>
+            <div className="p-6 flex justify-center items-center bg-slate-50 border-y border-slate-100">
+              <img 
+                src="https://web2.itnahodinu.cz/QAPI/petrerik.jpeg" 
+                alt="Petr a Erik" 
+                className="max-h-[50vh] object-contain rounded-2xl shadow-lg border border-white mx-auto select-none"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <div className="p-4 flex justify-end">
+              <button 
+                onClick={() => setShowPetrErikModal(false)}
+                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition shadow-md hover:shadow-lg"
+              >
+                Zavřít
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       
       {/* PERFECTLY FORMATTED VERTICAL A4 CERTIFICATE FOR PRINTING */}
@@ -2376,6 +2427,46 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 ...(ozData.orders || []).map(o => o.email.toLowerCase().trim())
                             ])).filter(Boolean) as string[];
 
+                            const getMerchantRegion = (emailStr: string) => {
+                                const emailLower = emailStr.toLowerCase().trim();
+                                const foundUser = (allUsers || []).find(u => (u.email || '').toLowerCase().trim() === emailLower);
+                                if (foundUser?.region) return foundUser.region;
+                                
+                                const mappings: Record<string, string> = {
+                                    'ludvikremesekwork@gmail.com': 'Praha',
+                                    'technik1@qapi.cz': 'Praha',
+                                    'prodejce2@qapi.cz': 'Plzeň',
+                                    'chytrosmichal@gmail.com': 'Ostrava',
+                                    'erik.bahleda@qapi.cz': 'České Budějovice',
+                                    'andrej.krok@qapi.cz': 'Karlovy Vary',
+                                    'petr.kollner@qapi.cz': 'Plzeň',
+                                    'filip.sindl@qapi.cz': 'Brno',
+                                    'davechytros@gmail.com': 'Zlín',
+                                    'qapi.shop@gmail.com': 'Praha',
+                                };
+                                return mappings[emailLower] || 'Karlovy Vary';
+                            };
+
+                            const userRegion = user.region || 'Karlovy Vary';
+
+                            // "Vývoj v čase (Osobní)" - regular users see only themselves, admins/team leaders see everyone
+                            const selectableIndividualEmails: string[] = allMerchantEmails.filter(email => {
+                                const emailLower = email.toLowerCase().trim();
+                                if (user.role === 'team_leader' || user.role === 'admin') return true;
+                                return emailLower === normEmail;
+                            });
+
+                            // "Srovnání týmu" - regular users see only themselves and their team (by region), admins/team leaders see everyone
+                            const selectableComparisonEmails: string[] = allMerchantEmails.filter(email => {
+                                const emailLower = email.toLowerCase().trim();
+                                if (user.role === 'team_leader' || user.role === 'admin') return true;
+                                return getMerchantRegion(emailLower) === userRegion;
+                            });
+
+                            const selectedEmail = (chartSelectedEmail || normEmail).toLowerCase().trim();
+                            const isAllowed = user.role === 'team_leader' || user.role === 'admin' || selectedEmail === normEmail;
+                            const targetEmail = isAllowed ? selectedEmail : normEmail;
+
                             const getMerchantName = (emailStr: string) => {
                                 const emailLower = emailStr.toLowerCase().trim();
                                 if (emailLower === (user.email || '').toLowerCase().trim()) {
@@ -2491,7 +2582,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             };
 
                             const individualChartData = sortedMonths.map(month => {
-                                const stats = getMerchantStatsForMonth(chartSelectedEmail || (user.email || '').toLowerCase().trim(), month);
+                                const stats = getMerchantStatsForMonth(targetEmail, month);
                                 return {
                                     rawMonth: month,
                                     monthLabel: formatMonthLabel(month),
@@ -2502,7 +2593,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 };
                             });
 
-                            const comparisonChartData = allMerchantEmails.map(email => {
+                            const comparisonChartData = selectableComparisonEmails.map(email => {
                                 const stats = getMerchantStatsForMonth(email, selectedOzMonth);
                                 return {
                                     email,
@@ -2755,11 +2846,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                 <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                                                     <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block shrink-0 whitespace-nowrap">Zvolit OZ:</span>
                                                     <select
-                                                        value={chartSelectedEmail || (user.email || '').toLowerCase().trim()}
+                                                        value={targetEmail}
                                                         onChange={(e) => setChartSelectedEmail(e.target.value)}
                                                         className="w-full sm:w-[220px] bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                                     >
-                                                        {allMerchantEmails.map(email => (
+                                                        {selectableIndividualEmails.map(email => (
                                                             <option key={email} value={email}>
                                                                 {getMerchantName(email)}
                                                             </option>
@@ -2770,7 +2861,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         ) : (
                                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                                 <div className="text-[11px] text-slate-500 font-medium">
-                                                    Srovnání dosažených výsledků všech aktivních obchodních zástupců, kteří v daném období realizovali objednávky.
+                                                    {user.role === 'team_leader' || user.role === 'admin'
+                                                        ? 'Srovnání dosažených výsledků všech aktivních obchodních zástupců, kteří v daném období realizovali objednávky.'
+                                                        : `Srovnání dosažených výsledků obchodních zástupců ve vašem regionu (${userRegion}).`
+                                                    }
                                                 </div>
                                                 <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 shrink-0">
                                                     Měsíc: <span className="text-emerald-600 font-extrabold uppercase tracking-wider">{formatMonthLabel(selectedOzMonth)}</span>
@@ -3849,7 +3943,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                         {/* XP SHOP */}
                         <div className="border-t border-slate-200 pt-12">
-                            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2"><ShoppingBag className="text-yellow-500"/> Obchod za Kredity</h2>
+                            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2"><ShoppingBag className="text-yellow-500 cursor-pointer select-none hover:scale-110 active:scale-95 transition-transform" onClick={handleShopIconClick}/> Obchod za Kredity</h2>
                             <p className="text-slate-500 mb-8">Vyměňte své tvrdě vydřené XP za boostery a odměny.</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
