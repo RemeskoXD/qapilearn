@@ -146,6 +146,7 @@ const PRESET_AVATARS = [
 
 interface DashboardProps {
   user: User;
+  settings: SystemSettings;
   challenges: Challenge[];
   allUsers: User[];
   events: CalendarEvent[];
@@ -179,7 +180,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
-    user, challenges, allUsers, events, bonusTasks, submissions, courses, quizzes,
+    user, settings, challenges, allUsers, events, bonusTasks, submissions, courses, quizzes,
     mentors = [], bookings = [], ebooks = [], streams = [], artifacts = [], tickets = [], nextLevelRequirement, communitySessions = [], notify,
     onLogout, onNavigate, onUpdateProfile, onRegisterEvent, onSubmitTask, onCourseProgress, onQuizComplete,
     onBookMentor, onCreateTicket, onReplyTicket, onUseArtifact, onChallengeAction, onCreateSession, onJoinSession
@@ -647,15 +648,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", id: 'dashboard' },
     { icon: <Coins size={20} className="text-emerald-500" />, label: "Moje Provize (OZ)", id: 'oz-rewards' },
     { icon: <Trophy size={20} />, label: "Žebříček", id: 'leaderboard' },
-    { icon: <BookOpen size={20} />, label: "Kurzy", id: 'courses' },
+    ...(settings.enableCourses !== false ? [{ icon: <BookOpen size={20} />, label: "Kurzy", id: 'courses' }] : []),
     { icon: <Zap size={20} />, label: "Výzvy", id: 'challenges' },
-    { icon: <Brain size={20} />, label: "Kvízy", id: 'quizzes' },
-    { icon: <Calendar size={20} />, label: "Akce & Webináře", id: 'events' },
-    { icon: <Users size={20} />, label: "Mentoring", id: 'mentoring' },
+    ...(settings.enableQuizzes !== false ? [{ icon: <Brain size={20} />, label: "Kvízy", id: 'quizzes' }] : []),
+    ...(settings.enableCalendar !== false ? [{ icon: <Calendar size={20} />, label: "Akce & Webináře", id: 'events' }] : []),
+    ...(settings.enableMentoring !== false ? [{ icon: <Users size={20} />, label: "Mentoring", id: 'mentoring' }] : []),
     { icon: <HelpCircle size={20} />, label: "Podpora", id: 'support' },
-    { icon: <FileText size={20} />, label: "Vzdělávání o obchodě", id: 'ebooks' },
-    { icon: <Gift size={20} />, label: "Bonusové úkoly", id: 'bonus' },
-    { icon: <Award size={20} />, label: "Certifikáty", id: 'certificates' },
+    ...(settings.enableEbooks !== false ? [{ icon: <FileText size={20} />, label: "Vzdělávání o obchodě", id: 'ebooks' }] : []),
+    ...(settings.enableBonusTasks !== false ? [{ icon: <Gift size={20} />, label: "Bonusové úkoly", id: 'bonus' }] : []),
+    ,
   ];
 
   // VIP Zóna je dočasně skrytá z menu podle požadavku uživatele
@@ -1250,6 +1251,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                          
                          {/* Card 1: KURZY */}
+                          {settings.enableCourses !== false && (
                          <div className="bg-white border border-slate-150 hover:border-indigo-150 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-6 text-slate-200/20 group-hover:text-amber-500/10 group-hover:rotate-6 transition duration-300"><BookOpen size={90}/></div>
                             <div className="space-y-4">
@@ -1279,8 +1281,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 Studovat lekce <ArrowRight size={14}/>
                              </button>
                           </div>
+                         )}
 
                           {/* Card 2: MENTORING */}
+                          {settings.enableMentoring !== false && (
                           <div className="bg-white border border-slate-150 hover:border-indigo-150 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group relative overflow-hidden">
                              <div className="absolute top-0 right-0 p-6 text-slate-200/20 group-hover:text-amber-500/10 group-hover:rotate-6 transition duration-300"><UsersIcon size={90}/></div>
                              <div className="space-y-4">
@@ -1310,6 +1314,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 Rezervovat mentoring <ArrowRight size={14}/>
                              </button>
                           </div>
+                         )}
 
                           {/* Card 3: LEADERBOARD / ŽEBŘÍČEK */}
                           <div className="bg-white border border-slate-150 hover:border-indigo-150 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between group relative overflow-hidden">

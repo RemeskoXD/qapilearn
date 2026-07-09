@@ -1,8 +1,8 @@
 import { execSync } from 'node:child_process';
-import './lib/env.js'; // Automaticky načte dotenv a připojí ?schema=qhub pro izolaci
+import './lib/env.js'; // Automaticky načte dotenv a připojí ?schema=public pro izolaci
 
 try {
-  console.log('[Q-Hub] Synchronizuji databázové schéma ve schématu (schema=qhub)...');
+  console.log('[Q-Hub] Synchronizuji databázové schéma ve schématu (schema=public)...');
   execSync('npx prisma db push --schema server/prisma/schema.prisma --accept-data-loss --skip-generate', {
     stdio: 'inherit',
     env: process.env,

@@ -25,7 +25,14 @@ export interface SystemSettings {
   allowRegistrations: boolean;
   globalBanner: string; // Message shown to all users
   version: string;
-}
+  enableCourses?: boolean;
+  enableQuizzes?: boolean;
+  enableMentoring?: boolean;
+  enableCalendar?: boolean;
+  enableEbooks?: boolean;
+  enableStreams?: boolean;
+  enableBonusTasks?: boolean;
+  }
 
 export interface Message {
   id: string;

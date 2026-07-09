@@ -660,6 +660,7 @@ const App: React.FC = () => {
       {banners}
       <Dashboard
         user={currentUser}
+        settings={systemSettings}
         challenges={challenges.data}
         allUsers={allUsers.data}
         events={events.data}

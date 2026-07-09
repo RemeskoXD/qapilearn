@@ -18,26 +18,26 @@ if (process.env.DATABASE_URL) {
     const parsedUrl = new URL(dbUrl);
     // Nastavíme schema=qhub, pokud není nastaveno
     if (!parsedUrl.searchParams.has('schema')) {
-      parsedUrl.searchParams.set('schema', 'qhub');
+      parsedUrl.searchParams.set('schema', 'public');
     }
-    // Omezíme connection_limit (např. na 3), aby nedocházelo k vyčerpání spojení na vzdáleném serveru a Connection reset by peer
+    // Omezíme connection_limit, aby nedocházelo k vyčerpání spojení, ale 3 je příliš málo pro paralelní requesty při načítání. Zvýšeno na 15.
     if (!parsedUrl.searchParams.has('connection_limit')) {
-      parsedUrl.searchParams.set('connection_limit', '3');
+      parsedUrl.searchParams.set('connection_limit', '15');
     }
     // Nastavíme timeouty pro předcházení pádům a dlouhým visícím požadavkům
     if (!parsedUrl.searchParams.has('pool_timeout')) {
-      parsedUrl.searchParams.set('pool_timeout', '20');
+      parsedUrl.searchParams.set('pool_timeout', '30');
     }
     if (!parsedUrl.searchParams.has('connect_timeout')) {
-      parsedUrl.searchParams.set('connect_timeout', '20');
+      parsedUrl.searchParams.set('connect_timeout', '30');
     }
     process.env.DATABASE_URL = parsedUrl.toString();
   } catch (e) {
     if (!dbUrl.includes('schema=')) {
-      dbUrl += dbUrl.includes('?') ? '&schema=qhub' : '?schema=qhub';
+      dbUrl += dbUrl.includes('?') ? '&schema=public' : '?schema=public';
     }
     if (!dbUrl.includes('connection_limit=')) {
-      dbUrl += `&connection_limit=3`;
+      dbUrl += `&connection_limit=15`;
     }
     process.env.DATABASE_URL = dbUrl;
   }

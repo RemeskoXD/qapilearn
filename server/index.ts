@@ -1,3 +1,4 @@
+import 'express-async-errors';
 import { env } from './lib/env.js';
 import dns from 'node:dns';
 dns.setDefaultResultOrder('ipv4first');

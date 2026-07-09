@@ -244,5 +244,13 @@ model QhubSystemSettings {
   globalBanner       String  @default("")
   version            String  @default("1.0.0 Q-Hub")
 
+  enableCourses Boolean @default(true)
+  enableQuizzes Boolean @default(true)
+  enableMentoring Boolean @default(true)
+  enableCalendar Boolean @default(true)
+  enableEbooks Boolean @default(true)
+  enableStreams Boolean @default(true)
+  enableBonusTasks Boolean @default(true)
+  
   @@map("qhub_settings")
 }

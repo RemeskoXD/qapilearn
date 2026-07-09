@@ -103,6 +103,42 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSetting
                 </div>
             </div>
 
+            {/* Platform Modules */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 md:col-span-2">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Layers size={20}/></div>
+                    <h3 className="font-bold text-slate-900">Moduly Platformy</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[
+                        { id: 'enableCourses', label: 'Kurzy', desc: 'Zobrazit sekci kurzů a vzdělávání' },
+                        { id: 'enableQuizzes', label: 'Kvízy', desc: 'Zobrazit sekci s testy a kvízy' },
+                        { id: 'enableMentoring', label: 'Mentoring & Rezervace', desc: 'Zobrazit sekci pro rezervaci mentorů' },
+                        { id: 'enableCalendar', label: 'Kalendář (Události)', desc: 'Zobrazit kalendář webinářů a událostí' },
+                        { id: 'enableEbooks', label: 'E-knihy', desc: 'Zobrazit knihovnu e-knih ke stažení' },
+                        { id: 'enableStreams', label: 'Streamy', desc: 'Zobrazit živá vysílání a záznamy' },
+                        { id: 'enableBonusTasks', label: 'Úkoly a Review', desc: 'Zobrazit sekci bonusových úkolů pro studenty' }
+                    ].map((mod) => (
+                        <div key={mod.id} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition">
+                            <div>
+                                <label className="font-bold text-slate-900 block">{mod.label}</label>
+                                <p className="text-xs text-slate-500">{mod.desc}</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={localSettings[mod.id as keyof SystemSettings] !== false} 
+                                    onChange={e => handleChange(mod.id as keyof SystemSettings, e.target.checked)} 
+                                    className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* System Info */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
