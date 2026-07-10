@@ -2,13 +2,48 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LayoutDashboard, BookOpen, Film, Calendar, Users, HelpCircle, 
   FileText, Award, Gem, Shield, LogOut, Bell, Zap, Play, Gift, 
-  TrendingUp, Settings, Lock, Mail, ChevronDown, ChevronUp, Download, EyeOff, Eye, CheckCircle, Package, Clock, ExternalLink, Camera, Send, X, ArrowLeft, Brain, Video, Check, Layers, Crown, Plus, Users as UsersIcon, MessageSquare, ArrowRight, AlertOctagon, Info, Star, Trophy, ArrowUp, MessageCircle, User as UserIcon, StickyNote, Edit3, ShoppingBag, BarChart2, DollarSign, Calendar as CalendarIcon, Copy, Coins, Trash2, Menu
+  TrendingUp, Settings, Lock, Mail, ChevronDown, ChevronUp, Download, EyeOff, Eye, CheckCircle, Package, Clock, ExternalLink, Camera, Send, X, ArrowLeft, Brain, Video, Check, Layers, Crown, Plus, Users as UsersIcon, MessageSquare, ArrowRight, AlertOctagon, Info, Star, Trophy, ArrowUp, MessageCircle, User as UserIcon, StickyNote, Edit3, ShoppingBag, BarChart2, DollarSign, Calendar as CalendarIcon, Copy, Coins, Trash2, Menu, ChevronRight, Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, Course, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, CommunitySession, ToastMessage, ProfitEntry, QhubPosition, QHUB_POSITIONS } from '../types';
+import { User, Challenge, Artifact, CalendarEvent, BonusTask, BonusSubmission, Course, Quiz, Mentor, Booking, Ebook, Stream, SupportTicket, LevelRequirement, CommunitySession, ToastMessage, ProfitEntry, QhubPosition, QHUB_POSITIONS, SystemSettings } from '../types';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import { SecretGame } from './SecretGame';
+
+
+
+
+function usePdfBlob(url: string | null) {
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    useEffect(() => {
+        if (!url) {
+            setBlobUrl(null);
+            return;
+        }
+        if (url.startsWith('data:')) {
+            try {
+                const arr = url.split(',');
+                const mime = arr[0].match(/:(.*?);/)?.[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                const blob = new Blob([u8arr], { type: mime });
+                const bUrl = URL.createObjectURL(blob);
+                setBlobUrl(bUrl);
+                return () => URL.revokeObjectURL(bUrl);
+            } catch(e) {
+                console.error("PDF conversion error", e);
+                setBlobUrl(url);
+            }
+        } else {
+            setBlobUrl(url);
+        }
+    }, [url]);
+    return blobUrl;
+}
 
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
@@ -180,15 +215,30 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
-    user, settings, challenges, allUsers, events, bonusTasks, submissions, courses, quizzes,
+    user: rawUser, settings, challenges = [], allUsers = [], events = [], bonusTasks = [], submissions = [], courses = [], quizzes = [],
     mentors = [], bookings = [], ebooks = [], streams = [], artifacts = [], tickets = [], nextLevelRequirement, communitySessions = [], notify,
     onLogout, onNavigate, onUpdateProfile, onRegisterEvent, onSubmitTask, onCourseProgress, onQuizComplete,
     onBookMentor, onCreateTicket, onReplyTicket, onUseArtifact, onChallengeAction, onCreateSession, onJoinSession
 }) => {
+  const user = {
+    ...rawUser,
+    inventory: rawUser.inventory || [],
+    certificates: rawUser.certificates || [],
+    courseProgress: rawUser.courseProgress || {},
+    quizHistory: rawUser.quizHistory || [],
+    messages: rawUser.messages || [],
+    activeChallenges: rawUser.activeChallenges || [],
+    profitHistory: rawUser.profitHistory || [],
+    positions: rawUser.positions || [],
+    lessonNotes: rawUser.lessonNotes || {}
+  };
   // If user is expired, default tab should be settings or tickets
   const isExpired = user.role === 'expired';
   const allowedTabs = ['settings', 'certificates', 'support'];
   const [activeTab, setActiveTab] = useState(isExpired ? 'settings' : 'dashboard');
+  const [materialSearch, setMaterialSearch] = useState('');
+  const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
+  const pdfBlobUrl = usePdfBlob(viewPdfUrl);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
 
@@ -247,6 +297,79 @@ const Dashboard: React.FC<DashboardProps> = ({
       setChartSelectedEmail(user.email.toLowerCase().trim());
     }
   }, [user]);
+
+  const currentMonthPayout = useMemo(() => {
+    if (!user || !user.email || !ozData) return null;
+    const normEmail = (user.email || '').toLowerCase().trim();
+    const config = (ozData?.userConfigs || {})[normEmail] || { userType: 'commission', fixRate: 0 };
+    const ozOrders = ozData?.orders || [];
+    const ozAdjustments = ozData?.adjustments || [];
+    const userOrders = ozOrders.filter(o => (o.email || "").toLowerCase() === normEmail);
+    const monthOrders = userOrders.filter(o => (o.date || "").startsWith(selectedOzMonth) && o.status === 'completed');
+    
+    // Calculate monthly volume (obrat)
+    const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);
+    
+    // Determine bracket base percentage
+    let baseRatePercent = 8;
+    if (totalVolume <= 400000) {
+        baseRatePercent = config.customRates?.b1 ?? 8;
+    } else if (totalVolume <= 700000) {
+        baseRatePercent = config.customRates?.b2 ?? 10;
+    } else if (totalVolume <= 1000000) {
+        baseRatePercent = config.customRates?.b3 ?? 11;
+    } else {
+        baseRatePercent = config.customRates?.b4 ?? 12;
+    }
+    
+    // Individual order commission calculations
+    const calculateOrderCommission = (amount, discount, overridePercent) => {
+        if (overridePercent !== undefined && overridePercent !== null) {
+            return amount * (overridePercent / 100);
+        }
+        if (discount > 60) return 0; // complete penalty
+        let rate = baseRatePercent;
+        const tier1 = discount >= 33 && discount <= 45; // reduced
+        const tier2 = discount > 45 && discount <= 60; // strictly penalized
+        let r1 = config.customRates?.b1 ?? 8;
+        let r2 = config.customRates?.b2 ?? 10;
+        let r3 = config.customRates?.b3 ?? 11;
+        let r4 = config.customRates?.b4 ?? 12;
+        if (totalVolume <= 400000) {
+            if (tier2) rate = 3;
+            else if (tier1) rate = 6;
+            else rate = r1;
+        } else if (totalVolume <= 700000) {
+            if (tier2) rate = 5;
+            else if (tier1) rate = 8;
+            else rate = r2;
+        } else if (totalVolume <= 1000000) {
+            if (tier2) rate = 6;
+            else if (tier1) rate = 9;
+            else rate = r3;
+        } else {
+            if (tier2) rate = 7;
+            else if (tier1) rate = 10;
+            else rate = r4;
+        }
+        return amount * (rate / 100);
+    };
+    
+    const totalCommissions = (config.userType === 'commission' || config.userType === 'both')
+        ? monthOrders.reduce((sum, o) => sum + calculateOrderCommission(o.amount, o.discount, o.customCommissionPercent), 0)
+        : 0;
+        
+    // Monthly Fix rate
+    const fixAmount = (config.userType === 'fix' || config.userType === 'both') ? config.fixRate : 0;
+    
+    // Fines & bonuses for selected month
+    const monthAdjustments = ozAdjustments.filter(a => (a.email || "").toLowerCase() === normEmail && a.month === selectedOzMonth);
+    const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
+    const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
+    
+    // Total Final payout
+    return Math.max(0, Math.round(totalCommissions + fixAmount + bonusesSum - finesSum));
+  }, [user, ozData, selectedOzMonth]);
 
   const fetchOzData = async () => {
     try {
@@ -648,15 +771,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", id: 'dashboard' },
     { icon: <Coins size={20} className="text-emerald-500" />, label: "Moje Provize (OZ)", id: 'oz-rewards' },
     { icon: <Trophy size={20} />, label: "Žebříček", id: 'leaderboard' },
-    ...(settings.enableCourses !== false ? [{ icon: <BookOpen size={20} />, label: "Kurzy", id: 'courses' }] : []),
-    { icon: <Zap size={20} />, label: "Výzvy", id: 'challenges' },
-    ...(settings.enableQuizzes !== false ? [{ icon: <Brain size={20} />, label: "Kvízy", id: 'quizzes' }] : []),
+    { icon: <Zap size={20} />, label: "Materiál pro stažení", id: 'challenges' },
     ...(settings.enableCalendar !== false ? [{ icon: <Calendar size={20} />, label: "Akce & Webináře", id: 'events' }] : []),
-    ...(settings.enableMentoring !== false ? [{ icon: <Users size={20} />, label: "Mentoring", id: 'mentoring' }] : []),
     { icon: <HelpCircle size={20} />, label: "Podpora", id: 'support' },
-    ...(settings.enableEbooks !== false ? [{ icon: <FileText size={20} />, label: "Vzdělávání o obchodě", id: 'ebooks' }] : []),
-    ...(settings.enableBonusTasks !== false ? [{ icon: <Gift size={20} />, label: "Bonusové úkoly", id: 'bonus' }] : []),
-    ,
   ];
 
   // VIP Zóna je dočasně skrytá z menu podle požadavku uživatele
@@ -691,8 +808,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (incompleteChallenges > 0) {
           list.push({
               id: 'challenges',
-              title: 'Denní Výzvy',
-              text: `Máš ${incompleteChallenges} nesplněných výzev. Nenech si utéct extra QAPI Coin!`,
+              title: 'Materiály pro stažení',
+              text: `Je k dispozici ${incompleteChallenges} nových materiálů ke stažení.`,
               icon: <Zap size={18} />,
               color: 'text-indigo-600',
               action: () => setActiveTab('challenges')
@@ -1222,29 +1339,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                          </div>
                          
-                         {/* Next Level progress circular gauge */}
-                         <div className="z-10 bg-slate-50/60 rounded-3xl p-4 border border-slate-100 flex items-center gap-4 max-w-sm w-full md:w-auto hidden">
-                            {nextLevelRequirement ? (
-                               <>
-                                  <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
-                                     <svg className="absolute w-full h-full transform -rotate-90">
-                                        <circle cx="32" cy="32" r="28" stroke="#EDDEC9" strokeWidth="3" fill="transparent" />
-                                        <circle cx="32" cy="32" r="28" stroke="#D4AF37" strokeWidth="3.5" strokeDasharray={`${Math.PI * 2 * 28}`} strokeDashoffset={`${Math.PI * 2 * 28 * (1 - Math.min(1, user.xp / nextLevelRequirement.xpRequired))}`} fill="transparent" strokeLinecap="round" className="transition-all duration-1000" />
-                                     </svg>
-                                     <span className="text-xs font-black text-slate-900">{Math.round((user.xp / nextLevelRequirement.xpRequired) * 100)}%</span>
-                                  </div>
-                                  <div className="text-left">
-                                     <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Další Level</h5>
-                                     <p className="text-sm font-black text-slate-900 leading-tight">Level {nextLevelRequirement.level} ({nextLevelRequirement.title})</p>
-                                     <p className="text-[10.5px] text-slate-500 mt-0.5">Potřebuješ ještě {nextLevelRequirement.xpRequired - user.xp} QAPI Coin</p>
-                                  </div>
-                               </>
-                            ) : (
-                               <div className="text-left">
-                                  <span className="text-xs font-bold text-slate-400">Dosáhl/a jsi maximálního levelu! 👑</span>
-                               </div>
-                            )}
-                         </div>
+                         {/* Salary/Payout Quick View */}
+                         {currentMonthPayout !== null && (
+                             <div className="z-10 bg-emerald-50 rounded-3xl p-5 border border-emerald-100 flex items-center gap-4 min-w-[240px] w-full md:w-auto shadow-sm">
+                                <div className="w-14 h-14 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                                   <Coins size={28} />
+                                </div>
+                                <div className="text-left">
+                                   <h5 className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Odhad Výplaty (Tento měsíc)</h5>
+                                   <p className="text-2xl font-black text-emerald-900 leading-none">{currentMonthPayout.toLocaleString()} Kč</p>
+                                   <button onClick={() => setActiveTab('oz-rewards')} className="text-xs font-bold text-emerald-700 mt-1.5 hover:text-emerald-800 transition flex items-center gap-1">
+                                       Zobrazit detaily provizí <ChevronRight size={14} />
+                                   </button>
+                                </div>
+                             </div>
+                         )}
                       </div>
 
                       {/* Prominent Quick-Links Grid: KURZY, MENTORING, LEADERBOARD */}
@@ -1272,7 +1381,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                    <div className="text-left">
                                       <span className="text-slate-400 block font-semibold uppercase text-[9px] tracking-widest">Hotovo</span>
                                       <span className="text-indigo-650 text-sm font-black">
-                                         {user.courseProgress.filter(p => p.isCompleted).length}
+                                         {(user.courseProgress || []).filter(p => p.isCompleted).length}
                                       </span>
                                    </div>
                                 </div>
@@ -1507,7 +1616,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {courses.map(course => {
                                 const locked = isLocked(course.level);
-                                const progress = user.courseProgress.find(p => p.courseId === course.id);
+                                const progress = (user.courseProgress || []).find(p => p.courseId === course.id);
                                 const completedCount = progress?.completedLessonIds.length || 0;
                                 const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
                                 const percent = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
@@ -1784,77 +1893,75 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                 )}
 
-                {/* --- CHALLENGES (VÝZVY) TAB --- */}
+                
+                {/* --- CHALLENGES (Materiál pro stažení) TAB --- */}
                 {activeTab === 'challenges' && (
                     <div className="space-y-8">
                         <div>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Výzvy a Daily Quests</h2>
-                            <p className="text-slate-500">Zlepšujte své návyky, dokončujte denní cíle a inkasujte cenné QAPI Coin do žebříčku.</p>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Materiál pro stažení</h2>
+                            <p className="text-slate-500">Procházejte a stahujte si dostupné materiály a dokumenty.</p>
+                        </div>
+                        
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <input 
+                                type="text"
+                                value={materialSearch}
+                                onChange={e => setMaterialSearch(e.target.value)}
+                                placeholder="Vyhledat materiál podle názvu..."
+                                className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm text-slate-900"
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {challenges && challenges.length > 0 ? challenges.map(challenge => {
-                                const progress = user.activeChallenges?.find(c => c.challengeId === challenge.id);
-                                const current = progress?.currentCount || 0;
-                                const isCompleted = progress?.completed || current >= challenge.targetCount;
-                                const percent = Math.min(100, (current / challenge.targetCount) * 100);
-
-                                return (
-                                    <div key={challenge.id} className={`bg-white border rounded-2xl p-6 relative flex flex-col justify-between transition ${isCompleted ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-200 hover:border-indigo-300'}`}>
-                                        <div>
-                                            <div className="flex justify-between items-start mb-4">
-                                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${challenge.type === 'daily' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                                                    {challenge.type === 'daily' ? 'Denní' : 'Týdenní'}
-                                                </span>
-                                                <span className="text-yellow-500 font-bold text-xs flex items-center gap-1 font-mono">
-                                                    <Zap size={14} fill="currentColor"/> +{challenge.rewardXP} QAPI Coin
-                                                </span>
-                                            </div>
-
-                                            <h3 className="font-bold text-slate-900 text-lg mb-1">{challenge.title}</h3>
-                                            <p className="text-slate-500 text-xs mb-4 leading-relaxed">{challenge.description}</p>
-                                        </div>
-
-                                        <div className="space-y-3 pt-4 border-t border-slate-100">
-                                            <div className="flex justify-between text-xs font-semibold">
-                                                <span className="text-slate-400">Postup</span>
-                                                <span className={isCompleted ? 'text-emerald-500' : 'text-slate-700'}>
-                                                    {current} / {challenge.targetCount}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                <div 
-                                                    className={`h-full transition-all duration-500 ${isCompleted ? 'bg-emerald-500' : 'bg-indigo-600'}`} 
-                                                    style={{ width: `${percent}%` }}
-                                                ></div>
-                                            </div>
-
-                                            {isCompleted ? (
-                                                <div className="w-full py-2 bg-emerald-100 text-emerald-800 font-bold text-xs text-center rounded-xl flex items-center justify-center gap-1">
-                                                    <Check size={14}/> SPLNĚNO
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => onChallengeAction && onChallengeAction(challenge.id)}
-                                                    className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
-                                                >
-                                                    <Plus size={14}/> Zaznamenat pokrok (+1)
-                                                </button>
-                                            )}
-                                        </div>
+                            {challenges && challenges.length > 0 ? challenges.filter(c => c.title.toLowerCase().includes(materialSearch.toLowerCase())).map(challenge => (
+                                <div key={challenge.id} className="bg-white border border-slate-200 hover:border-indigo-300 rounded-2xl p-6 relative flex flex-col justify-between transition shadow-sm hover:shadow-md">
+                                    <div>
+                                        <div className="flex items-start mb-4"><span className="px-2 py-1 rounded text-[10px] font-bold uppercase bg-indigo-100 text-indigo-700 flex items-center gap-1"><FileText size={12} /> PDF Dokument</span></div>
+                                        <h3 className="font-bold text-slate-900 text-lg mb-1">{challenge.title}</h3>
+                                        <p className="text-slate-500 text-xs mb-4 leading-relaxed">{challenge.description}</p>
                                     </div>
-                                );
-                            }) : (
-                                <div className="col-span-full text-center py-20 text-slate-500">
-                                    <Zap size={48} className="mx-auto mb-4 opacity-30"/>
-                                    <p>Žádné aktivní výzvy momentálně v systému nejsou k dispozici.</p>
+                                    <div className="pt-4 border-t border-slate-100">
+                                        <button
+                                            onClick={() => { if(challenge.pdfUrl) { setViewPdfUrl(challenge.pdfUrl); } }}
+                                            disabled={!challenge.pdfUrl}
+                                            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <Eye size={16}/> Otevřít materiál
+                                        </button>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="col-span-full text-center py-20 text-slate-500 bg-white border border-slate-200 rounded-3xl border-dashed">
+                                    <FileText size={48} className="mx-auto mb-4 opacity-30"/>
+                                    <p>Žádný materiál pro stažení momentálně není k dispozici.</p>
                                 </div>
                             )}
                         </div>
+                        
+                        <AnimatePresence>
+                            {viewPdfUrl && (
+                                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+                                    <motion.div initial={{scale:0.95}} animate={{scale:1}} className="bg-white w-full max-w-5xl h-[85vh] rounded-2xl overflow-hidden flex flex-col relative shadow-2xl">
+                                        <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                                            <h3 className="font-bold text-slate-900 flex items-center gap-2"><FileText size={18} className="text-indigo-600"/> Prohlížeč PDF</h3>
+                                            <div className="flex items-center gap-2">
+                                                <a href={pdfBlobUrl || viewPdfUrl} download="material.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl font-bold text-sm transition">
+                                                    <Download size={16} /> Stáhnout
+                                                </a>
+                                                <button onClick={() => setViewPdfUrl(null)} className="p-2 hover:bg-slate-200 rounded-full transition text-slate-500"><X size={20}/></button>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 bg-slate-100">
+                                            {pdfBlobUrl ? <iframe src={pdfBlobUrl} className="w-full h-full border-none" title="PDF Viewer" /> : <div className="p-8 text-center text-slate-500">Načítání dokumentu...</div>}
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 )}
-
+                
                 {/* --- QUIZZES (KVÍZY) TAB --- */}
                 {activeTab === 'quizzes' && (
                     <div className="space-y-8">
@@ -2425,11 +2532,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                         {/* Core Statistics calculations */}
                         {(() => {
                             const normEmail = (user.email || '').toLowerCase().trim();
-                            const config = ozData.userConfigs[normEmail] || { userType: 'commission', fixRate: 0 };
+                            const config = (ozData?.userConfigs || {})[normEmail] || { userType: 'commission', fixRate: 0 };
 
                             const allMerchantEmails: string[] = Array.from(new Set([
-                                ...Object.keys(ozData.userConfigs || {}),
-                                ...(ozData.orders || []).map(o => o.email.toLowerCase().trim())
+                                ...Object.keys((ozData?.userConfigs || {}) || {}),
+                                ...((ozData?.orders || []) || []).map(o => o.email.toLowerCase().trim())
                             ])).filter(Boolean) as string[];
 
                             const getMerchantRegion = (emailStr: string) => {
@@ -2495,7 +2602,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             };
 
                             const uniqueMonths: string[] = Array.from(new Set(
-                                (ozData.orders || [])
+                                ((ozData?.orders || []) || [])
                                     .map(o => o.date ? o.date.substring(0, 7) : '')
                                     .filter(m => m && m.match(/^\d{4}-\d{2}$/))
                             )).sort() as string[];
@@ -2516,10 +2623,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                             const getMerchantStatsForMonth = (email: string, mMonth: string) => {
                                 const mNormEmail = email.toLowerCase().trim();
-                                const mConfig = ozData.userConfigs[mNormEmail] || { userType: 'commission', fixRate: 0 };
+                                const mConfig = (ozData?.userConfigs || {})[mNormEmail] || { userType: 'commission', fixRate: 0 };
                                 
-                                const mUserOrders = ozData.orders.filter(o => o.email.toLowerCase() === mNormEmail);
-                                const mMonthOrders = mUserOrders.filter(o => o.date.startsWith(mMonth) && o.status === 'completed');
+                                const mUserOrders = (ozData?.orders || []).filter(o => (o.email || "").toLowerCase() === mNormEmail);
+                                const mMonthOrders = mUserOrders.filter(o => (o.date || "").startsWith(mMonth) && o.status === 'completed');
                                 
                                 const mTotalVolume = mMonthOrders.reduce((sum, o) => sum + o.amount, 0);
 
@@ -2571,7 +2678,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                                 const mFixAmount = (mConfig.userType === 'fix' || mConfig.userType === 'both') ? (mConfig.fixRate || 0) : 0;
                                 
-                                const mMonthAdjustments = ozData.adjustments.filter(a => a.email.toLowerCase() === mNormEmail && a.month === mMonth);
+                                const mMonthAdjustments = (ozData?.adjustments || []).filter(a => (a.email || "").toLowerCase() === mNormEmail && a.month === mMonth);
                                 const mBonusesSum = mMonthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
                                 const mFinesSum = mMonthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
 
@@ -2610,8 +2717,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 };
                             }).filter(d => d.obrat > 0 || d.provize > 0 || d.payout > 0);
                             
-                            const userOrders = ozData.orders.filter(o => o.email.toLowerCase() === normEmail);
-                            const monthOrders = userOrders.filter(o => o.date.startsWith(selectedOzMonth) && o.status === 'completed');
+                            const userOrders = (ozData?.orders || []).filter(o => (o.email || "").toLowerCase() === normEmail);
+                            const monthOrders = userOrders.filter(o => (o.date || "").startsWith(selectedOzMonth) && o.status === 'completed');
                             
                             // Calculate monthly volume (obrat)
                             const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);
@@ -2677,7 +2784,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             const fixAmount = (config.userType === 'fix' || config.userType === 'both') ? config.fixRate : 0;
 
                             // Fines & bonuses for selected month
-                            const monthAdjustments = ozData.adjustments.filter(a => a.email.toLowerCase() === normEmail && a.month === selectedOzMonth);
+                            const monthAdjustments = (ozData?.adjustments || []).filter(a => (a.email || "").toLowerCase() === normEmail && a.month === selectedOzMonth);
                             const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
                             const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
 
@@ -3204,11 +3311,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                 Historie vyplacených mezd za OZ činnost
                                             </h3>
                                             
-                                            {ozData.payouts.filter(p => p.email.toLowerCase() === normEmail).length === 0 ? (
+                                            {(ozData?.payouts || []).filter(p => (p.email || "").toLowerCase() === normEmail).length === 0 ? (
                                                 <div className="text-center py-10 text-slate-400 text-xs">Zatím nebyly zaúčtovány žádné minulé měsíční výplaty.</div>
                                             ) : (
                                                 <div className="space-y-3">
-                                                    {ozData.payouts.filter(p => p.email.toLowerCase() === normEmail).map((p) => (
+                                                    {(ozData?.payouts || []).filter(p => (p.email || "").toLowerCase() === normEmail).map((p) => (
                                                         <div key={p.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center text-xs text-slate-700">
                                                             <div>
                                                                 <span className="font-bold block py-0.5 px-2 bg-slate-200 text-slate-800 text-[10px] rounded w-max mb-1 uppercase tracking-wider">{p.month}</span>
@@ -3651,7 +3758,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {activeTab === 'bonus' && (
                     <div className="space-y-8 animate-fade-in">
                         <div>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Bonusové Výzvy & Úkoly</h2>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Bonusový Materiál & Úkoly</h2>
                             <p className="text-slate-500">Vyřešte náročnější reálné úkoly z praxe, doložte důkaz a získejte obří balík QAPI Coin.</p>
                         </div>
 
@@ -3767,7 +3874,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             }) : (
                                 <div className="col-span-full text-center py-20 text-slate-500">
                                     <Gift size={48} className="mx-auto mb-4 opacity-30"/>
-                                    <p>V systému aktuálně nejsou žádné bonusové výzvy.</p>
+                                    <p>V systému aktuálně není žádný bonusový materiál pro stažení.</p>
                                 </div>
                             )}
                         </div>
@@ -4162,7 +4269,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           const flatLessons = course.modules.flatMap(m => m.lessons);
                           const currentLesson = activeLessonId ? flatLessons.find(l => l.id === activeLessonId) : flatLessons[0];
                           const currentLessonIndex = flatLessons.findIndex(l => l.id === currentLesson?.id);
-                          const isCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(currentLesson?.id || '');
+                          const isCompleted = (user.courseProgress || []).find(p => p.courseId === course.id)?.completedLessonIds.includes(currentLesson?.id || '');
                           
                           const nextLesson = currentLessonIndex < flatLessons.length - 1 ? flatLessons[currentLessonIndex + 1] : null;
 
@@ -4179,8 +4286,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             <div key={mod.id} className="border-b border-slate-200">
                                                 <div className="p-4 bg-white/80 font-bold text-sm text-slate-600">{mod.title}</div>
                                                 <div>
-                                                    {mod.lessons.map(lesson => {
-                                                        const lessonCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);
+                                                    {(mod.lessons || []).map(lesson => {
+                                                        const lessonCompleted = (user.courseProgress || []).find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);
                                                         const isActive = currentLesson?.id === lesson.id;
                                                         return (
                                                             <div 
@@ -4226,8 +4333,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                         <div key={mod.id} className="border-b border-slate-200">
                                                             <div className="p-4 bg-slate-50 font-bold text-xs text-slate-500 uppercase tracking-wider">{mod.title}</div>
                                                             <div>
-                                                                {mod.lessons.map(lesson => {
-                                                                    const lessonCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);
+                                                                {(mod.lessons || []).map(lesson => {
+                                                                    const lessonCompleted = (user.courseProgress || []).find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);
                                                                     const isActive = currentLesson?.id === lesson.id;
                                                                     return (
                                                                         <div 

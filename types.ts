@@ -72,6 +72,7 @@ export interface Challenge {
   targetCount: number; // e.g., 100 pushups
   rewardXP: number;
   rewardArtifactId?: string;
+  pdfUrl?: string;
 }
 
 export interface UserChallengeProgress {

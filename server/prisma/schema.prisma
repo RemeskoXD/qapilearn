@@ -212,6 +212,7 @@ model QhubChallenge {
   targetCount      Int     @default(1)
   rewardXP         Int     @default(0)
   rewardArtifactId String?
+  pdfUrl           String?
 
   @@map("qhub_challenges")
 }
@@ -243,14 +244,23 @@ model QhubSystemSettings {
   allowRegistrations Boolean @default(true)
   globalBanner       String  @default("")
   version            String  @default("1.0.0 Q-Hub")
+  enableBonusTasks   Boolean @default(true)
+  enableCalendar     Boolean @default(true)
+  enableCourses      Boolean @default(true)
+  enableEbooks       Boolean @default(true)
+  enableMentoring    Boolean @default(true)
+  enableQuizzes      Boolean @default(true)
+  enableStreams      Boolean @default(true)
 
-  enableCourses Boolean @default(true)
-  enableQuizzes Boolean @default(true)
-  enableMentoring Boolean @default(true)
-  enableCalendar Boolean @default(true)
-  enableEbooks Boolean @default(true)
-  enableStreams Boolean @default(true)
-  enableBonusTasks Boolean @default(true)
-  
   @@map("qhub_settings")
+}
+
+model QhubAdminLog {
+  id        String   @id @default(cuid())
+  adminEmail String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@map("qhub_admin_logs")
 }

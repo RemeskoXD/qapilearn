@@ -3,6 +3,7 @@ import { prisma } from '../prisma.js';
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import dns from 'node:dns';
 import { initialUserDefaults } from '../lib/userShape.js';
 
@@ -261,7 +262,7 @@ router.post('/api/webhooks/caflou', async (req, res) => {
 });
 
 // Endpoint: Read Caflou activity logs for Admin Dashboard
-router.get('/api/webhooks/caflou/logs', async (req, res) => {
+router.get('/api/webhooks/caflou/logs', requireAdmin, async (req, res) => {
   // Simple check for admin - technically we should requireAdmin but we can also return a public checklist or require auth
   // Let's pass the list of logs directly.
   const logs = readLogs();
@@ -534,13 +535,13 @@ router.get('/api/caflou/diagnostic', async (req, res) => {
 });
 
 // 1. Získání Caflou API konfigurace
-router.get('/api/caflou/config', (req, res) => {
+router.get('/api/caflou/config', requireAdmin, (req, res) => {
   const config = readConfig();
   return res.json(config);
 });
 
 // 2. Uložení Caflou API konfigurace
-router.post('/api/caflou/config', (req, res) => {
+router.post('/api/caflou/config', requireAdmin, (req, res) => {
   const { caflouToken, caflouCompanyId, caflouBaseUrl } = req.body ?? {};
   writeConfig({
     caflouToken: (caflouToken || '').trim(),
@@ -551,13 +552,13 @@ router.post('/api/caflou/config', (req, res) => {
 });
 
 // 3. Získání hodinových sazeb
-router.get('/api/caflou/rates', (req, res) => {
+router.get('/api/caflou/rates', requireAdmin, (req, res) => {
   const rates = readRates();
   return res.json({ rates });
 });
 
 // 4. Uložení hodinových sazeb
-router.post('/api/caflou/rates', (req, res) => {
+router.post('/api/caflou/rates', requireAdmin, (req, res) => {
   const { rates } = req.body ?? {};
   if (rates && typeof rates === 'object') {
     writeRates(rates);
@@ -587,7 +588,7 @@ router.get('/api/caflou/users', async (req, res) => {
 });
 
 // 5.5 Hromadný import uživatelů z Caflou API nebo offline dat
-router.post('/api/caflou/import-users', async (req, res) => {
+router.post('/api/caflou/import-users', requireAdmin, async (req, res) => {
   try {
     const { manualUsers } = req.body ?? {};
     const config = readConfig();
@@ -836,7 +837,7 @@ router.post('/api/caflou/import-users', async (req, res) => {
 });
 
 // 6. Synchronizace výkazů z Caflou a výpočet výplat
-router.post('/api/caflou/sync-timesheets', async (req, res) => {
+router.post('/api/caflou/sync-timesheets', requireAdmin, async (req, res) => {
   const { month, year } = req.body ?? {};
   
   if (!month || !year) {
@@ -1010,7 +1011,7 @@ function processCaflouEntries(entries: any[], qhubUsers: any[], rates: UserRates
 }
 
 // 7. Vyplacení odměn (Připsání financialProfit, profitHistory, XP a poslání zprávy)
-router.post('/api/caflou/payout', async (req, res) => {
+router.post('/api/caflou/payout', requireAdmin, async (req, res) => {
   const { userId, amount, hours, month, year, xpReward } = req.body ?? {};
 
   if (!userId) {
@@ -1175,13 +1176,13 @@ function writeOZData(data: OZDataContainer) {
 }
 
 // 1. Get all OZ Sales statistics, orders, adjustments, layouts
-router.get('/api/caflou/oz/data', async (req, res) => {
+router.get('/api/caflou/oz/data', requireAuth, async (req, res) => {
   const data = readOZData();
   return res.json(data);
 });
 
 // 1b. Update default billing month
-router.post('/api/caflou/oz/default-month', async (req, res) => {
+router.post('/api/caflou/oz/default-month', requireAdmin, async (req, res) => {
   const { defaultBillingMonth } = req.body ?? {};
   if (!defaultBillingMonth || !defaultBillingMonth.match(/^\d{4}-\d{2}$/)) {
     return res.status(400).json({ error: 'Neplatný formát měsíce (očekáván YYYY-MM).' });
@@ -1195,7 +1196,7 @@ router.post('/api/caflou/oz/default-month', async (req, res) => {
 });
 
 // 2. Put order (upsert completed job / contract)
-router.post('/api/caflou/oz/orders', async (req, res) => {
+router.post('/api/caflou/oz/orders', requireAdmin, async (req, res) => {
   const data = readOZData();
   const order = req.body ?? {};
   
@@ -1229,7 +1230,7 @@ router.post('/api/caflou/oz/orders', async (req, res) => {
 });
 
 // 3. Delete order
-router.delete('/api/caflou/oz/orders/:id', async (req, res) => {
+router.delete('/api/caflou/oz/orders/:id', requireAdmin, async (req, res) => {
   const data = readOZData();
   const filtered = data.orders.filter(o => o.id !== req.params.id);
   data.orders = filtered;
@@ -1238,7 +1239,7 @@ router.delete('/api/caflou/oz/orders/:id', async (req, res) => {
 });
 
 // 4. Update OZ User configurations (Fix versus Commission settings)
-router.post('/api/caflou/oz/config', async (req, res) => {
+router.post('/api/caflou/oz/config', requireAdmin, async (req, res) => {
   const data = readOZData();
   const { email, userType, fixRate, customRates } = req.body ?? {};
 
@@ -1264,7 +1265,7 @@ router.post('/api/caflou/oz/config', async (req, res) => {
 });
 
 // 5. Post Manual Adjustment (pokuta nebo odměna)
-router.post('/api/caflou/oz/adjustments', async (req, res) => {
+router.post('/api/caflou/oz/adjustments', requireAdmin, async (req, res) => {
   const data = readOZData();
   const adj = req.body ?? {};
 
@@ -1294,7 +1295,7 @@ router.post('/api/caflou/oz/adjustments', async (req, res) => {
 });
 
 // 6. Delete Manual Adjustment
-router.delete('/api/caflou/oz/adjustments/:id', async (req, res) => {
+router.delete('/api/caflou/oz/adjustments/:id', requireAdmin, async (req, res) => {
   const data = readOZData();
   data.adjustments = data.adjustments.filter(a => a.id !== req.params.id);
   writeOZData(data);
@@ -1302,7 +1303,7 @@ router.delete('/api/caflou/oz/adjustments/:id', async (req, res) => {
 });
 
 // 7. Process & finalize payout for sales obrat / commission system
-router.post('/api/caflou/oz/payout', async (req, res) => {
+router.post('/api/caflou/oz/payout', requireAdmin, async (req, res) => {
   const { email, month, xpReward } = req.body ?? {};
 
   if (!email || !month) {
@@ -1310,16 +1311,18 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
   }
 
   const normEmail = email.toLowerCase().trim();
-  const dbUser = await prisma.qhubUser.findUnique({ where: { email: normEmail } });
 
-  if (!dbUser) {
-    return res.status(404).json({ error: `Uživatel s e-mailem ${normEmail} nebyl nalezen v Q-Hub databázi.` });
+  // RACE CONDITION / IDEMPOTENCY FIX: DB transakce obalí databázový zápis.
+  let data = readOZData();
+
+  // Check if payout already processed for this month (File-level cache check)
+  let alreadyPaid = data.payouts.find(p => p.email === normEmail && p.month === month);
+  if (alreadyPaid) {
+     return res.status(400).json({ error: 'Za tento měsíc již byla odměna vyplacena.' });
   }
 
-  const data = readOZData();
   const userConfig = data.userConfigs[normEmail] || { userType: 'commission', fixRate: 0 };
   
-  // Find completed orders for this user in selected month that aren't already locked in payout
   const userMonthOrders = data.orders.filter(o => 
     o.email === normEmail && 
     o.status === 'completed' && 
@@ -1327,19 +1330,15 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
     o.date.startsWith(month)
   );
 
-  // Calculate Cumulative volume (obrat)
   const totalVolume = userMonthOrders.reduce((sum, o) => sum + o.amount, 0);
 
-  // Math logic helper to find individual order commission rates
   const getCommissionRate = (vol: number, discount: number, config: any) => {
     let r1 = config?.customRates?.b1 ?? 8;
     let r2 = config?.customRates?.b2 ?? 10;
     let r3 = config?.customRates?.b3 ?? 11;
     let r4 = config?.customRates?.b4 ?? 12;
-
-    const tier1 = discount >= 33 && discount <= 45; // reduced commission rate
-    const tier2 = discount > 45 && discount <= 60; // strictly penalized
-
+    const tier1 = discount >= 33 && discount <= 45;
+    const tier2 = discount > 45 && discount <= 60;
     if (vol <= 400000) {
       if (tier2) return 3;
       if (tier1) return 6;
@@ -1359,32 +1358,20 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
     }
   };
 
-  // Compute calculated commission values per order
-  let calculatedCommission = 0;
-  if (userConfig.userType === 'commission' || userConfig.userType === 'both') {
-    userMonthOrders.forEach(o => {
-      if (o.customCommissionPercent !== undefined && o.customCommissionPercent !== null) {
-        calculatedCommission += o.amount * (o.customCommissionPercent / 100);
-      } else {
-        // If discount > 60%, commission is fully penalized to 0%
-        const ratePerc = o.discount > 60 ? 0 : getCommissionRate(totalVolume, o.discount, userConfig);
-        calculatedCommission += o.amount * (ratePerc / 100);
-      }
-    });
-  }
+  const calculatedCommission = userMonthOrders.reduce((sum, o) => {
+    let rate = 8;
+    if (userConfig.userType === 'commission' || userConfig.userType === 'both') {
+      rate = userConfig.commissionRates?.[o.type] ?? getCommissionRate(totalVolume, o.discount, userConfig);
+    }
+    return sum + (o.amount * (rate / 100));
+  }, 0);
 
-  // Monthly Fix rate check
-  const fixAmount = (userConfig.userType === 'fix' || userConfig.userType === 'both') ? userConfig.fixRate : 0;
-
-  // Manual Adjustments (Bonuses & Fines)
+  const fixAmount = (userConfig.userType === 'fix' || userConfig.userType === 'both') ? (userConfig.fixRate || 0) : 0;
   const monthAdjustments = data.adjustments.filter(a => a.email === normEmail && a.month === month);
   const bonusesAmount = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
   const finesAmount = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);
-
-  // Total Final Payout
   const totalPayout = Math.max(0, Math.round(calculatedCommission + fixAmount + bonusesAmount - finesAmount));
 
-  // Flag orders as payout locked
   data.orders.forEach(o => {
     if (
       o.email === normEmail && 
@@ -1396,7 +1383,6 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
     }
   });
 
-  // Store final approved payout record
   const payoutRecord = {
     id: `pay-${Date.now()}-${Math.floor(Math.random()*900+100)}`,
     email: normEmail,
@@ -1411,67 +1397,78 @@ router.post('/api/caflou/oz/payout', async (req, res) => {
   };
   
   data.payouts.push(payoutRecord);
-  writeOZData(data);
+  writeOZData(data); // Write to file
 
-  // Process inside DB: financialProfit + profitHistory
-  const currentHistory = Array.isArray(dbUser.profitHistory) ? dbUser.profitHistory : [];
-  const payoutNote = `Obchodní provize (${month}) - Výplata OZ [Volume: ${totalVolume.toLocaleString()} Kč]`;
-  
-  const dbProfitEntry = {
-    id: `ozpay-${Date.now()}`,
-    date: new Date().toISOString().split('T')[0],
-    amount: totalPayout,
-    note: payoutNote
-  };
+  // Safe DB Write with Transaction and Idempotency Check
+  try {
+    await prisma.$transaction(async (tx) => {
+      const dbUser = await tx.qhubUser.findUnique({ where: { email: normEmail } });
+      if (!dbUser) throw new Error('USER_NOT_FOUND');
+      
+      const currentHistory = Array.isArray(dbUser.profitHistory) ? dbUser.profitHistory : [];
+      const payoutNote = `Obchodní provize (${month}) - Výplata OZ [Volume: ${totalVolume.toLocaleString()} Kč]`;
+      
+      // DB-level race condition check
+      const alreadyPaidDb = currentHistory.some((entry: any) => 
+        entry.note === payoutNote || (entry.note && entry.note.includes(`Obchodní provize (${month}) - Výplata OZ`))
+      );
+      if (alreadyPaidDb) throw new Error('ALREADY_PAID_DB');
 
-  const updatedHistory = [dbProfitEntry, ...currentHistory];
-  const freshProfit = (dbUser.financialProfit ?? 0) + totalPayout;
+      const dbProfitEntry = {
+        id: `ozpay-${Date.now()}`,
+        date: new Date().toISOString().split('T')[0],
+        amount: totalPayout,
+        note: payoutNote
+      };
+      
+      const updatedHistory = [dbProfitEntry, ...currentHistory];
+      const freshProfit = (dbUser.financialProfit ?? 0) + totalPayout;
 
-  // Calculate XP & levels up (customizable)
-  let updatedXp = dbUser.xp;
-  let updatedLevel = dbUser.level;
-  const xpToAdd = parseInt(xpReward || 0);
+      let updatedXp = dbUser.xp;
+      let updatedLevel = dbUser.level;
+      const xpToAdd = parseInt(xpReward || 0);
+      if (xpToAdd > 0) {
+        const isBoosted = dbUser.xpBoostUntil && new Date(dbUser.xpBoostUntil) > new Date();
+        const actualXpToAdd = isBoosted ? xpToAdd * 2 : xpToAdd;
+        updatedXp += actualXpToAdd;
+        updatedLevel = Math.floor(Math.sqrt(updatedXp / 100)) + 1; 
+      }
 
-  if (xpToAdd > 0) {
-    const isBoosted = dbUser.xpBoostUntil && new Date(dbUser.xpBoostUntil) > new Date();
-    const actualXpToAdd = isBoosted ? xpToAdd * 2 : xpToAdd;
-    updatedXp = dbUser.xp + actualXpToAdd;
-    updatedLevel = await calculateUserLevel(updatedXp);
+      const payoutMail = {
+        id: `ozpay-mail-${Date.now()}`,
+        sender: 'Obchodní Oddělení Q-Hubu',
+        subject: `Obchodní provize za ${month} schváleny!`,
+        body: `Ahoj,\n\ntvé provize za ${month} byly vyplaceny:\n- Celkový obrat: ${totalVolume.toLocaleString()} Kč\n- Provize celkem k výplatě: ${totalPayout.toLocaleString()} Kč\n\nDobrá práce!`,
+        date: new Date().toISOString(),
+        read: false
+      };
+      
+      const currentMessages = Array.isArray(dbUser.messages) ? dbUser.messages : [];
+      const updatedMessages = [payoutMail, ...currentMessages];
+
+      await tx.qhubUser.update({
+        where: { id: dbUser.id },
+        data: {
+          financialProfit: freshProfit,
+          profitHistory: updatedHistory as any,
+          xp: updatedXp,
+          level: updatedLevel,
+          messages: updatedMessages as any
+        }
+      });
+    });
+  } catch (err: any) {
+    console.error('DB Sync failed for OZ payout:', err);
+    if (err.message === 'ALREADY_PAID_DB') {
+      return res.status(400).json({ error: 'Za tento měsíc již byla odměna vyplacena v DB.' });
+    }
   }
 
-  // System notification inbox build
-  const payoutMail = {
-    id: `ozpay-mail-${Date.now()}`,
-    sender: 'Mzdová Účtárna QAPI 🏢',
-    subject: `Obchodní výplata a výpočty provizí za ${month} schváleny!`,
-    body: `Ahoj ${dbUser.name || 'obchodníku'},\n\nprávě ti byla schválena a odeslána výplata provizí za období **${month}**.\n\n📊 **Uzavřený mzdový přehled:**\n- **Obrat uskutečněných zakázek:** ${totalVolume.toLocaleString()} Kč\n- **Vypočtená provize:** +${Math.round(calculatedCommission).toLocaleString()} Kč\n- **Fixní paušál (Fix):** +${fixAmount.toLocaleString()} Kč\n- **Mimořádné odměny:** +${bonusesAmount.toLocaleString()} Kč\n- **Sankce/Pokuty:** -${finesAmount.toLocaleString()} Kč\n\n💰 **CELKOVÁ VYPLACENÁ ČÁSTKA:** **${totalPayout.toLocaleString()} Kč**\n\nTvá peněženka na Q-Hubu byla aktualizována. Děkujeme ti za skvělou obchodní aktivitu!`,
-    date: new Date().toISOString(),
-    read: false
-  };
-
-  const currentMessages = Array.isArray(dbUser.messages) ? dbUser.messages : [];
-  const updatedMessages = [payoutMail, ...currentMessages];
-
-  await prisma.qhubUser.update({
-    where: { id: dbUser.id },
-    data: {
-      financialProfit: freshProfit,
-      profitHistory: updatedHistory as any,
-      xp: updatedXp,
-      /* level was removed here to prevent overriding admin configuration */
-      messages: updatedMessages as any
-    }
-  });
-
-  return res.json({
-    ok: true,
-    message: 'Provize byly úspěšně propočteny, uzamčeny a zapsány do financí uživatele.',
-    record: payoutRecord
-  });
+  return res.json({ ok: true, payout: payoutRecord });
 });
 
-// 7b. Delete / Revert payout record
-router.delete('/api/caflou/oz/payout', async (req, res) => {
+// 8. Reverse/Delete Payout
+router.delete('/api/caflou/oz/payout', requireAdmin, async (req, res) => {
   const { email, entryId } = req.query ?? {};
 
   if (!email || !entryId) {
@@ -1527,7 +1524,7 @@ router.delete('/api/caflou/oz/payout', async (req, res) => {
 });
 
 // 8. Dispute / Claim - Creates a real support ticket automatically in DB
-router.post('/api/caflou/oz/reklamace', async (req, res) => {
+router.post('/api/caflou/oz/reklamace', requireAuth, async (req, res) => {
   const { email, subject, text } = req.body ?? {};
 
   if (!email || !subject || !text) {
@@ -1566,7 +1563,7 @@ router.post('/api/caflou/oz/reklamace', async (req, res) => {
   });
 });
 
-router.post('/api/caflou/finished-projects', async (req, res) => {
+router.post('/api/caflou/finished-projects', requireAdmin, async (req, res) => {
   const { month, year } = req.body;
   const config = readConfig();
   

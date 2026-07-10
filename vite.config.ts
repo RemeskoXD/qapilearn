@@ -14,6 +14,9 @@ export default defineConfig({
         secure: false,
       },
     },
+    watch: {
+      ignored: ['**/caflou_oz_data.json', '**/caflou_api.json']
+    },
   },
   plugins: [tailwindcss(), react()],
   resolve: {

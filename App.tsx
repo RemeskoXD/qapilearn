@@ -9,6 +9,7 @@ import {
   Loader2,
 } from 'lucide-react';
 
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -71,12 +72,22 @@ const App: React.FC = () => {
   // --- AUTH BOOT ---
   useEffect(() => {
     (async () => {
-      // Vždy začínáme na přihlašovací obrazovce (login) na / s vyčištěným hashem, aby se uživateli hned ukázal login na čisté adrese
       if (window.location.hash === '#db-check') {
         window.location.hash = '';
       }
-      setView('login');
-      setBootLoading(false);
+      try {
+        const res = await api.get('/auth/me');
+        if (res.user) {
+          setCurrentUser(res.user);
+          setView(res.user.role === 'admin' ? 'admin' : 'dashboard');
+        } else {
+          setView('login');
+        }
+      } catch {
+        setView('login');
+      } finally {
+        setBootLoading(false);
+      }
     })();
   }, []);
 
@@ -606,7 +617,8 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-slate-50">
         {ToastContainer}
         {banners}
-        <AdminDashboard
+        <ErrorBoundary>
+          <AdminDashboard
           currentUser={currentUser}
           allUsers={allUsers.data}
           settings={systemSettings}
@@ -649,6 +661,7 @@ const App: React.FC = () => {
           onLogout={handleLogout}
           onNavigate={(v) => setView(v as any)}
         />
+        </ErrorBoundary>
       </div>
     );
   }
@@ -658,7 +671,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       {ToastContainer}
       {banners}
-      <Dashboard
+      <ErrorBoundary><Dashboard
         user={currentUser}
         settings={systemSettings}
         challenges={challenges.data}
@@ -691,7 +704,8 @@ const App: React.FC = () => {
         onChallengeAction={handleChallenge}
         onCreateSession={handleCreateSession}
         onJoinSession={handleJoinSession}
-      />
+        />
+      </ErrorBoundary>
     </div>
   );
 };

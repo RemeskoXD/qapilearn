@@ -22,6 +22,7 @@ import AdminGamification from './admin/AdminGamification';
 import AdminSubmissions from './admin/AdminSubmissions';
 import AdminSettings from './admin/AdminSettings';
 import AdminCaflou from './admin/AdminCaflou';
+import { AdminAuditLogs } from './admin/AdminAuditLogs';
 
 // Fix types for framer motion
 const MotionDiv = motion.div as any;
@@ -95,19 +96,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
   const navItems = [
     { id: 'overview', icon: <Home size={18} />, label: 'Přehled' },
     { id: 'users', icon: <Users size={18} />, label: 'Uživatelé' },
-    ...(props.settings?.enableCourses !== false ? [{ id: 'courses', icon: <BookOpen size={18} />, label: 'Kurzy' }] : []),
-    ...(props.settings?.enableQuizzes !== false ? [{ id: 'quizzes', icon: <Brain size={18} />, label: 'Kvízy' }] : []),
-    ...(props.settings?.enableMentoring !== false ? [
-        { id: 'mentoring', icon: <Briefcase size={18} />, label: 'Mentoring' },
-        { id: 'bookings', icon: <CalendarCheck size={18} />, label: 'Rezervace' }
-    ] : []),
     { id: 'support', icon: <MessageSquare size={18} />, label: 'Support Desk' },
     ...(props.settings?.enableCalendar !== false ? [{ id: 'events', icon: <Calendar size={18} />, label: 'Kalendář' }] : []),
-    ...(props.settings?.enableEbooks !== false ? [{ id: 'ebooks', icon: <FileText size={18} />, label: 'E-knihy' }] : []),
-    ...(props.settings?.enableStreams !== false ? [{ id: 'streams', icon: <Film size={18} />, label: 'Streamy' }] : []),
     { id: 'gamification', icon: <Gem size={18} />, label: 'Gamifikace' },
-    ...(props.settings?.enableBonusTasks !== false ? [{ id: 'submissions', icon: <CheckSquare size={18} />, label: 'Úkoly & Review' }] : []),
-    { id: 'levels', icon: <Star size={18} />, label: 'Levely' },
     { id: 'caflou', icon: <LinkIcon size={18} className="rotate-45" />, label: 'Caflou Integrace' },
     { id: 'settings', icon: <Settings size={18} />, label: 'Nastavení' },
   ];
@@ -278,10 +269,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
             {activeTab === 'overview' && (
                 <AdminOverview 
                     allUsers={props.allUsers}
+                    events={props.events}
                     courses={props.courses}
                     quizzes={props.quizzes}
                     tickets={props.tickets}
                     submissions={props.submissions}
+                    onNavigate={(tab) => setActiveTab(tab)}
                 />
             )}
 
@@ -396,6 +389,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = (props) => {
                     onUpdateLevels={props.onUpdateLevels}
                     notify={props.notify}
                 />
+            )}
+
+            
+            {activeTab === 'logs' && (
+                <AdminAuditLogs />
             )}
 
             {activeTab === 'caflou' && (

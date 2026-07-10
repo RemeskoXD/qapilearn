@@ -1472,7 +1472,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                                                     setConfirmDeleteId(entry.id);
                                                   }}
                                                   className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg bg-rose-50 hover:text-rose-700 transition cursor-pointer flex items-center justify-center mx-auto"
-                                                  title="Smazat záznam o výplatě"
+                                                  title="Smazat lokální záznam o výplatě"
                                                 >
                                                   <Trash2 size={12} />
                                                 </button>
@@ -2308,7 +2308,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                                         <button
                                           onClick={() => handleDeleteOrder(o.id)}
                                           className="p-1 px-1.5 text-rose-600 hover:bg-rose-50 border border-transparent rounded-lg transition"
-                                          title="Smazat zakázku"
+                                          title="Smazat lokální záznam zakázky"
                                         >
                                           <Trash2 size={12} />
                                         </button>

@@ -55,7 +55,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '4mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 // Express je za reverse proxy (Coolify / Traefik) – nutné pro secure cookies.
@@ -85,6 +86,7 @@ app.use('/api/streams', crudRouter(prisma.qhubStream as any, {
 }));
 app.use('/api/artifacts', crudRouter(prisma.qhubArtifact as any));
 app.use('/api/challenges', crudRouter(prisma.qhubChallenge as any));
+app.use('/api/admin-logs', crudRouter(prisma.qhubAdminLog as any));
 app.use('/api/tasks', crudRouter(prisma.qhubBonusTask as any, {
   sanitize: (b: any) => ({ ...b, deadline: b.deadline ? new Date(b.deadline) : undefined }),
 }));

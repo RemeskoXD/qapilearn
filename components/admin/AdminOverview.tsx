@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, BookOpen, Brain, MessageSquare, AlertCircle, TrendingUp, CheckCircle, Shield, Award, Calendar, ChevronRight, Search, Activity, Clock, LogOut, ArrowUpRight, Zap, Ban, Lock } from 'lucide-react';
-import { User, Course, Quiz, SupportTicket, BonusSubmission } from '../../types';
+import { User, Course, Quiz, SupportTicket, BonusSubmission, CalendarEvent } from '../../types';
+import { Calendar as CalendarIcon, Briefcase } from 'lucide-react';
 
 interface AdminOverviewProps {
   allUsers: User[];
@@ -8,20 +9,59 @@ interface AdminOverviewProps {
   quizzes: Quiz[];
   tickets: SupportTicket[];
   submissions: BonusSubmission[];
+  events?: CalendarEvent[];
+  onNavigate?: (tab: string) => void;
 }
 
-const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = [], quizzes = [], tickets = [], submissions = [] }) => {
+const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = [], quizzes = [], tickets = [], submissions = [], events = [], onNavigate }) => {
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  
+  const [ozData, setOzData] = useState<any>(null);
+  React.useEffect(() => {
+    fetch('/api/caflou/oz/data').then(r => r.ok ? r.json() : null).then(data => {
+        if(data) setOzData(data);
+    }).catch(e => console.error(e));
+  }, []);
+  
+  const currentMonthTotalPayout = React.useMemo(() => {
+    if (!ozData) return null;
+    const monthString = new Date().toISOString().substring(0, 7);
+    const monthOrders = (ozData.orders || []).filter((o:any) => (o.date || '').startsWith(monthString) && o.status === 'completed');
+    
+    let total = 0;
+    
+    const usersWithOrders = Array.from(new Set(monthOrders.map((o:any) => (o.email || '').toLowerCase())));
+    for (const email of usersWithOrders) {
+        const config = (ozData.userConfigs || {})[email] || { userType: 'commission', fixRate: 0 };
+        const userOrders = monthOrders.filter((o:any) => (o.email || '').toLowerCase() === email);
+        const userCommissions = userOrders.reduce((sum:number, o:any) => {
+            let rate = 8;
+            if (config.userType === 'commission' || config.userType === 'both') {
+                rate = config.commissionRates?.[o.type] ?? 8;
+            }
+            return sum + (o.amount * (rate / 100));
+        }, 0);
+        
+        const fixAmount = (config.userType === 'fix' || config.userType === 'both') ? (config.fixRate || 0) : 0;
+        const monthAdjustments = (ozData.adjustments || []).filter((a:any) => (a.email || '').toLowerCase() === email && a.month === monthString);
+        const bonusesSum = monthAdjustments.filter((a:any) => a.type === 'bonus').reduce((sum:number, a:any) => sum + a.amount, 0);
+        const finesSum = monthAdjustments.filter((a:any) => a.type === 'fine').reduce((sum:number, a:any) => sum + a.amount, 0);
+        
+        total += Math.max(0, Math.round(userCommissions + fixAmount + bonusesSum - finesSum));
+    }
+    
+    return total;
+  }, [ozData]);
 
   // Calculations
-  const activeUsers = allUsers.filter((u) => !u.isBanned);
-  const bannedCount = allUsers.filter((u) => u.isBanned).length;
-  const adminCount = allUsers.filter((u) => u.role === 'admin').length;
-  const merchantUsers = allUsers.filter((u) => u.role === 'obchodnik').length;
-  const techUsers = allUsers.filter((u) => u.role === 'technik').length;
-  const teamLeaderUsers = allUsers.filter((u) => u.role === 'team_leader').length;
-  const lineUsers = allUsers.filter((u) => u.role === 'linka').length;
-  const otherUsers = allUsers.filter((u) => u.role === 'ostatni').length;
+  const activeUsers = (allUsers || []).filter((u) => !u.isBanned);
+  const bannedCount = (allUsers || []).filter((u) => u.isBanned).length;
+  const adminCount = (allUsers || []).filter((u) => u.role === 'admin').length;
+  const merchantUsers = (allUsers || []).filter((u) => u.role === 'obchodnik').length;
+  const techUsers = (allUsers || []).filter((u) => u.role === 'technik').length;
+  const teamLeaderUsers = (allUsers || []).filter((u) => u.role === 'team_leader').length;
+  const lineUsers = (allUsers || []).filter((u) => u.role === 'linka').length;
+  const otherUsers = (allUsers || []).filter((u) => u.role === 'ostatni').length;
   
   const openTickets = tickets.filter((t) => t.status === 'open').length;
   const pendingSubmissions = submissions.filter((s) => s.status === 'pending').length;
@@ -36,6 +76,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
 
   const stats = [
     {
+      tab: 'users',
       label: 'Registrovaní pracovníci',
       value: allUsers.length,
       sub: `${activeUsers.length} aktivních · ${bannedCount} zablokovaných`,
@@ -45,24 +86,27 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
       badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-100',
     },
     {
-      label: 'Vzdělávací Kurzy',
-      value: courses.length,
-      sub: `${courses.filter((c) => c.published).length} publikováno · ${courses.filter((c) => !c.published).length} konceptů`,
-      icon: <BookOpen size={22} className="text-violet-600" />,
+      tab: 'events',
+      label: 'Události',
+      value: events.length,
+      sub: `${events.filter(e => new Date(e.date) >= new Date()).length} nadcházejících`,
+      icon: <CalendarIcon size={22} className="text-violet-600" />,
       color: 'border-slate-200 hover:border-violet-400 bg-linear-to-b from-white to-slate-50/50',
-      badge: 'Lekce & Teorie',
+      badge: 'Kalendář',
       badgeColor: 'bg-violet-50 text-violet-700 border-violet-100',
     },
     {
-      label: 'Znalostní Kvízy',
-      value: quizzes.length,
-      sub: `${quizzes.filter((q) => q.published).length} publikováno · ${quizzes.filter((q) => !q.published).length} testů`,
-      icon: <Brain size={22} className="text-amber-600" />,
+      tab: 'caflou',
+      label: 'Caflou Zakázky',
+      value: ozData?.orders ? ozData.orders.length : 0,
+      sub: `${ozData?.orders ? ozData.orders.filter((o: any) => o.status === 'completed').length : 0} dokončených zakázek`,
+      icon: <Briefcase size={22} className="text-amber-600" />,
       color: 'border-slate-200 hover:border-amber-400 bg-linear-to-b from-white to-slate-50/50',
-      badge: 'Testy',
+      badge: 'Obchod',
       badgeColor: 'bg-amber-50 text-amber-700 border-amber-100',
     },
     {
+      tab: 'gamification',
       label: 'Celkový Pokrok Hubu',
       value: `${(totalPlatformXP / 1000).toFixed(1)}k`,
       sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} QAPI Coin na pracovníka`,
@@ -156,6 +200,18 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
         <div className="lg:col-span-4 space-y-6">
           
           {/* Attention Items */}
+          {/* Total Payout Dashboard Widget */}
+          {currentMonthTotalPayout !== null && (
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 shadow-xl relative overflow-hidden text-white mb-6">
+             <div className="absolute top-0 right-0 p-4 opacity-10">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+             </div>
+             <h3 className="font-bold text-emerald-50 text-sm uppercase tracking-widest mb-1">Odhad celkových výplat (Tento měsíc)</h3>
+             <p className="text-4xl font-black">{currentMonthTotalPayout.toLocaleString()} Kč</p>
+             <p className="text-sm font-medium text-emerald-100 mt-2">Včetně všech bonusů, fixů a srážek za všechny obchodníky v {new Date().toISOString().substring(0,7)}.</p>
+          </div>
+          )}
+
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl relative overflow-hidden">
             <div className="flex items-center gap-2 mb-4">
               <AlertCircle size={20} className="text-orange-500 animate-bounce" />

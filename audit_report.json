@@ -1,0 +1,1508 @@
+[
+  {
+    "file": "components/AdminDashboard.tsx",
+    "line": 142,
+    "match": "navItems.map(",
+    "code": "{navItems.map(item => ("
+  },
+  {
+    "file": "components/AdminDashboard.tsx",
+    "line": 199,
+    "match": "navItems.map(",
+    "code": "{navItems.map(item => ("
+  },
+  {
+    "file": "components/AdminDashboard.tsx",
+    "line": 255,
+    "match": "navItems.find(",
+    "code": "<h1 className=\"text-xl font-bold text-slate-900\">{navItems.find(i => i.id === activeTab)?.label}</h1>"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 43,
+    "match": "listItems.map(",
+    "code": "{listItems.map((item, i) => <li key={i}>{parseInlineMarkdown(item)}</li>)}"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 71,
+    "match": "parts.map(",
+    "code": "return parts.map((part, pIdx) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 77,
+    "match": "subParts.map(",
+    "code": "return subParts.map((sub, sIdx) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 268,
+    "match": "userOrders.filter(",
+    "code": "const monthOrders = userOrders.filter(o => o.date.startsWith(selectedOzMonth) && o.status === 'completed');"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 271,
+    "match": "monthOrders.reduce(",
+    "code": "const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 319,
+    "match": "monthOrders.reduce(",
+    "code": "? monthOrders.reduce((sum, o) => sum + calculateOrderCommission(o.amount, o.discount, o.customCommissionPercent), 0)"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 327,
+    "match": "monthAdjustments.filter(",
+    "code": "const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 328,
+    "match": "monthAdjustments.filter(",
+    "code": "const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 423,
+    "match": "courses.find(",
+    "code": "const course = courses.find(c => c.id === activeCourseId);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 426,
+    "match": "flatLessons.find(",
+    "code": "const lesson = flatLessons.find(l => l.id === activeLessonId);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 549,
+    "match": "newHistory.reduce(",
+    "code": "const totalProfit = newHistory.reduce((sum, item) => sum + item.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 604,
+    "match": "history.filter(",
+    "code": "filtered = history.filter(e => new Date(e.date) >= thirtyDaysAgo);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 616,
+    "match": "history.filter(",
+    "code": "filtered = history.filter(e => new Date(e.date) >= oneYearAgo);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 637,
+    "match": "chartData.map(",
+    "code": "const maxChartVal = chartData.length > 0 ? Math.max(...chartData.map(d => d.val)) * 1.1 : 1000;"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 644,
+    "match": "chartData.map(",
+    "code": "const points = chartData.map((d, i) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 710,
+    "match": "xpChartData.map(",
+    "code": "const maxXpVal = xpChartData.length > 0 ? Math.max(...xpChartData.map(d => d.xp)) * 1.15 : 1000;"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 715,
+    "match": "xpChartData.map(",
+    "code": "const points = xpChartData.map((d, i) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 744,
+    "match": "user.messages.filter(",
+    "code": "const unreadMessages = user.messages.filter(m => !m.read).length;"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 767,
+    "match": "user.activeChallenges.filter(",
+    "code": "const incompleteChallenges = user.activeChallenges.filter(c => !c.completed).length;"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 780,
+    "match": "user.inventory.filter(",
+    "code": "const consumableItems = user.inventory.filter(i => i.type === 'consumable');"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 820,
+    "match": "quizzes.find(",
+    "code": "const quiz = quizzes.find(q => q.id === activeQuizId);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 867,
+    "match": "allUsers.map(",
+    "code": "const resolvedUsers = allUsers.map(u => u.id === user.id ? { ...u, ...user } : u);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 868,
+    "match": "resolvedUsers.some(",
+    "code": "if (!resolvedUsers.some(u => u.id === user.id)) {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 923,
+    "match": "user.certificates.find(",
+    "code": "const cert = user.certificates.find(c => c.id === printingCertId);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1048,
+    "match": "sidebarLinks.map(",
+    "code": "{sidebarLinks.map((link, i) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1108,
+    "match": "sidebarLinks.map(",
+    "code": "{sidebarLinks.map((link, i) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1225,
+    "match": "notifications.map(",
+    "code": "{notifications.length > 0 ? notifications.map((notif, idx) => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1344,
+    "match": "user.courseProgress.filter(",
+    "code": "{user.courseProgress.filter(p => p.isCompleted).length}"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1377,
+    "match": "bookings.filter(",
+    "code": "{bookings.filter(b => b.userId === user.id).length} sezení"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1492,
+    "match": "xpChartData.map(",
+    "code": "{xpChartData.map((d, idx) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1577,
+    "match": "courses.map(",
+    "code": "{courses.map(course => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1579,
+    "match": "user.courseProgress.find(",
+    "code": "const progress = user.courseProgress.find(p => p.courseId === course.id);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1581,
+    "match": "course.modules.reduce(",
+    "code": "const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1865,
+    "match": "challenges.map(",
+    "code": "{challenges && challenges.length > 0 ? challenges.map(challenge => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1936,
+    "match": "quizzes.find(",
+    "code": "const quizObj = quizzes.find(q => q.id === activeQuizId);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 1996,
+    "match": "question.options.map(",
+    "code": "{question.options.map((option, idx) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2028,
+    "match": "quizObj.questions.filter(",
+    "code": "const correct = quizObj.questions.filter(q => selectedAnswers[q.id] === q.correctOptionIndex).length;"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2053,
+    "match": "quizzes.map(",
+    "code": "{quizzes && quizzes.length > 0 ? quizzes.map(quiz => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2126,
+    "match": "events.map(",
+    "code": "{events && events.length > 0 ? events.map(event => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2217,
+    "match": "user.certificates.map(",
+    "code": "{user.certificates.length > 0 ? user.certificates.map(cert => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2291,
+    "match": "mentors.map(",
+    "code": "{mentors && mentors.length > 0 ? mentors.map(mentor => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2338,
+    "match": "mentors.find(",
+    "code": "const mentorObj = mentors.find(m => m.id === selectedMentor);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2412,
+    "match": "bookings.filter(",
+    "code": "{bookings && bookings.filter(b => b.userId === user.id).length > 0 ? ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2413,
+    "match": "bookings.filter(",
+    "code": "bookings.filter(b => b.userId === user.id).map(booking => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2414,
+    "match": "mentors.find(",
+    "code": "const mentorName = mentors.find(m => m.id === booking.mentorId)?.name || 'Mentor/Konzultant';"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2527,
+    "match": "allMerchantEmails.filter(",
+    "code": "const selectableIndividualEmails: string[] = allMerchantEmails.filter(email => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2534,
+    "match": "allMerchantEmails.filter(",
+    "code": "const selectableComparisonEmails: string[] = allMerchantEmails.filter(email => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2591,
+    "match": "mUserOrders.filter(",
+    "code": "const mMonthOrders = mUserOrders.filter(o => o.date.startsWith(mMonth) && o.status === 'completed');"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2593,
+    "match": "mMonthOrders.reduce(",
+    "code": "const mTotalVolume = mMonthOrders.reduce((sum, o) => sum + o.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2606,
+    "match": "mMonthOrders.reduce(",
+    "code": "const mTotalCommissions = mMonthOrders.reduce((sum, o) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2644,
+    "match": "mMonthAdjustments.filter(",
+    "code": "const mBonusesSum = mMonthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2645,
+    "match": "mMonthAdjustments.filter(",
+    "code": "const mFinesSum = mMonthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2658,
+    "match": "sortedMonths.map(",
+    "code": "const individualChartData = sortedMonths.map(month => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2670,
+    "match": "selectableComparisonEmails.map(",
+    "code": "const comparisonChartData = selectableComparisonEmails.map(email => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2683,
+    "match": "userOrders.filter(",
+    "code": "const monthOrders = userOrders.filter(o => o.date.startsWith(selectedOzMonth) && o.status === 'completed');"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2686,
+    "match": "monthOrders.reduce(",
+    "code": "const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2742,
+    "match": "monthOrders.reduce(",
+    "code": "? monthOrders.reduce((sum, o) => sum + calculateOrderCommission(o.amount, o.discount, o.customCommissionPercent), 0)"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2750,
+    "match": "monthAdjustments.filter(",
+    "code": "const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2751,
+    "match": "monthAdjustments.filter(",
+    "code": "const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 2927,
+    "match": "selectableIndividualEmails.map(",
+    "code": "{selectableIndividualEmails.map(email => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3035,
+    "match": "individualChartData.map(",
+    "code": "{individualChartData.map((d, idx) => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3166,
+    "match": "monthOrders.map(",
+    "code": "{monthOrders.map((o) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3250,
+    "match": "monthAdjustments.map(",
+    "code": "{monthAdjustments.map((a) => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3439,
+    "match": "tickets.filter(",
+    "code": "{tickets && tickets.filter(t => t.userId === user.id).length > 0 ? ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3440,
+    "match": "tickets.filter(",
+    "code": "tickets.filter(t => t.userId === user.id).map(ticket => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3475,
+    "match": "tickets.find(",
+    "code": "{activeTicketId && tickets.find(t => t.id === activeTicketId) ? (() => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3476,
+    "match": "tickets.find(",
+    "code": "const activeTicketObj = tickets.find(t => t.id === activeTicketId)!;"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3494,
+    "match": "activeTicketObj.messages.map(",
+    "code": "activeTicketObj.messages.map((msg, index) => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3568,
+    "match": "ebooks.map(",
+    "code": "{ebooks && ebooks.length > 0 ? ebooks.map(ebook => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3728,
+    "match": "bonusTasks.map(",
+    "code": "{bonusTasks && bonusTasks.length > 0 ? bonusTasks.map(task => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3856,
+    "match": "communitySessions.map(",
+    "code": "{communitySessions && communitySessions.length > 0 ? communitySessions.map(session => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3889,
+    "match": "localFeed.map(",
+    "code": "{localFeed.map(post => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3929,
+    "match": "CZECH_REGIONS.map(",
+    "code": "{CZECH_REGIONS.map(reg => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3942,
+    "match": "leaderboardUsers.map(",
+    "code": "{leaderboardUsers.map((u, i) => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 3992,
+    "match": "user.inventory.map(",
+    "code": "{user.inventory.map((item, idx) => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4116,
+    "match": "user.positions.map(",
+    "code": "{user.positions.map(pid => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4117,
+    "match": "QHUB_POSITIONS.find(",
+    "code": "const p = QHUB_POSITIONS.find(q => q.id === pid);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4144,
+    "match": "PRESET_AVATARS.map(",
+    "code": "{PRESET_AVATARS.map((url, i) => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4169,
+    "match": "QHUB_POSITIONS.map(",
+    "code": "{QHUB_POSITIONS.map(p => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4184,
+    "match": "settingsForm.positions.filter(",
+    "code": "? settingsForm.positions.filter(x => x !== p.id)"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4229,
+    "match": "courses.find(",
+    "code": "const course = courses.find(c => c.id === activeCourseId);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4232,
+    "match": "flatLessons.find(",
+    "code": "const currentLesson = activeLessonId ? flatLessons.find(l => l.id === activeLessonId) : flatLessons[0];"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4234,
+    "match": "user.courseProgress.find(",
+    "code": "const isCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(currentLesson?.id || '');"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4247,
+    "match": "course.modules.map(",
+    "code": "{course.modules.map(mod => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4251,
+    "match": "mod.lessons.map(",
+    "code": "{mod.lessons.map(lesson => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4252,
+    "match": "user.courseProgress.find(",
+    "code": "const lessonCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4294,
+    "match": "course.modules.map(",
+    "code": "{course.modules.map(mod => ("
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4298,
+    "match": "mod.lessons.map(",
+    "code": "{mod.lessons.map(lesson => {"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4299,
+    "match": "user.courseProgress.find(",
+    "code": "const lessonCompleted = user.courseProgress.find(p => p.courseId === course.id)?.completedLessonIds.includes(lesson.id);"
+  },
+  {
+    "file": "components/Dashboard.tsx",
+    "line": 4435,
+    "match": "optionsToRender.map(",
+    "code": "{optionsToRender.map((opt, oIdx) => {"
+  },
+  {
+    "file": "components/DbCheckPage.tsx",
+    "line": 525,
+    "match": "items.map(",
+    "code": "{items.map((it, idx) => ("
+  },
+  {
+    "file": "components/SecretGame.tsx",
+    "line": 1003,
+    "match": "shuffledOptions.filter(",
+    "code": "? shuffledOptions.filter(opt => opt.type === 'best' || opt.type === 'neutral')"
+  },
+  {
+    "file": "components/SecretGame.tsx",
+    "line": 1157,
+    "match": "highScores.map(",
+    "code": "{highScores.map((scoreEntry, index) => {"
+  },
+  {
+    "file": "components/admin/AdminBookings.tsx",
+    "line": 21,
+    "match": "mentors.find(",
+    "code": "const getMentorName = (id: string) => mentors.find(m => m.id === id)?.name || 'Neznámý mentor';"
+  },
+  {
+    "file": "components/admin/AdminBookings.tsx",
+    "line": 23,
+    "match": "bookings.filter(",
+    "code": "const filteredBookings = bookings.filter(b => {"
+  },
+  {
+    "file": "components/admin/AdminBookings.tsx",
+    "line": 35,
+    "match": "bookings.map(",
+    "code": "const updated = bookings.map(b => b.id === editingBooking.id ? { ...b, status } : b);"
+  },
+  {
+    "file": "components/admin/AdminBookings.tsx",
+    "line": 43,
+    "match": "bookings.map(",
+    "code": "const updated = bookings.map(b => b.id === editingBooking.id ? { ...b, adminNote: editingBooking.adminNote, rating: editingBooking.rating } : b);"
+  },
+  {
+    "file": "components/admin/AdminBookings.tsx",
+    "line": 93,
+    "match": "filteredBookings.map(",
+    "code": "{filteredBookings.map(booking => {"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 742,
+    "match": "prev.map(",
+    "code": "setReport(prev => prev.map(r => r.email === item.email ? { ...r, alreadyPaid: true } : r));"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 757,
+    "match": "report.filter(",
+    "code": "const unpaidItems = report.filter(item => item.userFound && item.payoutAmount > 0 && !item.alreadyPaid);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 964,
+    "match": "projectsData.map(",
+    "code": "{projectsData.map(p => {"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 984,
+    "match": "allCaflouUsers.find(",
+    "code": "const matchedTech = allCaflouUsers.find(u =>"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1091,
+    "match": "yearsList.map(",
+    "code": "{yearsList.map(y => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1184,
+    "match": "report.map(",
+    "code": "{report.map(item => {"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1307,
+    "match": "qhubUsers.map(",
+    "code": "{Array.from(new Set(qhubUsers.map((u) => u.role).filter(Boolean))).map((role) => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1434,
+    "match": "paginatedHistory.map(",
+    "code": "{paginatedHistory.map((entry: any) => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1570,
+    "match": "qhubUsers.map(",
+    "code": "{qhubUsers.map(user => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1895,
+    "match": "qhubUsers.find(",
+    "code": "const matchedUser = qhubUsers.find(u => u.email.toLowerCase().trim() === norm);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1910,
+    "match": "filteredEmails.map(",
+    "code": "{filteredEmails.map(email => {"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1912,
+    "match": "qhubUsers.find(",
+    "code": "const matchedUser = qhubUsers.find(u => u.email.toLowerCase().trim() === norm);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1915,
+    "match": "salesData.orders.filter(",
+    "code": "const monthOrders = salesData.orders.filter(o => o.email.toLowerCase() === norm && (o.date >= salesStartDate && o.date <= salesEndDate) && o.status === 'completed');"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1916,
+    "match": "monthOrders.reduce(",
+    "code": "const totalVolume = monthOrders.reduce((sum, o) => sum + o.amount, 0);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1975,
+    "match": "monthOrders.reduce(",
+    "code": "? monthOrders.reduce((sum, o) => sum + calculateIndividualCommission(o.amount, o.discount, o.customCommissionPercent), 0)"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1982,
+    "match": "salesData.adjustments.filter(",
+    "code": "const monthAdjustments = salesData.adjustments.filter(a => a.email.toLowerCase() === norm && (a.month >= salesStartDate.substring(0,7) && a.month <= salesEndDate.substring(0,7)));"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1983,
+    "match": "monthAdjustments.filter(",
+    "code": "const bonusesSum = monthAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 1984,
+    "match": "monthAdjustments.filter(",
+    "code": "const finesSum = monthAdjustments.filter(a => a.type === 'fine').reduce((sum, a) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2184,
+    "match": "monthOrders.map(",
+    "code": "{monthOrders.map(o => {"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2327,
+    "match": "monthAdjustments.map(",
+    "code": "{monthAdjustments.map(a => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2358,
+    "match": "salesData.payouts.filter(",
+    "code": "{salesData.payouts.filter(p => p.email.toLowerCase() === norm).length === 0 ? ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2361,
+    "match": "salesData.payouts.filter(",
+    "code": "salesData.payouts.filter(p => p.email.toLowerCase() === norm).map(p => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2373,
+    "match": "salesData.payouts.some(",
+    "code": "const alreadyPaidThisMonth = salesData.payouts.some(p => p.email.toLowerCase() === norm && p.month === targetMonth);"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2773,
+    "match": "diagnosticData.suggestions.map(",
+    "code": "{diagnosticData.suggestions.map((sug: string, idx: number) => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2867,
+    "match": "importResults.map(",
+    "code": "{importResults.map((u, idx) => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 2958,
+    "match": "logs.map(",
+    "code": "{logs.map((log) => ("
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 3032,
+    "match": "qhubUsers.find(",
+    "code": "const name = qhubUsers.find(u => u.email.toLowerCase() === norm)?.name || norm;"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 3035,
+    "match": "salesData.payouts.filter(",
+    "code": "total: salesData.payouts.filter(p => p.email.toLowerCase() === norm).reduce((sum, p) => sum + p.totalPayout, 0)"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 3062,
+    "match": "qhubUsers.find(",
+    "code": "const name = qhubUsers.find(u => u.email.toLowerCase() === norm)?.name || norm;"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 3065,
+    "match": "salesData.payouts.filter(",
+    "code": "xp: salesData.payouts.filter(p => p.email.toLowerCase() === norm).reduce((sum, p) => sum + p.xpReward, 0)"
+  },
+  {
+    "file": "components/admin/AdminCaflou.tsx",
+    "line": 3085,
+    "match": "salesData.payouts.reduce(",
+    "code": "Object.values(salesData.payouts.reduce((acc: any, p: any) => {"
+  },
+  {
+    "file": "components/admin/AdminCalendar.tsx",
+    "line": 41,
+    "match": "events.find(",
+    "code": "const exists = events.find(e => e.id === editingEvent.id);"
+  },
+  {
+    "file": "components/admin/AdminCalendar.tsx",
+    "line": 42,
+    "match": "events.map(",
+    "code": "onUpdateEvents(exists ? events.map(e => e.id === editingEvent.id ? editingEvent : e) : [...events, editingEvent]);"
+  },
+  {
+    "file": "components/admin/AdminCalendar.tsx",
+    "line": 53,
+    "match": "events.filter(",
+    "code": "onUpdateEvents(events.filter(e => e.id !== deletingEventId));"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 269,
+    "match": "courses.find(",
+    "code": "const crs = courses.find(c => c.id === id);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 278,
+    "match": "currentCourse.modules.reduce(",
+    "code": "const totalDuration = currentCourse.modules.reduce((acc, m) => acc + m.lessons.reduce((lAcc, l) => lAcc + l.duration, 0), 0);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 278,
+    "match": "m.lessons.reduce(",
+    "code": "const totalDuration = currentCourse.modules.reduce((acc, m) => acc + m.lessons.reduce((lAcc, l) => lAcc + l.duration, 0), 0);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 281,
+    "match": "courses.find(",
+    "code": "const exists = courses.find(c => c.id === courseToSave.id);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 282,
+    "match": "courses.map(",
+    "code": "onUpdateCourses(exists ? courses.map(c => c.id === courseToSave.id ? courseToSave : c) : [...courses, courseToSave]);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 298,
+    "match": "currentCourse.modules.find(",
+    "code": "const mod = currentCourse.modules.find(m => m.id === moduleId);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 307,
+    "match": "currentCourse.modules.map(",
+    "code": "setCurrentCourse({ ...currentCourse, modules: currentCourse.modules.map(m => m.id === moduleId ? { ...m, lessons: [...m.lessons, newLesson] } : m) });"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 316,
+    "match": "currentCourse.modules.map(",
+    "code": "modules: currentCourse.modules.map(m => m.id === activeModuleId ? {"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 318,
+    "match": "m.lessons.map(",
+    "code": "lessons: m.lessons.map(l => l.id === activeLessonId ? { ...l, ...updates } : l)"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 325,
+    "match": "currentCourse.modules.find(",
+    "code": "const mod = currentCourse.modules.find(m => m.id === moduleId);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 326,
+    "match": "lessons.find(",
+    "code": "const les = mod?.lessons.find(l => l.id === lessonId);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 336,
+    "match": "courses.filter(",
+    "code": "onUpdateCourses(courses.filter(c => c.id !== deletingItem.id));"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 339,
+    "match": "currentCourse.modules.filter(",
+    "code": "setCurrentCourse({ ...currentCourse, modules: currentCourse.modules.filter(m => m.id !== deletingItem.id) });"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 345,
+    "match": "currentCourse.modules.map(",
+    "code": "modules: currentCourse.modules.map(m => m.id === deletingItem.id ? { ...m, lessons: m.lessons.filter(l => l.id !== deletingItem.extraId) } : m)"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 345,
+    "match": "m.lessons.filter(",
+    "code": "modules: currentCourse.modules.map(m => m.id === deletingItem.id ? { ...m, lessons: m.lessons.filter(l => l.id !== deletingItem.extraId) } : m)"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 382,
+    "match": "courses.map(",
+    "code": "{courses.map(course => {"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 479,
+    "match": "currentCourse.modules.map(",
+    "code": "{currentCourse.modules.map((mod, mIdx) => ("
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 496,
+    "match": "currentCourse.modules.map(",
+    "code": "<input value={mod.title} onChange={e => setCurrentCourse({...currentCourse, modules: currentCourse.modules.map(m => m.id === mod.id ? {...m, title: e.target.value} : m)})} className=\"input text-xs py-1.5 bg-slate-50 border-slate-200 mt-1\"/>"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 499,
+    "match": "mod.lessons.map(",
+    "code": "{mod.lessons.map((l, lIdx) => ("
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 532,
+    "match": "currentCourse.modules.find(",
+    "code": "const module = currentCourse.modules.find(m => m.id === activeModuleId);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 533,
+    "match": "lessons.find(",
+    "code": "const lesson = module?.lessons.find(l => l.id === activeLessonId);"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 549,
+    "match": "listItems.map(",
+    "code": "{listItems.map((item, i) => <li key={i}>{parseInline(item)}</li>)}"
+  },
+  {
+    "file": "components/admin/AdminCourses.tsx",
+    "line": 822,
+    "match": "q.options.map(",
+    "code": "{q.options.map((opt, oIdx) => ("
+  },
+  {
+    "file": "components/admin/AdminEbooks.tsx",
+    "line": 33,
+    "match": "ebooks.find(",
+    "code": "const exists = ebooks.find(b => b.id === editingBook.id);"
+  },
+  {
+    "file": "components/admin/AdminEbooks.tsx",
+    "line": 34,
+    "match": "ebooks.map(",
+    "code": "onUpdateEbooks(exists ? ebooks.map(b => b.id === editingBook.id ? editingBook : b) : [...ebooks, editingBook]);"
+  },
+  {
+    "file": "components/admin/AdminEbooks.tsx",
+    "line": 45,
+    "match": "ebooks.filter(",
+    "code": "onUpdateEbooks(ebooks.filter(b => b.id !== deletingEbookId));"
+  },
+  {
+    "file": "components/admin/AdminEbooks.tsx",
+    "line": 64,
+    "match": "ebooks.map(",
+    "code": "{ebooks.map(book => ("
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 35,
+    "match": "artifacts.find(",
+    "code": "const exists = artifacts.find(a => a.id === editingArtifact.id);"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 36,
+    "match": "artifacts.map(",
+    "code": "onUpdateArtifacts(exists ? artifacts.map(a => a.id === editingArtifact.id ? editingArtifact : a) : [...artifacts, editingArtifact]);"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 41,
+    "match": "artifacts.find(",
+    "code": "const art = artifacts.find(a => a.id === id);"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 50,
+    "match": "challenges.find(",
+    "code": "const exists = challenges.find(c => c.id === editingChallenge.id);"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 51,
+    "match": "challenges.map(",
+    "code": "onUpdateChallenges(exists ? challenges.map(c => c.id === editingChallenge.id ? editingChallenge : c) : [...challenges, editingChallenge]);"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 56,
+    "match": "challenges.find(",
+    "code": "const chal = challenges.find(c => c.id === id);"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 65,
+    "match": "artifacts.filter(",
+    "code": "onUpdateArtifacts(artifacts.filter(a => a.id !== deletingItem.id));"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 68,
+    "match": "challenges.filter(",
+    "code": "onUpdateChallenges(challenges.filter(c => c.id !== deletingItem.id));"
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 105,
+    "match": "artifacts.map(",
+    "code": "{artifacts.map(item => ("
+  },
+  {
+    "file": "components/admin/AdminGamification.tsx",
+    "line": 131,
+    "match": "challenges.map(",
+    "code": "{challenges.map(challenge => ("
+  },
+  {
+    "file": "components/admin/AdminMentoring.tsx",
+    "line": 38,
+    "match": "mentors.find(",
+    "code": "const exists = mentors.find(m => m.id === editingMentor.id);"
+  },
+  {
+    "file": "components/admin/AdminMentoring.tsx",
+    "line": 39,
+    "match": "mentors.map(",
+    "code": "onUpdateMentors(exists ? mentors.map(m => m.id === editingMentor.id ? editingMentor : m) : [...mentors, editingMentor]);"
+  },
+  {
+    "file": "components/admin/AdminMentoring.tsx",
+    "line": 51,
+    "match": "mentors.filter(",
+    "code": "onUpdateMentors(mentors.filter(m => m.id !== deletingMentorId));"
+  },
+  {
+    "file": "components/admin/AdminMentoring.tsx",
+    "line": 58,
+    "match": "mentors.find(",
+    "code": "const mentor = mentors.find(m => m.id === id);"
+  },
+  {
+    "file": "components/admin/AdminMentoring.tsx",
+    "line": 60,
+    "match": "mentors.map(",
+    "code": "const updated = mentors.map(m => m.id === id ? { ...m, isAvailable: !m.isAvailable } : m);"
+  },
+  {
+    "file": "components/admin/AdminMentoring.tsx",
+    "line": 79,
+    "match": "mentors.map(",
+    "code": "{mentors.map(mentor => ("
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 33,
+    "match": "monthOrders.map(",
+    "code": "const usersWithOrders = Array.from(new Set(monthOrders.map((o:any) => (o.email || '').toLowerCase())));"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 36,
+    "match": "monthOrders.filter(",
+    "code": "const userOrders = monthOrders.filter((o:any) => (o.email || '').toLowerCase() === email);"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 37,
+    "match": "userOrders.reduce(",
+    "code": "const userCommissions = userOrders.reduce((sum:number, o:any) => {"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 47,
+    "match": "monthAdjustments.filter(",
+    "code": "const bonusesSum = monthAdjustments.filter((a:any) => a.type === 'bonus').reduce((sum:number, a:any) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 48,
+    "match": "monthAdjustments.filter(",
+    "code": "const finesSum = monthAdjustments.filter((a:any) => a.type === 'fine').reduce((sum:number, a:any) => sum + a.amount, 0);"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 57,
+    "match": "allUsers.filter(",
+    "code": "const activeUsers = allUsers.filter((u) => !u.isBanned);"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 58,
+    "match": "allUsers.filter(",
+    "code": "const bannedCount = allUsers.filter((u) => u.isBanned).length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 59,
+    "match": "allUsers.filter(",
+    "code": "const adminCount = allUsers.filter((u) => u.role === 'admin').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 60,
+    "match": "allUsers.filter(",
+    "code": "const merchantUsers = allUsers.filter((u) => u.role === 'obchodnik').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 61,
+    "match": "allUsers.filter(",
+    "code": "const techUsers = allUsers.filter((u) => u.role === 'technik').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 62,
+    "match": "allUsers.filter(",
+    "code": "const teamLeaderUsers = allUsers.filter((u) => u.role === 'team_leader').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 63,
+    "match": "allUsers.filter(",
+    "code": "const lineUsers = allUsers.filter((u) => u.role === 'linka').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 64,
+    "match": "allUsers.filter(",
+    "code": "const otherUsers = allUsers.filter((u) => u.role === 'ostatni').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 66,
+    "match": "tickets.filter(",
+    "code": "const openTickets = tickets.filter((t) => t.status === 'open').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 67,
+    "match": "submissions.filter(",
+    "code": "const pendingSubmissions = submissions.filter((s) => s.status === 'pending').length;"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 70,
+    "match": "allUsers.reduce(",
+    "code": "const totalPlatformXP = allUsers.reduce((sum, u) => sum + (u.xp || 0), 0);"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 92,
+    "match": "events.filter(",
+    "code": "sub: `${events.filter(e => new Date(e.date) >= new Date()).length} nadcházejících`,"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 102,
+    "match": "ozData.orders.filter(",
+    "code": "sub: `${ozData?.orders ? ozData.orders.filter((o: any) => o.status === 'completed').length : 0} dokončených zakázek`,"
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 172,
+    "match": "stats.map(",
+    "code": "{stats.map((stat, i) => ("
+  },
+  {
+    "file": "components/admin/AdminOverview.tsx",
+    "line": 222,
+    "match": "attentionItems.map(",
+    "code": "{attentionItems.map((item, i) => ("
+  },
+  {
+    "file": "components/admin/AdminQuizzes.tsx",
+    "line": 36,
+    "match": "quizzes.find(",
+    "code": "const exists = quizzes.find(q => q.id === editingQuiz.id);"
+  },
+  {
+    "file": "components/admin/AdminQuizzes.tsx",
+    "line": 37,
+    "match": "quizzes.map(",
+    "code": "onUpdateQuizzes(exists ? quizzes.map(q => q.id === editingQuiz.id ? editingQuiz : q) : [...quizzes, editingQuiz]);"
+  },
+  {
+    "file": "components/admin/AdminQuizzes.tsx",
+    "line": 48,
+    "match": "quizzes.filter(",
+    "code": "onUpdateQuizzes(quizzes.filter(q => q.id !== deletingQuizId));"
+  },
+  {
+    "file": "components/admin/AdminQuizzes.tsx",
+    "line": 80,
+    "match": "quizzes.map(",
+    "code": "{quizzes.map(quiz => ("
+  },
+  {
+    "file": "components/admin/AdminQuizzes.tsx",
+    "line": 174,
+    "match": "editingQuiz.questions.map(",
+    "code": "{editingQuiz.questions.map((q, qIdx) => ("
+  },
+  {
+    "file": "components/admin/AdminQuizzes.tsx",
+    "line": 196,
+    "match": "q.options.map(",
+    "code": "{q.options.map((opt, oIdx) => ("
+  },
+  {
+    "file": "components/admin/AdminStreams.tsx",
+    "line": 34,
+    "match": "streams.find(",
+    "code": "const exists = streams.find(s => s.id === editingStream.id);"
+  },
+  {
+    "file": "components/admin/AdminStreams.tsx",
+    "line": 35,
+    "match": "streams.map(",
+    "code": "onUpdateStreams(exists ? streams.map(s => s.id === editingStream.id ? editingStream : s) : [...streams, editingStream]);"
+  },
+  {
+    "file": "components/admin/AdminStreams.tsx",
+    "line": 46,
+    "match": "streams.filter(",
+    "code": "onUpdateStreams(streams.filter(s => s.id !== deletingStreamId));"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 29,
+    "match": "bonusTasks.find(",
+    "code": "const exists = bonusTasks.find(t => t.id === editingTask.id);"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 30,
+    "match": "bonusTasks.map(",
+    "code": "onUpdateTasks(exists ? bonusTasks.map(t => t.id === editingTask.id ? editingTask : t) : [...bonusTasks, editingTask]);"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 40,
+    "match": "bonusTasks.filter(",
+    "code": "onUpdateTasks(bonusTasks.filter(t => t.id !== deletingTaskId));"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 47,
+    "match": "submissions.filter(",
+    "code": "const pendingSubmissions = submissions.filter(s => s.status === 'pending');"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 49,
+    "match": "allUsers.find(",
+    "code": "const u = allUsers.find(user => user.id === uid);"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 52,
+    "match": "bonusTasks.find(",
+    "code": "const getTaskTitle = (tid: string) => bonusTasks.find(t => t.id === tid)?.title || 'Neznámý úkol';"
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 83,
+    "match": "pendingSubmissions.map(",
+    "code": "pendingSubmissions.map(sub => ("
+  },
+  {
+    "file": "components/admin/AdminSubmissions.tsx",
+    "line": 121,
+    "match": "bonusTasks.map(",
+    "code": "{bonusTasks.map(task => ("
+  },
+  {
+    "file": "components/admin/AdminSupport.tsx",
+    "line": 21,
+    "match": "tickets.find(",
+    "code": "const selectedTicket = tickets.find(t => t.id === selectedTicketId);"
+  },
+  {
+    "file": "components/admin/AdminSupport.tsx",
+    "line": 23,
+    "match": "tickets.filter(",
+    "code": "const filteredTickets = tickets.filter(t => {"
+  },
+  {
+    "file": "components/admin/AdminSupport.tsx",
+    "line": 55,
+    "match": "filteredTickets.map(",
+    "code": "{filteredTickets.map(ticket => ("
+  },
+  {
+    "file": "components/admin/AdminSupport.tsx",
+    "line": 94,
+    "match": "selectedTicket.messages.map(",
+    "code": "{selectedTicket.messages.map((msg, idx) => ("
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 110,
+    "match": "createForm.positions.filter(",
+    "code": "const next = has ? createForm.positions.filter(x => x !== p) : [...createForm.positions, p];"
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 237,
+    "match": "editForm.positions.filter(",
+    "code": "const next = has ? editForm.positions.filter(x => x !== p) : [...editForm.positions, p];"
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 306,
+    "match": "QHUB_POSITIONS.map(",
+    "code": "{QHUB_POSITIONS.map(p => ("
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 318,
+    "match": "CZECH_REGIONS.map(",
+    "code": "{CZECH_REGIONS.map(reg => ("
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 341,
+    "match": "filteredUsers.map(",
+    "code": "{filteredUsers.map(user => {"
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 400,
+    "match": "userPositions.map(",
+    "code": "{userPositions.map(pid => {"
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 401,
+    "match": "QHUB_POSITIONS.find(",
+    "code": "const p = QHUB_POSITIONS.find(q => q.id === pid);"
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 532,
+    "match": "CZECH_REGIONS.map(",
+    "code": "{CZECH_REGIONS.map(reg => ("
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 575,
+    "match": "QHUB_POSITIONS.map(",
+    "code": "{QHUB_POSITIONS.map(p => {"
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 778,
+    "match": "CZECH_REGIONS.map(",
+    "code": "{CZECH_REGIONS.map(reg => ("
+  },
+  {
+    "file": "components/admin/AdminUsers.tsx",
+    "line": 792,
+    "match": "QHUB_POSITIONS.map(",
+    "code": "{QHUB_POSITIONS.map(p => {"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 12,
+    "match": "oldItems.map(",
+    "code": "const oldMap = new Map(oldItems.map((i) => [i.id, i]));"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 13,
+    "match": "newItems.map(",
+    "code": "const newMap = new Map(newItems.map((i) => [i.id, i]));"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 15,
+    "match": "oldItems.filter(",
+    "code": "const toDelete = oldItems.filter((i) => !newMap.has(i.id));"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 16,
+    "match": "newItems.filter(",
+    "code": "const toCreate = newItems.filter((i) => !oldMap.has(i.id));"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 17,
+    "match": "newItems.filter(",
+    "code": "const toUpdate = newItems.filter((i) => {"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 26,
+    "match": "toDelete.map(",
+    "code": "...toDelete.map((i) => api.delete(`${basePath}/${i.id}`).catch((err) => {"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 30,
+    "match": "toCreate.map(",
+    "code": "...toCreate.map((i) => api.post(basePath, i).catch((err) => {"
+  },
+  {
+    "file": "lib/sync.ts",
+    "line": 34,
+    "match": "toUpdate.map(",
+    "code": "...toUpdate.map((i) => api.put(`${basePath}/${i.id}`, i).catch((err) => {"
+  },
+  {
+    "file": "App.tsx",
+    "line": 65,
+    "match": "prev.filter(",
+    "code": "() => setToasts((prev) => prev.filter((t) => t.id !== id)),"
+  },
+  {
+    "file": "App.tsx",
+    "line": 130,
+    "match": "levels.data.find(",
+    "code": "() => levels.data.find((l) => l.level === (currentUser?.level ?? 0) + 1),"
+  },
+  {
+    "file": "App.tsx",
+    "line": 271,
+    "match": "updated.courseProgress.find(",
+    "code": "let p = updated.courseProgress.find((x) => x.courseId === courseId);"
+  },
+  {
+    "file": "App.tsx",
+    "line": 283,
+    "match": "courses.data.find(",
+    "code": "const course = courses.data.find((c) => c.id === courseId);"
+  },
+  {
+    "file": "App.tsx",
+    "line": 286,
+    "match": "mandatory.every(",
+    "code": "const allDone = mandatory.every((l) => p!.completedLessonIds.includes(l.id));"
+  },
+  {
+    "file": "App.tsx",
+    "line": 301,
+    "match": "updated.certificates.some(",
+    "code": "if (!updated.certificates.some((c) => c.courseId === courseId)) {"
+  },
+  {
+    "file": "App.tsx",
+    "line": 313,
+    "match": "quizzes.data.find(",
+    "code": "const quiz = quizzes.data.find((q) => q.id === quizId);"
+  },
+  {
+    "file": "App.tsx",
+    "line": 315,
+    "match": "updated.quizHistory.find(",
+    "code": "const exists = updated.quizHistory.find((h) => h.quizId === quizId && h.passed);"
+  },
+  {
+    "file": "App.tsx",
+    "line": 326,
+    "match": "updated.quizHistory.find(",
+    "code": "attempts: (updated.quizHistory.find((h) => h.quizId === quizId)?.attempts || 0) + 1,"
+  },
+  {
+    "file": "App.tsx",
+    "line": 354,
+    "match": "updated.activeChallenges.find(",
+    "code": "let p = updated.activeChallenges.find((x) => x.challengeId === cid);"
+  },
+  {
+    "file": "App.tsx",
+    "line": 355,
+    "match": "challenges.data.find(",
+    "code": "const ch = challenges.data.find((c) => c.id === cid);"
+  },
+  {
+    "file": "App.tsx",
+    "line": 481,
+    "match": "toasts.map(",
+    "code": "{toasts.map((t) => ("
+  },
+  {
+    "file": "App.tsx",
+    "line": 603,
+    "match": "collectionsWithErrors.map(",
+    "code": "{collectionsWithErrors.map((c, i) => ("
+  }
+]

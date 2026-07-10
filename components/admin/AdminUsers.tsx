@@ -338,7 +338,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                        {filteredUsers.map(user => {
+                        {(filteredUsers || []).map(user => {
                             if (!user) return null;
                             const emailDisplay = user.email || '';
                             const nameDisplay = user.name || 'Bezejmenný';
@@ -392,7 +392,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                         {(() => {
                                             let userPositions = Array.isArray(user.positions) ? user.positions : [];
                                             if (typeof user.positions === 'string') {
-                                                try { userPositions = JSON.parse(user.positions); } catch {}
+                                                try { const p = JSON.parse(user.positions); if (Array.isArray(p)) userPositions = p; } catch {}
                                             }
                                             if (userPositions.length > 0) {
                                                 return (

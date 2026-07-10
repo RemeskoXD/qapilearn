@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { logAdminAction } from '../lib/adminLog.js';
 import { publicUser, initialUserDefaults } from '../lib/userShape.js';
 
 const router = Router();
@@ -137,6 +138,7 @@ router.patch('/me', requireAuth, async (req, res) => {
     data,
   });
   res.json(publicUser(updated));
+  await logAdminAction(req.user?.email || 'unknown', `Upraven uživatel: ${updated.email}`);
 });
 
 router.get('/:id', requireAuth, async (req, res) => {
@@ -150,6 +152,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
   const data = pick(req.body ?? {}, ADMIN_EDITABLE);
   const updated = await prisma.qhubUser.update({ where: { id: req.params.id }, data });
   res.json(publicUser(updated));
+  await logAdminAction(req.user?.email || 'unknown', `Patch uživatel: ${updated.email}`);
 });
 
 router.patch('/:id', requireAdmin, async (req, res) => {
@@ -175,6 +178,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   }
   await prisma.qhubUser.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
+  await logAdminAction(req.user?.email || 'unknown', `Smazán uživatel: ${req.params.id}`);
 });
 
 // Admin pošle zprávu uživateli (přidá do JSON pole `messages`)

@@ -8,10 +8,10 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
-  GraduationCap,
-  BookOpen,
   Award,
-  Users as UsersIcon,
+  Calendar,
+  Gem,
+  CheckSquare
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { User } from '../types';
@@ -66,18 +66,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         <div className="relative z-10 max-w-md">
           <h2 className="text-4xl font-bold text-slate-900 leading-tight mb-4">
-            Učení, výzvy a růst <span className="text-indigo-600">na jednom místě.</span>
+            Materiál pro stažení, růst a odměny <span className="text-indigo-600">na jednom místě.</span>
           </h2>
           <p className="text-slate-600 text-lg leading-relaxed mb-10">
-            Q-Hub je interní vzdělávací platforma pro tým. Kurzy, kvízy, mentoring, streamy
+            Q-Hub je interní gamifikační platforma pro tým. Materiál pro stažení, odměny, události
             a sledování pokroku — vše v jedné aplikaci.
           </p>
 
           <div className="grid grid-cols-2 gap-4">
-            <Feature icon={<BookOpen size={18} />} label="Kurzy & lekce" />
-            <Feature icon={<GraduationCap size={18} />} label="Kvízy & certifikáty" />
-            <Feature icon={<UsersIcon size={18} />} label="Mentoring 1:1" />
-            <Feature icon={<Award size={18} />} label="Gamifikace & QAPI Coin" />
+            <Feature icon={<Award size={18} />} label="Gamifikace & Levely" />
+            <Feature icon={<Calendar size={18} />} label="Akce & Webináře" />
+            <Feature icon={<Gem size={18} />} label="QAPI Coin & Odměny" />
+            <Feature icon={<CheckSquare size={18} />} label="Bonusové úkoly" />
           </div>
         </div>
 

@@ -1,0 +1,1 @@
+import { BookOpen, Plus, Edit, Trash2, Save, X, Layers, FileText, Video, Brain, CheckCircle, Clock, MoreVertical, PlayCircle, Eye, AlertCircle, Image as ImageIcon, Move, RotateCw, ZoomIn, RefreshCw, Download } from 'lucide-react';

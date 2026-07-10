@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Save, AlertTriangle, Activity, Lock, Globe, Bell, Power, RefreshCw, Server, Trash2 } from 'lucide-react';
+import { Settings, Save, AlertTriangle, Activity, Lock, Globe, Bell, Power, RefreshCw, Server, Trash2, Layers } from 'lucide-react';
 import { SystemSettings } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 

@@ -295,7 +295,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
 
   const deleteModule = (moduleId: string) => {
       if (!currentCourse) return;
-      const mod = currentCourse.modules.find(m => m.id === moduleId);
+      const mod = (currentCourse.modules || []).find(m => m.id === moduleId);
       if (mod) {
           setDeletingItem({ type: 'module', id: moduleId, name: mod.title });
       }
@@ -304,7 +304,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
   const addLesson = (moduleId: string) => {
       if (!currentCourse) return;
       const newLesson: Lesson = { id: `l-${Date.now()}`, title: 'Nová Lekce', type: 'video', content: '', duration: 10, isMandatory: true, questions: [] };
-      setCurrentCourse({ ...currentCourse, modules: currentCourse.modules.map(m => m.id === moduleId ? { ...m, lessons: [...m.lessons, newLesson] } : m) });
+      setCurrentCourse({ ...currentCourse, modules: (currentCourse.modules || []).map(m => m.id === moduleId ? { ...m, lessons: [...m.lessons, newLesson] } : m) });
       setActiveModuleId(moduleId);
       setActiveLessonId(newLesson.id);
   };
@@ -313,7 +313,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
       if (!currentCourse || !activeModuleId || !activeLessonId) return;
       setCurrentCourse({
           ...currentCourse,
-          modules: currentCourse.modules.map(m => m.id === activeModuleId ? {
+          modules: (currentCourse.modules || []).map(m => m.id === activeModuleId ? {
               ...m,
               lessons: m.lessons.map(l => l.id === activeLessonId ? { ...l, ...updates } : l)
           } : m)
@@ -322,7 +322,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
 
   const deleteLesson = (moduleId: string, lessonId: string) => {
       if (!currentCourse) return;
-      const mod = currentCourse.modules.find(m => m.id === moduleId);
+      const mod = (currentCourse.modules || []).find(m => m.id === moduleId);
       const les = mod?.lessons.find(l => l.id === lessonId);
       if (les) {
           setDeletingItem({ type: 'lesson', id: moduleId, extraId: lessonId, name: les.title });
@@ -336,13 +336,13 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
           onUpdateCourses(courses.filter(c => c.id !== deletingItem.id));
           notify('success', 'Smazáno', 'Kurz byl odstraněn.');
       } else if (deletingItem.type === 'module') {
-          setCurrentCourse({ ...currentCourse, modules: currentCourse.modules.filter(m => m.id !== deletingItem.id) });
+          setCurrentCourse({ ...currentCourse, modules: (currentCourse.modules || []).filter(m => m.id !== deletingItem.id) });
           if (activeModuleId === deletingItem.id) setActiveModuleId(null);
           notify('success', 'Smazáno', 'Sekce byla odstraněna.');
       } else if (deletingItem.type === 'lesson') {
           setCurrentCourse({
               ...currentCourse,
-              modules: currentCourse.modules.map(m => m.id === deletingItem.id ? { ...m, lessons: m.lessons.filter(l => l.id !== deletingItem.extraId) } : m)
+              modules: (currentCourse.modules || []).map(m => m.id === deletingItem.id ? { ...m, lessons: m.lessons.filter(l => l.id !== deletingItem.extraId) } : m)
           });
           if (activeLessonId === deletingItem.extraId) setActiveLessonId(null);
           notify('success', 'Smazáno', 'Lekce byla odstraněna.');
@@ -476,7 +476,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
 
                             <div className="p-3 flex-1 space-y-3 bg-slate-50/20 overflow-y-auto custom-scrollbar">
                                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Osnova & Lekce</div>
-                                {currentCourse.modules.map((mod, mIdx) => (
+                                {(currentCourse.modules || []).map((mod, mIdx) => (
                                     <div key={mod.id} className={`border rounded-xl overflow-hidden transition ${activeModuleId === mod.id ? 'border-indigo-400 bg-indigo-50/30' : 'border-slate-200 bg-white'}`}>
                                         <div 
                                             onClick={() => { setActiveModuleId(mod.id); setIsPreviewMode(false); }} 
@@ -493,10 +493,10 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
                                             <div className="p-3 bg-white border-t border-indigo-100 space-y-2">
                                                 <div>
                                                     <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Název sekce</label>
-                                                    <input value={mod.title} onChange={e => setCurrentCourse({...currentCourse, modules: currentCourse.modules.map(m => m.id === mod.id ? {...m, title: e.target.value} : m)})} className="input text-xs py-1.5 bg-slate-50 border-slate-200 mt-1"/>
+                                                    <input value={mod.title} onChange={e => setCurrentCourse({...currentCourse, modules: (currentCourse.modules || []).map(m => m.id === mod.id ? {...m, title: e.target.value} : m)})} className="input text-xs py-1.5 bg-slate-50 border-slate-200 mt-1"/>
                                                 </div>
                                                 <div className="space-y-1.5 mt-2">
-                                                    {mod.lessons.map((l, lIdx) => (
+                                                    {(mod.lessons || []).map((l, lIdx) => (
                                                         <div 
                                                             key={l.id} 
                                                             onClick={(e) => {e.stopPropagation(); setActiveLessonId(l.id); setIsPreviewMode(false);}} 
@@ -529,7 +529,7 @@ const AdminCourses: React.FC<AdminCoursesProps> = ({ courses, allUsers, onUpdate
                         <div className="flex-1 bg-slate-50 p-8 overflow-y-auto custom-scrollbar">
                             {activeModuleId && activeLessonId ? (
                                 (() => {
-                                    const module = currentCourse.modules.find(m => m.id === activeModuleId);
+                                    const module = (currentCourse.modules || []).find(m => m.id === activeModuleId);
                                     const lesson = module?.lessons.find(l => l.id === activeLessonId);
                                     if(!lesson) return <div className="text-slate-500">Lekce nenalezena.</div>;
                                     

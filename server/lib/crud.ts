@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { logAdminAction } from './adminLog.js';
 
 interface PrismaModel {
   findMany: (args?: any) => Promise<any[]>;
@@ -42,6 +43,8 @@ export function crudRouter(model: PrismaModel, opts: { sanitize?: (input: any) =
     try {
       const data = sanitize(req.body);
       const created = await model.create({ data });
+      const modelName = (model as any)?.name || 'Neznámý model';
+      await logAdminAction(req.user?.email || 'unknown', `Vytvořeno: ${modelName}`, JSON.stringify(data).substring(0, 200));
       res.json(created);
     } catch (e: any) {
       res.status(400).json({ error: e.message });
@@ -53,6 +56,8 @@ export function crudRouter(model: PrismaModel, opts: { sanitize?: (input: any) =
       const data = sanitize(req.body);
       delete data.id;
       const updated = await model.update({ where: { id: req.params.id }, data });
+      const modelName = (model as any)?.name || 'Neznámý model';
+      await logAdminAction(req.user?.email || 'unknown', `Upraveno: ${modelName} (${req.params.id})`);
       res.json(updated);
     } catch (e: any) {
       res.status(400).json({ error: e.message });
@@ -62,6 +67,8 @@ export function crudRouter(model: PrismaModel, opts: { sanitize?: (input: any) =
   router.delete('/:id', requireAdmin, async (req, res) => {
     try {
       await model.delete({ where: { id: req.params.id } });
+      const modelName = (model as any)?.name || 'Neznámý model';
+      await logAdminAction(req.user?.email || 'unknown', `Smazáno: ${modelName} (${req.params.id})`);
       res.json({ ok: true });
     } catch (e: any) {
       res.status(400).json({ error: e.message });
