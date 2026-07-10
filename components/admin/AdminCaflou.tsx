@@ -433,7 +433,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [report, setReport] = useState<ReportItem[]>([]);
-  const [xpBonusRate, setXpBonusRate] = useState<number>(2); // XP za odpracovanou hodinu (default 2 XP / hod)
+  const [xpBonusRate, setXpBonusRate] = useState<number>(2); // QAPI Coin za odpracovanou hodinu (default 2 QAPI Coin / hod)
   const [processingPayouts, setProcessingPayouts] = useState<Record<string, boolean>>({});
 
   // Calculations for current report
@@ -736,7 +736,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
       });
 
       if (resp.ok) {
-        notify('success', 'Odměna vyplacena', `Uživateli ${item.userName || item.email} bylo úspěšně připsáno ${item.payoutAmount.toLocaleString()} Kč a ${xpReward} XP.`);
+        notify('success', 'Odměna vyplacena', `Uživateli ${item.userName || item.email} bylo úspěšně připsáno ${item.payoutAmount.toLocaleString()} Kč a ${xpReward} QAPI Coin.`);
         
         // Označíme položku v lokálním stavu reportu jako vyplacenou
         setReport(prev => prev.map(r => r.email === item.email ? { ...r, alreadyPaid: true } : r));
@@ -1096,7 +1096,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                  Bonus v XP (za odpracovanou hodinu)
+                  Bonus v QAPI Coin (za odpracovanou hodinu)
                 </label>
                 <div className="relative">
                   <input
@@ -1107,7 +1107,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                     id="input-xp-bonus"
                   />
                   <Trophy size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500" />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-slate-400">XP / hod</span>
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-slate-400">QAPI Coin / hod</span>
                 </div>
               </div>
 
@@ -1176,7 +1176,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       <th className="p-4">Mzdová Sazba</th>
                       <th className="p-4 text-center">Odpracováno</th>
                       <th className="p-4 text-emerald-700">Výplata za měsíc</th>
-                      <th className="p-4 text-amber-600">Her. XP Odměna</th>
+                      <th className="p-4 text-amber-600">Her. QAPI Coin Odměna</th>
                       <th className="p-4 text-right rounded-r-xl">Akce</th>
                     </tr>
                   </thead>
@@ -1238,7 +1238,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                             {item.payoutAmount.toLocaleString()} Kč
                           </td>
                           <td className="p-4 font-bold text-xs text-amber-600 font-mono">
-                            +{computedXp} XP
+                            +{computedXp} QAPI Coin
                           </td>
                           <td className="p-4 text-right">
                             {item.alreadyPaid ? (
@@ -2383,10 +2383,10 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
                               return (
                                 <div className="flex items-center gap-2 w-full md:w-auto self-stretch md:self-auto justify-end">
-                                  {/* Custom XP reward helper field */}
+                                  {/* Custom QAPI Coin reward helper field */}
                                   <div className="flex items-center gap-1 BG-WHITE border border-slate-200 rounded-xl px-2 py-1.5 bg-white text-xs select-none shadow-sm">
                                     <Sparkles size={12} className="text-amber-500" />
-                                    <span className="font-bold text-slate-450 text-[10px]">Herní XP:</span>
+                                    <span className="font-bold text-slate-450 text-[10px]">Herní QAPI Coin:</span>
                                     <input
                                       type="number"
                                       defaultValue={totalPayout}
@@ -2575,7 +2575,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-500 uppercase block">
-                      XP hodnota za doručenou webhook událost
+                      QAPI Coin hodnota za doručenou webhook událost
                     </label>
                     <div className="flex items-center gap-3">
                       <input 
@@ -2584,7 +2584,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                         onChange={e => setXpValue(Math.max(10, parseInt(e.target.value) || 0))}
                         className="w-32 bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono font-bold text-slate-900 focus:border-indigo-500 outline-none transition text-xs"
                       />
-                      <span className="text-xs font-semibold text-slate-500">XP za každý dokončený úkol</span>
+                      <span className="text-xs font-semibold text-slate-500">QAPI Coin za každý dokončený úkol</span>
                     </div>
                   </div>
 
@@ -2640,7 +2640,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                     <span className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold text-indigo-300 flex-shrink-0">C</span>
                     <div>
                       <strong className="block text-white mb-0.5">Odměna do herního profilu</strong>
-                      <span className="text-indigo-150 text-xs">Tlačítko schválení odešle uživateli finanční profit do jeho Q-Hub peněženky, připíše mu XP a zašle slavnostní gratulační zprávu.</span>
+                      <span className="text-indigo-150 text-xs">Tlačítko schválení odešle uživateli finanční profit do jeho Q-Hub peněženky, připíše mu QAPI Coin a zašle slavnostní gratulační zprávu.</span>
                     </div>
                   </li>
                 </ul>
@@ -2950,7 +2950,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                       <th className="p-4">Uživatel Email</th>
                       <th className="p-4">Událost Caflou</th>
                       <th className="p-4">Název Úkolu/Práce</th>
-                      <th className="p-4">Připsáno XP</th>
+                      <th className="p-4">Připsáno QAPI Coin</th>
                       <th className="p-4 rounded-r-xl">Status</th>
                     </tr>
                   </thead>
@@ -2974,10 +2974,10 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                         <td className="p-4">
                           {log.xpAwarded > 0 ? (
                             <span className="text-yellow-600 font-extrabold font-mono bg-yellow-50 border border-yellow-200 rounded px-1.5 py-0.5">
-                              +{log.xpAwarded} XP
+                              +{log.xpAwarded} QAPI Coin
                             </span>
                           ) : (
-                            <span className="text-slate-400">0 XP</span>
+                            <span className="text-slate-400">0 QAPI Coin</span>
                           )}
                         </td>
                         <td className="p-4">
@@ -3048,7 +3048,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
 
                 {/* Objem rozdaných EXpů */}
                 <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl shadow-inner">
-                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-6">Rozdané Herní Zkušenosti (XP)</h4>
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider mb-6">Rozdané Herní Zkušenosti (QAPI Coin)</h4>
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={(() => {
@@ -3069,7 +3069,7 @@ export default function AdminCaflou({ notify }: AdminCaflouProps) {
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                         <XAxis type="number" tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
                         <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 10, fill: '#64748b', fontWeight: 'bold'}} axisLine={false} tickLine={false} />
-                        <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold'}} formatter={(val: number) => [`${val} XP`, 'Celkem rozdaných XP']} />
+                        <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold'}} formatter={(val: number) => [`${val} QAPI Coin`, 'Celkem rozdaných QAPI Coin']} />
                         <Bar dataKey="xp" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={24} />
                       </BarChart>
                     </ResponsiveContainer>

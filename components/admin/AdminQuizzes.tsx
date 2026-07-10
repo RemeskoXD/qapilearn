@@ -90,7 +90,7 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                         
                         <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 pt-4 border-t border-slate-200">
                             <span className="flex items-center gap-1"><Brain size={12}/> {quiz.questions.length} otázek</span>
-                            <span className="flex items-center gap-1 text-yellow-500 font-bold">+{quiz.xpReward} XP</span>
+                            <span className="flex items-center gap-1 text-yellow-500 font-bold">+{quiz.xpReward} QAPI Coin</span>
                         </div>
 
                         <div className="flex gap-2">
@@ -147,7 +147,7 @@ const AdminQuizzes: React.FC<AdminQuizzesProps> = ({ quizzes, onUpdateQuizzes, n
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="label">Odměna XP</label>
+                                    <label className="label">Odměna QAPI Coin</label>
                                     <input type="number" value={editingQuiz.xpReward} onChange={e => setEditingQuiz({...editingQuiz, xpReward: parseInt(e.target.value)})} className="input"/>
                                 </div>
                                 <div>

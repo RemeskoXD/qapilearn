@@ -472,7 +472,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const handleBuyItem = (item: Partial<Artifact>) => {
       if (!item.price || user.xp < item.price) {
-          notify('error', 'Nedostatek XP', 'Nemáte dostatek kreditů pro nákup.');
+          notify('error', 'Nedostatek QAPI Coin', 'Nemáte dostatek kreditů pro nákup.');
           return;
       }
 
@@ -678,7 +678,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               list.push({
                   id: 'level-up',
                   title: 'Level Up na dosah!',
-                  text: `Chybí ti jen ${xpNeeded} XP na level ${nextLevelRequirement.level} (${nextLevelRequirement.title}). Dokonči lekci a máš to!`,
+                  text: `Chybí ti jen ${xpNeeded} QAPI Coin na level ${nextLevelRequirement.level} (${nextLevelRequirement.title}). Dokonči lekci a máš to!`,
                   icon: <Star size={18} />,
                   color: 'text-yellow-500',
                   action: () => setActiveTab('courses')
@@ -692,7 +692,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           list.push({
               id: 'challenges',
               title: 'Denní Výzvy',
-              text: `Máš ${incompleteChallenges} nesplněných výzev. Nenech si utéct extra XP!`,
+              text: `Máš ${incompleteChallenges} nesplněných výzev. Nenech si utéct extra QAPI Coin!`,
               icon: <Zap size={18} />,
               color: 'text-indigo-600',
               action: () => setActiveTab('challenges')
@@ -705,7 +705,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           list.push({
               id: 'artifacts',
               title: 'Plný Inventář',
-              text: `Máš ${consumableItems.length} nepoužitých předmětů. Aktivuj si XP Boost!`,
+              text: `Máš ${consumableItems.length} nepoužitých předmětů. Aktivuj si QAPI Coin Boost!`,
               icon: <Package size={18} />,
               color: 'text-violet-600',
               action: () => setActiveTab('artifacts')
@@ -1074,7 +1074,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                  <div className="mt-1 space-y-1">
                     <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 leading-none">
                         <span className="flex items-center gap-0.5 font-bold font-mono text-slate-700 hidden">
-                            <Zap size={10} className="text-yellow-500" fill="currentColor" /> {user.xp?.toLocaleString() || 0} XP
+                            <Zap size={10} className="text-yellow-500" fill="currentColor" /> {user.xp?.toLocaleString() || 0} QAPI Coin
                         </span>
                         <span className="text-[10px] text-indigo-600 font-extrabold bg-indigo-50 border border-indigo-150 px-1.5 py-0.5 rounded leading-none">
                             {user.level === 2 ? 'Senior' : user.level >= 3 ? 'Expert' : 'Junior'}
@@ -1116,7 +1116,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                {isBoostActive && (
                    <div className="flex items-center gap-2 bg-violet-100 border border-violet-300 px-3 py-1 rounded-full animate-pulse">
                        <Zap size={14} className="text-violet-600" fill="currentColor"/>
-                       <span className="text-xs font-bold text-purple-300 hidden md:inline">2x XP BOOST AKTIVNÍ</span>
+                       <span className="text-xs font-bold text-purple-300 hidden md:inline">2x QAPI Coin BOOST AKTIVNÍ</span>
                    </div>
                )}
             </div>
@@ -1212,11 +1212,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                                   <Crown size={14} className="text-brand-gold"/> Profesní úroveň: {user.level === 2 ? '🥈 Senior' : user.level >= 3 ? '🥇 Expert' : '🥉 Junior'}
                                </span>
                                <span className="bg-amber-50 border border-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 hidden">
-                                  🏆 {user.xp} XP Celkem
+                                  🏆 {user.xp} QAPI Coin Celkem
                                </span>
                                {user.xpBoostUntil && new Date(user.xpBoostUntil) > new Date() && (
                                   <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-xl animate-pulse">
-                                     💡 2x XP Boost!
+                                     💡 2x QAPI Coin Boost!
                                   </span>
                                )}
                             </div>
@@ -1236,7 +1236,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                   <div className="text-left">
                                      <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Další Level</h5>
                                      <p className="text-sm font-black text-slate-900 leading-tight">Level {nextLevelRequirement.level} ({nextLevelRequirement.title})</p>
-                                     <p className="text-[10.5px] text-slate-500 mt-0.5">Potřebuješ ještě {nextLevelRequirement.xpRequired - user.xp} XP</p>
+                                     <p className="text-[10.5px] text-slate-500 mt-0.5">Potřebuješ ještě {nextLevelRequirement.xpRequired - user.xp} QAPI Coin</p>
                                   </div>
                                </>
                             ) : (
@@ -1347,25 +1347,25 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                        </div>
 
-                       {/* --- XP PROGRESS CHART / GRAF --- */}
+                       {/* --- QAPI Coin PROGRESS CHART / GRAF --- */}
                        <div className="bg-white border border-slate-150 rounded-3xl p-6 md:p-8 shadow-sm hidden">
                           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
                              <div className="text-left">
                                 <h3 className="text-lg font-extrabold text-slate-950 flex items-center gap-2">
                                    <TrendingUp size={20} className="text-brand-gold" />
-                                   Křivka profesního růstu (XP Body)
+                                   Křivka profesního růstu (QAPI Coin Body)
                                  </h3>
                                  <p className="text-xs text-slate-500 mt-0.5">Sledujte v reálném čase, jak se vaše body vyvíjí za odvedenou práci, Caflou úkoly a studijní moduly.</p>
                              </div>
                              <div className="bg-indigo-50 border border-indigo-150 rounded-xl px-4 py-2 text-xs font-bold text-indigo-700 flex items-center gap-1.5 shadow-sm">
-                                🌱 Tempo růstu: <span className="font-mono text-slate-900">{user.xp} XP</span>
+                                🌱 Tempo růstu: <span className="font-mono text-slate-900">{user.xp} QAPI Coin</span>
                              </div>
                           </div>
 
                           {/* SVG Graph Drawing */}
                           {xpChartData.length < 2 ? (
                              <div className="py-12 text-center text-slate-400">
-                                Chybí dostatek bodů pro vykreslení růstové křivky. Získejte svá první XP!
+                                Chybí dostatek bodů pro vykreslení růstové křivky. Získejte svá první QAPI Coin!
                              </div>
                           ) : (
                              <div className="relative pt-4">
@@ -1382,7 +1382,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                          <p className="font-semibold text-slate-100">{xpChartData[hoveredXpIndex].desc}</p>
                                          <div className="flex justify-between items-center mt-3 pt-2 border-t border-white/10 text-[10px] text-slate-400 font-mono">
                                             <span>Datum: {xpChartData[hoveredXpIndex].label}</span>
-                                            <span className="text-brand-gold font-bold">+{xpChartData[hoveredXpIndex].xp} XP</span>
+                                            <span className="text-brand-gold font-bold">+{xpChartData[hoveredXpIndex].xp} QAPI Coin</span>
                                          </div>
                                       </motion.div>
                                    )}
@@ -1544,7 +1544,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             <div className="flex items-center gap-4 text-xs text-slate-500 mb-4">
                                                 <span className="flex items-center gap-1"><Clock size={12}/> {course.totalDuration} min</span>
                                                 <span className="flex items-center gap-1"><Layers size={12}/> {course.modules.length} modulů</span>
-                                                {course.xpReward && <span className="flex items-center gap-1 text-yellow-500"><Zap size={12}/> {course.xpReward} XP</span>}
+                                                {course.xpReward && <span className="flex items-center gap-1 text-yellow-500"><Zap size={12}/> {course.xpReward} QAPI Coin</span>}
                                             </div>
                                             
                                             {/* Progress Bar */}
@@ -1688,7 +1688,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <ul className="text-sm text-slate-600 space-y-2 list-disc pl-5">
                                             <li>Zvýšením konverzního poměru o pouhé <strong>2 %</strong> získáte dodatečný zisk bez navýšení marketingového rozpočtu.</li>
                                             <li>Soustřeďte se na kvalifikaci kontaktů (SQL) před hovorem – zvýší se hodnota průměrného dealu.</li>
-                                            <li>Aktivujte XP boostery v inventáři pro zvýšení motivace týmu na uzavírání obchodů.</li>
+                                            <li>Aktivujte QAPI Coin boostery v inventáři pro zvýšení motivace týmu na uzavírání obchodů.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1789,7 +1789,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="space-y-8">
                         <div>
                             <h2 className="text-3xl font-bold text-slate-900 mb-2">Výzvy a Daily Quests</h2>
-                            <p className="text-slate-500">Zlepšujte své návyky, dokončujte denní cíle a inkasujte cenné XP do žebříčku.</p>
+                            <p className="text-slate-500">Zlepšujte své návyky, dokončujte denní cíle a inkasujte cenné QAPI Coin do žebříčku.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1807,7 +1807,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     {challenge.type === 'daily' ? 'Denní' : 'Týdenní'}
                                                 </span>
                                                 <span className="text-yellow-500 font-bold text-xs flex items-center gap-1 font-mono">
-                                                    <Zap size={14} fill="currentColor"/> +{challenge.rewardXP} XP
+                                                    <Zap size={14} fill="currentColor"/> +{challenge.rewardXP} QAPI Coin
                                                 </span>
                                             </div>
 
@@ -1860,7 +1860,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="space-y-8">
                         <div>
                             <h2 className="text-3xl font-bold text-slate-900 mb-2">Samo-testy a Ověření vědomostí</h2>
-                            <p className="text-slate-500">Prověřte své odborné znalosti, získejte certifikáty a instantní XP bonus.</p>
+                            <p className="text-slate-500">Prověřte své odborné znalosti, získejte certifikáty a instantní QAPI Coin bonus.</p>
                         </div>
 
                         {activeQuizId ? (() => {
@@ -1881,7 +1881,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                                         <div>
                                             <h3 className="font-bold text-2xl text-slate-900">{quizResult.passed ? 'Test úspěšně dokončen! 🎉' : 'Test nebyl úspěšně splněn'}</h3>
-                                            <p className="text-slate-500 text-sm mt-1">{quizResult.passed ? 'Získáváte slíbené kredity XP za excelentní výsledek!' : 'Zkuste to znovu po dalším prostudování lekcí.'}</p>
+                                            <p className="text-slate-500 text-sm mt-1">{quizResult.passed ? 'Získáváte slíbené kredity QAPI Coin za excelentní výsledek!' : 'Zkuste to znovu po dalším prostudování lekcí.'}</p>
                                         </div>
 
                                         <div className="bg-slate-50 rounded-2xl p-6 grid grid-cols-2 gap-4">
@@ -2006,7 +2006,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     
                                                     <div className="flex flex-wrap gap-4 text-xs text-slate-500 border-t border-slate-100 pt-3">
                                                         <span className="flex items-center gap-1 font-mono text-yellow-500 font-bold">
-                                                            <Zap size={12} fill="currentColor"/> +{quiz.xpReward} XP
+                                                            <Zap size={12} fill="currentColor"/> +{quiz.xpReward} QAPI Coin
                                                         </span>
                                                         <span className="flex items-center gap-1">
                                                             🎯 Limit: {quiz.passingScore}%
@@ -3652,7 +3652,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="space-y-8 animate-fade-in">
                         <div>
                             <h2 className="text-3xl font-bold text-slate-900 mb-2">Bonusové Výzvy & Úkoly</h2>
-                            <p className="text-slate-500">Vyřešte náročnější reálné úkoly z praxe, doložte důkaz a získejte obří balík XP.</p>
+                            <p className="text-slate-500">Vyřešte náročnější reálné úkoly z praxe, doložte důkaz a získejte obří balík QAPI Coin.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -3663,7 +3663,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-start">
                                                 <span className="text-[10px] font-mono font-bold text-yellow-500 bg-yellow-105/50 px-2 py-1 rounded flex items-center gap-1">
-                                                    <Zap size={11} fill="currentColor"/> +{task.rewardXP} XP
+                                                    <Zap size={11} fill="currentColor"/> +{task.rewardXP} QAPI Coin
                                                 </span>
                                                 {task.deadline && (
                                                     <span className="text-[10px] text-slate-400 font-semibold font-mono">
@@ -3867,7 +3867,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="grid grid-cols-12 bg-white/80 p-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                 <div className="col-span-1 text-center">#</div>
                                 <div className="col-span-6">Reprezentant</div>
-                                <div className="col-span-3 text-right">XP / Pozice</div>
+                                <div className="col-span-3 text-right">QAPI Coin / Pozice</div>
                                 <div className="col-span-2 text-right">Odznak</div>
                             </div>
                             {leaderboardUsers.map((u, i) => (
@@ -3885,7 +3885,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         </div>
                                     </div>
                                     <div className="col-span-3 text-right">
-                                        <div className="font-mono text-yellow-500 font-bold">{u.xp.toLocaleString()} XP</div>
+                                        <div className="font-mono text-yellow-500 font-bold">{u.xp.toLocaleString()} QAPI Coin</div>
                                         <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
                                             {u.level === 2 ? 'Senior' : u.level >= 3 ? 'Expert' : 'Junior'}
                                         </div>
@@ -3909,7 +3909,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold">Váš Inventář</h2>
                                 <div className="px-4 py-2 bg-white rounded-lg text-sm text-yellow-500 font-bold border border-yellow-500/20">
-                                    {user.xp} XP (Kreditů)
+                                    {user.xp} QAPI Coin (Kreditů)
                                 </div>
                             </div>
                             {user.inventory.length === 0 ? (
@@ -3946,10 +3946,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                             )}
                         </div>
 
-                        {/* XP SHOP */}
+                        {/* QAPI Coin SHOP */}
                         <div className="border-t border-slate-200 pt-12">
                             <h2 className="text-2xl font-bold mb-2 flex items-center gap-2"><ShoppingBag className="text-yellow-500 cursor-pointer select-none hover:scale-110 active:scale-95 transition-transform" onClick={handleShopIconClick}/> Obchod za Kredity</h2>
-                            <p className="text-slate-500 mb-8">Vyměňte své tvrdě vydřené XP za boostery a odměny.</p>
+                            <p className="text-slate-500 mb-8">Vyměňte své tvrdě vydřené QAPI Coin za boostery a odměny.</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {(artifacts || []).map((item, idx) => (
@@ -3967,7 +3967,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                                     : 'bg-slate-100 text-slate-500 cursor-not-allowed'
                                                 }`}
                                             >
-                                                {item.price} XP {user.xp >= (item.price || 0) ? '' : '(Nedostatek)'}
+                                                {item.price} QAPI Coin {user.xp >= (item.price || 0) ? '' : '(Nedostatek)'}
                                             </button>
                                         </div>
                                     </div>

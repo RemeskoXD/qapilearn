@@ -378,7 +378,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                                  roleDisplay === 'admin' ? '🛡️ Admin' : roleDisplay}
                                             </span>
                                             <span className="text-xs font-semibold text-slate-750">
-                                                {levelDisplay === 2 ? '🥈 Senior' : levelDisplay >= 3 ? '🥇 Expert' : '🥉 Junior'} • {xpDisplay} XP
+                                                {levelDisplay === 2 ? '🥈 Senior' : levelDisplay >= 3 ? '🥇 Expert' : '🥉 Junior'} • {xpDisplay} QAPI Coin
                                             </span>
                                         </div>
                                     </td>
@@ -599,7 +599,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                             <div className="bg-slate-50/70 p-6 rounded-2xl border border-slate-200/80">
                                 <div>
                                     <label className="text-xs font-bold text-slate-705 tracking-wide uppercase mb-1.5 block flex items-center gap-1.5">
-                                        <Crown size={14} className="text-amber-500" /> Profesní úroveň (Rank) & XP
+                                        <Crown size={14} className="text-amber-500" /> Profesní úroveň (Rank) & QAPI Coin
                                     </label>
                                     <div className="flex gap-3">
                                         <div className="relative w-1/2">
@@ -614,13 +614,13 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ allUsers, onCreateUser, onUpdat
                                             </select>
                                         </div>
                                         <div className="relative flex-1">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-indigo-400 uppercase">XP</span>
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-extrabold text-indigo-400 uppercase">QAPI Coin</span>
                                             <input 
                                                 type="number" 
                                                 value={editForm.xp} 
                                                 onChange={e => setEditForm({...editForm, xp: parseInt(e.target.value) || 0})} 
                                                 className="w-full bg-white border-2 border-slate-205 hover:border-slate-305 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 rounded-xl pl-9 pr-4 py-3 text-slate-900 text-sm font-bold outline-none transition-all shadow-sm" 
-                                                placeholder="XP body"
+                                                placeholder="QAPI Coin body"
                                             />
                                         </div>
                                     </div>

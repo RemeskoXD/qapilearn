@@ -77,7 +77,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <Feature icon={<BookOpen size={18} />} label="Kurzy & lekce" />
             <Feature icon={<GraduationCap size={18} />} label="Kvízy & certifikáty" />
             <Feature icon={<UsersIcon size={18} />} label="Mentoring 1:1" />
-            <Feature icon={<Award size={18} />} label="Gamifikace & XP" />
+            <Feature icon={<Award size={18} />} label="Gamifikace & QAPI Coin" />
           </div>
         </div>
 

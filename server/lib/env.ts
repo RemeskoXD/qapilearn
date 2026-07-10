@@ -37,7 +37,7 @@ if (process.env.DATABASE_URL) {
       dbUrl += dbUrl.includes('?') ? '&schema=public' : '?schema=public';
     }
     if (!dbUrl.includes('connection_limit=')) {
-      dbUrl += `&connection_limit=15`;
+      dbUrl += `&connection_limit=3`;
     }
     process.env.DATABASE_URL = dbUrl;
   }
@@ -55,7 +55,7 @@ function required(name: string, fallback?: string): string {
 export const env = {
   DATABASE_URL: required('DATABASE_URL'),
   JWT_SECRET: required('JWT_SECRET', 'qhub-default-jwt-secret-key-super-secure-123-fallback-for-easy-deploy'),
-  PORT: process.env.APPLET_ID ? 4000 : (process.env.NODE_ENV === 'production' ? parseInt(process.env.PORT || '4000', 10) : 4000),
+  PORT: (process.env.APP_MODE === 'dev' || process.argv.includes('watch')) ? 4000 : 3000,
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
   ADMIN_EMAILS: (process.env.ADMIN_EMAILS || '')
     .split(',')

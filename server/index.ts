@@ -96,7 +96,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 // V produkci servírujeme přímo frontend (dist/) ze stejného originu.
 // Tím odpadá potřeba zvláštního CORS / hostingu a běží to jako 1 kontejner.
-if (env.NODE_ENV === 'production') {
+if (!(process.env.APP_MODE === 'dev' || process.argv.includes('watch'))) {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   // Dockerfile kopíruje dist do /app/dist; server.js běží z /app/server/dist
   const candidates = [

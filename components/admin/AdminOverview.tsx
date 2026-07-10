@@ -26,7 +26,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
   const openTickets = tickets.filter((t) => t.status === 'open').length;
   const pendingSubmissions = submissions.filter((s) => s.status === 'pending').length;
 
-  // Calculate total XP in the platform
+  // Calculate total QAPI Coin in the platform
   const totalPlatformXP = allUsers.reduce((sum, u) => sum + (u.xp || 0), 0);
   
   // Sort users by recent joining
@@ -65,10 +65,10 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
     {
       label: 'Celkový Pokrok Hubu',
       value: `${(totalPlatformXP / 1000).toFixed(1)}k`,
-      sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} XP na pracovníka`,
+      sub: `Průměrně ${allUsers.length ? Math.round(totalPlatformXP / allUsers.length).toLocaleString() : 0} QAPI Coin na pracovníka`,
       icon: <Zap size={22} className="text-brand-gold" />,
       color: 'border-slate-200 hover:border-brand-gold bg-linear-to-b from-white to-slate-50/50',
-      badge: 'Celkem XP',
+      badge: 'Celkem QAPI Coin',
       badgeColor: 'bg-indigo-50 text-brand-gold border-indigo-200',
     },
   ];
@@ -218,7 +218,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
               <div>
                 <h3 className="font-black text-slate-900 text-lg">Nedávno registrovaní pracovníci</h3>
-                <p className="text-xs text-slate-400">Přehled posledních registrovaných pracovníků, jejich XP a oprávnění.</p>
+                <p className="text-xs text-slate-400">Přehled posledních registrovaných pracovníků, jejich QAPI Coin a oprávnění.</p>
               </div>
               <div className="relative w-full sm:w-48 text-[11px]">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
@@ -237,7 +237,7 @@ const AdminOverview: React.FC<AdminOverviewProps> = ({ allUsers = [], courses = 
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-bold uppercase text-slate-400 tracking-wider">
                     <th className="pb-3 pl-2">Pracovník</th>
-                    <th className="pb-3 text-right">Získáno XP</th>
+                    <th className="pb-3 text-right">Získáno QAPI Coin</th>
                     <th className="pb-3">Plán / Role</th>
                     <th className="pb-3 text-right">Člen od</th>
                   </tr>

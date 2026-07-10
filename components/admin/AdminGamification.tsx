@@ -109,7 +109,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                             <h3 className="font-bold text-slate-900">{item.name}</h3>
                             <p className="text-xs text-slate-500 mb-4 h-8 overflow-hidden">{item.description}</p>
                             <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                                <span className="font-mono text-yellow-500 font-bold">{item.price} XP</span>
+                                <span className="font-mono text-yellow-500 font-bold">{item.price} QAPI Coin</span>
                                 <div className="flex gap-2">
                                     <button onClick={() => setEditingArtifact(item)} className="p-1.5 hover:bg-slate-100 rounded text-slate-500"><Edit size={14}/></button>
                                     <button onClick={() => handleDeleteArtifact(item.id)} className="p-1.5 hover:bg-slate-100 rounded text-red-500"><Trash2 size={14}/></button>
@@ -142,7 +142,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                             <div className="flex items-center gap-6">
                                 <div className="text-right">
                                     <span className="block text-xs text-slate-500 uppercase">Odměna</span>
-                                    <span className="font-bold text-yellow-500">+{challenge.rewardXP} XP</span>
+                                    <span className="font-bold text-yellow-500">+{challenge.rewardXP} QAPI Coin</span>
                                 </div>
                                 <div className="flex gap-2">
                                     <button onClick={() => setEditingChallenge(challenge)} className="p-2 bg-slate-100 hover:bg-indigo-600 rounded-lg text-slate-600 hover:text-white transition"><Edit size={16}/></button>
@@ -172,7 +172,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                                     <input value={lvl.title} onChange={e => handleLevelChange(idx, 'title', e.target.value)} className="w-full bg-white text-slate-900 border border-slate-250 rounded px-3 py-1.5 focus:ring-1 focus:ring-amber-500 outline-none transition text-sm font-semibold"/>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] text-slate-500 uppercase font-bold block">XP Potřeba</label>
+                                    <label className="text-[10px] text-slate-500 uppercase font-bold block">QAPI Coin Potřeba</label>
                                     <input type="number" value={lvl.xpRequired} onChange={e => handleLevelChange(idx, 'xpRequired', parseInt(e.target.value))} className="w-full bg-white text-slate-900 border border-slate-250 rounded px-3 py-1.5 focus:ring-1 focus:ring-amber-500 outline-none font-mono text-sm text-indigo-600 font-bold"/>
                                 </div>
                             </div>
@@ -192,7 +192,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                         <textarea value={editingArtifact.description} onChange={e => setEditingArtifact({...editingArtifact, description: e.target.value})} placeholder="Popis" className="input h-20"/>
                         <div className="flex gap-2">
                             <input value={editingArtifact.image} onChange={e => setEditingArtifact({...editingArtifact, image: e.target.value})} placeholder="Emoji / URL" className="input w-1/3"/>
-                            <input type="number" value={editingArtifact.price} onChange={e => setEditingArtifact({...editingArtifact, price: parseInt(e.target.value)})} placeholder="Cena XP" className="input flex-1"/>
+                            <input type="number" value={editingArtifact.price} onChange={e => setEditingArtifact({...editingArtifact, price: parseInt(e.target.value)})} placeholder="Cena QAPI Coin" className="input flex-1"/>
                         </div>
                         <select value={editingArtifact.rarity} onChange={e => setEditingArtifact({...editingArtifact, rarity: e.target.value as any})} className="input">
                             <option value="common">Common</option>
@@ -201,7 +201,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                             <option value="legendary">Legendary</option>
                         </select>
                         <select value={editingArtifact.effectType} onChange={e => setEditingArtifact({...editingArtifact, effectType: e.target.value as any})} className="input">
-                            <option value="xp_boost">XP Boost</option>
+                            <option value="xp_boost">QAPI Coin Boost</option>
                             <option value="none">Žádný efekt (Badge/Ticket)</option>
                         </select>
                         <div className="flex justify-end gap-2 pt-4">
@@ -225,7 +225,7 @@ const AdminGamification: React.FC<AdminGamificationProps> = ({
                             </select>
                             <input type="number" value={editingChallenge.targetCount} onChange={e => setEditingChallenge({...editingChallenge, targetCount: parseInt(e.target.value)})} placeholder="Cíl (počet)" className="input flex-1"/>
                         </div>
-                        <input type="number" value={editingChallenge.rewardXP} onChange={e => setEditingChallenge({...editingChallenge, rewardXP: parseInt(e.target.value)})} placeholder="Odměna XP" className="input"/>
+                        <input type="number" value={editingChallenge.rewardXP} onChange={e => setEditingChallenge({...editingChallenge, rewardXP: parseInt(e.target.value)})} placeholder="Odměna QAPI Coin" className="input"/>
                         <div className="flex justify-end gap-2 pt-4">
                             <button onClick={() => setEditingChallenge(null)} className="btn-secondary">Zrušit</button>
                             <button onClick={handleSaveChallenge} className="btn-primary bg-indigo-600 hover:bg-indigo-500">Uložit</button>
