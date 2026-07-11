@@ -1,11 +1,10 @@
-[providers]
-name = "node"
+providers = ["node"]
 
 [phases.setup]
 nixPkgs = ["nodejs_20", "openssl"]
 
 [phases.build]
-cmds = ["npm ci", "npm run build"]
+cmds = ["npm ci", "npx prisma generate --schema server/prisma/schema.prisma", "npm run build"]
 
 [start]
 cmd = "npm run start"
