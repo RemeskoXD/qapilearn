@@ -55,7 +55,7 @@ function required(name: string, fallback?: string): string {
 export const env = {
   DATABASE_URL: required('DATABASE_URL'),
   JWT_SECRET: required('JWT_SECRET', 'qhub-default-jwt-secret-key-super-secure-123-fallback-for-easy-deploy'),
-  PORT: (process.env.APP_MODE === 'dev' || process.argv.includes('watch')) ? 4000 : 3000,
+  PORT: process.env.PORT ? parseInt(process.env.PORT, 10) : ((process.env.APP_MODE === 'dev' || process.argv.includes('watch')) ? 4000 : 3000),
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
   ADMIN_EMAILS: (process.env.ADMIN_EMAILS || '')
     .split(',')

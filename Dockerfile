@@ -48,7 +48,7 @@ EXPOSE 3000
 
 # Healthcheck pro Coolify / reverse proxy.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:${PORT}/api/health || exit 1
+  CMD wget -qO- http://localhost:${PORT}/api/health || exit 1
 
 # Spuštění:
 #   1) prisma db push  -> vytvoří/aktualizuje qhub_* tabulky
